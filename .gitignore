@@ -1,0 +1,16 @@
+*.pyc
+*.pkl
+*.param
+*.h5
+
+*~
+*.so
+.idea
+numa/malis/_malis.cpp
+numa/malis/_malis.so
+build
+cache
+*__pycache__
+*.nbi
+*.nbc
+
