@@ -117,12 +117,12 @@ class DefaultConfig(object):
 
     def read_user_config(self):
         config_dict = dict()
-        user_path = os.path.abspath(os.path.expanduser('~/.elektronnrc'))
+        user_path = os.path.abspath(os.path.expanduser('~/.elektronn2rc'))
         if not os.path.exists(user_path):
             logger.debug("No user config file at %s, using default values" %(user_path,))
         else:
             try:
-                logger.debug("Reading user DefaultConfig from ~/.elektronnrc")
+                logger.debug("Reading user DefaultConfig from ~/.elektronn2rc")
                 exec (compile(open(user_path).read(), user_path, 'exec'), {}, config_dict)
             except Exception as e:
                 raise RuntimeError("The user config file %s does exist, "

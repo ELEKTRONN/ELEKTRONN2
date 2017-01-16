@@ -58,7 +58,7 @@ if config.device is None:
 else:
     if gpu:
         print("Cannot init gpu to %s because there is already the value %s "
-              "in .elektronnrc." %(gpu, config.device))
+              "in ~/.elektronn2rc." %(gpu, config.device))
 
 from elektronn2.training import trainer
 from elektronn2.training import trainutils
