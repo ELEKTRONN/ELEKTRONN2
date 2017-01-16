@@ -2,10 +2,8 @@
 # ELEKTRONN2 Toolkit
 # Copyright (c) 2016 Philipp J. Schubert
 # All rights reserved
-from elektronn2 import neuromancer
-import numpy as np
 
-save_path = '~/numa_examples/'
+save_path = '~/elektronn2_examples/'
 save_name = "piano_lstm_sgd"
 
 preview_data_path = None
@@ -53,13 +51,26 @@ def create_model():
     return model
 
 if __name__ == "__main__":
-    from elektronn2 import neuromancer
+    import traceback
     model = create_model()
-    # "Test" if model is saveable
-    model.save("/tmp/shit")
-# TODO:  train and predict mnist (with bn, w/o bn, with train mode and
-    # predict mode when loading model, compare)
-#    model2 = neuromancer.model.modelload("/tmp/shit")
+
+
+    try:
+        model.test_run_prediction()
+    except Exception as e:
+        traceback.print_exc()
+        print("Test run failed. In case your GPU ran out of memory the \
+               principal setup might still be working")
+
+    try:
+        from elektronn2.utils.d3viz import visualise_model
+        visualise_model(model, 'model-graph')
+        import webbrowser
+        webbrowser.open('model-graph.png')
+        webbrowser.open('model-graph.html')
+    except Exception as e:
+        traceback.print_exc()
+        print("Could not print model model graph. Is pydot/graphviz properly installed?")
 
 
 

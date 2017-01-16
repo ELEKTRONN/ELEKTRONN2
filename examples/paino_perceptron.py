@@ -5,13 +5,9 @@
 from elektronn2 import neuromancer
 import numpy as np
 
-save_path = '~/numa_examples/'
+save_path = '~/elektronn2_examples/'
 save_name = "piano_perceptron"
 
-preview_data_path = None
-preview_kwargs    = dict(export_class='all', max_z_pred=5)
-initial_prev_h   = 0.5
-prev_save_h      = 1.0
 data_class = 'PianoData_perc'
 background_processes = 2
 

@@ -144,7 +144,7 @@ def _augmentMNIST(data, label, crop=2, factor=4):
 
 
 class MNISTData(Data):
-    def __init__(self, input_node, target_node,  path=None, convert2image=True, 
+    def __init__(self, input_node, target_node,  path=None, convert2image=True,
                  warp_on=False, shift_augment=True, center=True):
         if path is None:
             (self.train_d, self.train_l), (self.valid_d, self.valid_l), (
@@ -160,6 +160,7 @@ class MNISTData(Data):
         self.test_l  = self.test_l.astype(np.int16)
         self.train_l = self.train_l.astype(np.int16)
         self.valid_l = self.valid_l.astype(np.int16)
+        self.example_shape = None
 
         if center:
             self.test_d  -= self.test_d.mean()
@@ -170,7 +171,7 @@ class MNISTData(Data):
         if self.shif_augment:
             self._stripborder(1)
             self.train_d, self.train_l = _augmentMNIST(self.train_d, self.train_l, crop=2, factor=4)
-            
+
         self.train_l = self.train_l[:, None]
         self.test_l = self.test_l[:, None]
         self.valid_l = self.valid_l[:, None]
@@ -262,7 +263,7 @@ class MNISTData(Data):
 
 
 class PianoData(Data):
-  def __init__(self, input_node, target_node, 
+  def __init__(self, input_node, target_node,
                path='/home/mkilling/devel/data/PianoRoll/Nottingham_enc.pkl', n_tap=20, n_lab=58):
     path = os.path.expanduser(path)
     (self.train_d, self.valid_d, self.test_d)  = pickleload(path)
@@ -281,24 +282,24 @@ class PianoData(Data):
         self._perm = self.rng.permutation(self._training_count)
         self._pos = 0
         slice = self._perm[:batch_size]
-  
+
       data  = [self.train_d[i] for i in slice]
-        
+
     elif source=='valid':
       data  = self.valid_d[:batch_size]
-  
+
     elif source=='test':
       data  = self.test_d[:batch_size]
-    
+
     lengths = np.array(map(len, data))
     start_t = np.round(np.random.rand(batch_size)*(lengths-self.n_taps-1)).astype(np.int)
     x = np.array([d[t:t+self.n_taps].astype(np.float32) for d,t in zip(data, start_t)])
     y = np.array([d[t+self.n_taps]                      for d,t in zip(data, start_t)])
     return x, y
-    
-    
+
+
 class PianoData_perc(PianoData):
-  def __init__(self, input_node, target_node, 
+  def __init__(self, input_node, target_node,
                path='/home/mkilling/devel/data/PianoRoll/Nottingham_enc.pkl', n_tap=20, n_lab=58):
     super(PianoData_perc, self).__init__(input_node, target_node, path='/home/mkilling/devel/data/PianoRoll/Nottingham_enc.pkl', n_tap=20, n_lab=58)
 

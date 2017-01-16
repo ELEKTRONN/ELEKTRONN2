@@ -328,6 +328,8 @@ class Trainer(object):
                 bg_worker.shutdown()
 
         if self.model.batch_normalisation_active:
+            print("Rebuilding model, replacing batch normalisation layers "
+                  "with constant values")
             self.model = rebuild_model(self.model, replace_bn='const')
 
 

@@ -2,16 +2,11 @@
 # ELEKTRONN2 Toolkit
 # Copyright (c) 2016 Philipp J. Schubert
 # All rights reserved
-from elektronn2 import neuromancer
-import numpy as np
+
 optimiser = 'Adam'
-save_path = '~/numa_examples/'
+save_path = '~/elektronn2_examples/'
 save_name = "piano_gru_%s" % optimiser
 
-preview_data_path = None
-preview_kwargs    = dict(export_class='all', max_z_pred=5)
-initial_prev_h   = 0.5                  # hours: time after which first preview is made
-prev_save_h      = 1.0
 data_class = 'PianoData' # <String>: Name of Data Class in TrainData or <tuple>: (path_to_file, class_name)
 background_processes = 2
 

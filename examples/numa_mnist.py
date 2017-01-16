@@ -2,19 +2,14 @@
 # ELEKTRONN2 Toolkit
 # Copyright (c) 2016 Philipp J. Schubert
 # All rights reserved
-save_path = '~/numa_examples/'
-save_name = "mnist_test"
-
-preview_data_path = None
-preview_kwargs    = dict(export_class='all', max_z_pred=5)
-initial_prev_h   = 0.5                  # hours: time after which first preview is made
-prev_save_h      = 1.0
+save_path = '~/elektronn2_examples/'
+save_name = "mnist"
 data_class = 'MNISTData' # <String>: Name of Data Class in TrainData or <tuple>: (path_to_file, class_name)
 background_processes = 2
 
 n_steps = 300000
 max_runtime = 4 * 24 * 3600 # in seconds
-history_freq = 2000
+history_freq = 500
 monitor_batch_size = 20
 optimiser = 'Adam'
 data_batch_args = {}
@@ -26,7 +21,7 @@ def create_model():
     from elektronn2 import neuromancer
 
     act = 'relu'
-    in_sh = (20,1,26,26)
+    in_sh = (None,1,26,26)
     inp = neuromancer.Input(in_sh, 'b,f,y,x', name='raw')
 
     out = neuromancer.Conv(inp, 12,  (3,3), (2,2), activation_func=act, batch_normalisation = 'train')
