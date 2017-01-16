@@ -1,0 +1,96 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+# ELEKTRONN2 Toolkit
+# Copyright (c) 2015 Marius F. Killinger
+# All rights reserved
+from __future__ import absolute_import, division, print_function
+from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
+
+import os
+import inspect
+import argparse
+import traceback
+from subprocess import check_call, CalledProcessError
+
+import matplotlib
+
+def parseargs():
+    def convert(s):
+        if s=='auto':
+            return s
+        elif s.lower()=='false':
+            return False
+        elif s.lower()=='None':
+            return None
+        else:
+            return int(s)
+
+    parser = argparse.ArgumentParser(
+    usage="Evaluate </path/to_config_file> [--gpu={Auto|False|<int>}]")
+    parser.add_argument("config", type=str)
+    parser.add_argument("--func", type=str, choices=['train', 'trace', 'tracernn'], default='train')
+    parser.add_argument("--gpu", default=None, type=convert, choices=['auto', False, None]+list(range(0,100)))
+    parsed = parser.parse_args()
+    print(parsed)
+    return parsed.config, parsed.func, parsed.gpu
+
+exp_config_file, func, gpu = parseargs()
+
+# prevent setting of mpl qt-backend on machines without X-server before other
+# modules import mpl #  Redirect to /dev/null because xset output is unimportant
+with open(os.devnull, 'w') as devnull:
+    try:
+        # "xset q" will always succeed to run if an X server is currently running
+        check_call(['xset', 'q'], stdout=devnull, stderr=devnull)
+        print('X available')
+        # Don't set backend explicitly, use system default...
+    # if "xset q" fails, conclude that X is not running
+    except (OSError, CalledProcessError):
+        print('X unavailable')
+        matplotlib.use('AGG')
+
+
+from elektronn2.config import config
+
+if config.device is None:
+    from elektronn2.utils.gpu import initgpu
+    initgpu(gpu)
+else:
+    if gpu:
+        print("Cannot init gpu to %s because there is already the value %s "
+              "in .elektronnrc." %(gpu, config.device))
+
+from elektronn2.training import trainer
+from elektronn2.training import trainutils
+
+if exp_config_file in [None, "None"]:
+    #exp_config_file  = "/home/mfk/axon/mkilling/investigation/MA-TEX/CNN-Timings/DS-3-2-unet2d.py"
+    #exp_config_file  = "/home/mfk/axon/mkilling/CNN_Training/configs_numa/DualScale/Testold.py"
+    #exp_config_file  = "~/axon/mkilling/CNN_Training/configs_numa/TR-P-1-DBG.py"
+    exp_config_file = "~/axon/mkilling/CNN_Training/configs_numa/TM-RB-0-2-static.py"
+    func = 'tracernn'
+
+
+this_file = os.path.abspath(inspect.getframeinfo(inspect.currentframe()).filename)
+exp_config = trainutils.ExperimentConfig(exp_config_file, this_file)
+
+if func=='train':
+    T = trainer.Trainer(exp_config)
+elif func=='trace':
+    T = trainer.TracingTrainer(exp_config)
+elif func=='tracernn':
+    T = trainer.TracingTrainerRNN(exp_config)
+else:
+    raise ValueError("Unrecognised training function %s" %func)
+
+T.debug_getcnnbatch()
+try:
+    from elektronn2.utils.d3viz import visualise_model
+    visualise_model(T.model, '1-model-graph')
+except Exception as e:
+    traceback.print_exc()
+    print("Could not print model model graph")
+
+T.run()
+os.mknod("0-EVAL-needed")
+#trainutils.evaluate_model_binary(T.model, exp_config.save_name, T.data, n_proc=7)

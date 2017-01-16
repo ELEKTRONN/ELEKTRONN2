@@ -1,0 +1,47 @@
+General
+=======
+
+* embedfilters, make 3-channels images RGB/colour
+* Comments/Docstrings where applicable
+* Timings/Profiling
+[* Initialisation methods review, pre-initialisation]
+[* Add GradNet inspired stuff]
+* Conv: error message?!?
+[* Trainer/Config/Creation]
+[* Carry FOV in tagged shapeullin m]
+* Make class weights etc. shared instead of inputtable
+
+
+
+
+Neural
+======
+
+[* DensePrediction]
+* Mergercrop / Unet
+* Inception Module
+* RNN
+* LSTM
+
+
+Python 3 Compat
+===============
+
+Modules/Packages to Ignore
+--------------------------
+
+* data/
+* TestRestore.py
+* VAE.py
+
+
+Other
+=====
+
+* Wrap/Improve Warping
+* Graph Visualisation
+* Server for Plotting
+* Packaging
+* Optimise Parallelisation
+* Tests: transform main --> unittest
+

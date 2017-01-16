@@ -1,0 +1,7 @@
+include LICENSE.txt
+include README.rst
+include requirements.txt
+
+recursive-include numa/utils/d3viz/css *
+recursive-include numa/utils/d3viz/html *
+recursive-include numa/utils/d3viz/js *
