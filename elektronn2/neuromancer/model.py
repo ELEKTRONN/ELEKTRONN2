@@ -639,9 +639,6 @@ def modelload(file_name, override_mfp_to_active=False,
 
     model_load_kwargs: remove_bn, make_weights_constant (True/False)
     """  # TODO: Document params
-    import traceback
-    for line in traceback.format_stack():
-        print(line.strip())
 
     logger.info("Loading model from %s" %file_name)
     node_descr, desig_descr = utils.pickleload(file_name)
