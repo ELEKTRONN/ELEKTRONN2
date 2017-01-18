@@ -1,5 +1,6 @@
 numpy>=1.11
 scipy>=0.18
+sklearn<=0.20
 matplotlib>=2.0
 h5py>=2.2
 theano>=0.8
