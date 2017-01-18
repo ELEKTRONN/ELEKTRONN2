@@ -32,14 +32,7 @@ class Mock(MagicMock):
             return MagicMock()
 
 MOCK_MODULES = [
-    'knossos_utils'
-    #'numba',
-    #'llvmlite',
-    #'matplotlib',
-    #'seaborn',
-    #'cython',
-    #'scipy',
-    #'h5py',
+    'knossos_utils',
 ]
 sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
 
