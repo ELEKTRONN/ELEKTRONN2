@@ -1,7 +1,7 @@
-elektronn2
-==========
+docs
+====
 
 .. toctree::
    :maxdepth: 4
 
-   elektronn2
+   conf
