@@ -193,7 +193,7 @@ def run_apidoc(_):
     import sys
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
-    module = '.'
+    module = '../elektronn2'
     output_path = os.path.join(cur_dir, 'source')
     main(['-e', '-o', output_path, module, '--force'])
 

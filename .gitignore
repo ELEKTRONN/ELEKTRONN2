@@ -15,3 +15,4 @@ cache
 *.nbc
 
 docs/_build/*
+docs/source/*
