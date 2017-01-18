@@ -8,8 +8,15 @@ Welcome to ELEKTRONN2's documentation!
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: API documentation:
 
+   elektronn2.data
+   elektronn2.malis
+   elektronn2.neuromancer
+   elektronn2.tests
+   elektronn2.training
+   elektronn2.utils
+   elektronn2.config
 
 
 Indices and tables
