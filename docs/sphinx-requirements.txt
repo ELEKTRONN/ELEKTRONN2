@@ -10,3 +10,6 @@ pydotplus
 seaborn
 prompt_toolkit>=1.0.3
 jedi>=0.9.0
+
+sphinx
+sphinx_rtd_theme
