@@ -30,28 +30,27 @@ __all__ = ['GaussianRV', 'SkelLoss',
 
 
 class GaussianRV(Node):
+    """
+    Parameters
+    ----------
+    mu: node
+        Mean of the Gaussian density
+    sig: node
+        Sigma of the Gaussian density
+    n_samples: int
+        Number of samples to be drawn per instance.
+        Special case '0': draw 1 sample but don't' increase rank of tensor!
+
+    The output is a **sample** from separable Gaussians of given mean and
+    sigma (but this operation is still differentiable, due to the
+    "re-parameterisation trick").
+
+    The output dimension mu.ndim+1 because the samples are accumulated along
+    a new axis **right** of 'b' (batch).
+    """
+
     def __init__(self, mu, log_sig, n_samples=0, name="state",
                  print_repr=True):
-        """
-        Parameters
-        ----------
-
-        mu: node
-          Mean of the Gaussian density
-        sig: node
-          Sigma of the Gaussian density
-        n_samples: int
-          Number of samples to be drawn per instance.
-          Special case '0': draw 1 sample but don't' increase rank of tensor!
-
-        The output is a **sample** from separable Gaussians of given mean and
-        sigma (but this operation is still differentiable, due to the
-        "re-parameterisation trick").
-
-        The output dimension mu.ndim+1 because the samples are accumulated along
-        a new axis **right** of 'b' (batch).
-
-        """
         super(GaussianRV, self).__init__((mu, log_sig), name, print_repr)
 
         self.mu = mu
@@ -110,25 +109,25 @@ class GaussianRV(Node):
 ###############################################################################
 
 class GaussianAEVBPrior(GaussianRV):
+    """
+    Parameters
+    ----------
+    mu: Layer
+        Mean of the Gaussian density
+    sig: Layer
+        Sigma of the Gaussian density
+    n_samples: int
+        Number of samples to be drawn per instance.
+        Special case '0': draw 1 sample but don't' increase rank of tensor!
+
+    The prior basically puts a L2-norm on mu and a similar constraint on sig
+    but transformed such that sig=1 is favoured and for sig --> 0 it goes to inf.
+
+    This Layer should only be created using the dedicated method of ``GaussianRV``.
+    """
+
     def __init__(self, mu, log_sig, n_samples=0, name="prior",
                  print_repr=True):
-        """
-        Parameters
-        ----------
-
-        mu: Layer
-          Mean of the Gaussian density
-        sig: Layer
-          Sigma of the Gaussian density
-        n_samples: int
-          Number of samples to be drawn per instance.
-          Special case '0': draw 1 sample but don't' increase rank of tensor!
-
-        The prior basically puts a L2-norm on mu and a similar constraint on sig
-        but transformed such that sig=1 is favoured and for sig --> 0 it goes to inf.
-
-        This Layer should only be created using the dedicated method of ``GaussianRV``.
-        """
         super(GaussianAEVBPrior, self).__init__(mu, log_sig, n_samples,
                                                 name, print_repr)
 
@@ -154,11 +153,18 @@ class GaussianAEVBPrior(GaussianRV):
 ###############################################################################
 
 class StereographicMap(Node):
+    """
+    Interpret pred (bs, 3) as (X,Y,R), map to
+    $(x, y, z) = R \cdot \left(\frac{2 X}{1 + X^2 + Y^2}, \frac{2 Y}{1 + X^2 + Y^2}, \frac{-1 + X^2 + Y^2}{1 + X^2 + Y^2}\right)$
+
+    Parameters
+    ----------
+    pred
+    name
+    print_repr
+    """
+
     def __init__(self, pred, name="stereo_map", print_repr=True):
-        """
-        Interpret pred (bs, 3) as (X,Y,R), map to
-        $(x, y, z) = R \cdot \left(\frac{2 X}{1 + X^2 + Y^2}, \frac{2 Y}{1 + X^2 + Y^2}, \frac{-1 + X^2 + Y^2}{1 + X^2 + Y^2}\right)$
-        """
         super(StereographicMap, self).__init__(pred, name, print_repr)
         self.pred   = pred.output
         self.pred_shape = pred.shape
@@ -182,12 +188,24 @@ class StereographicMap(Node):
 
 
 class SkelPrior(Node):
+    """
+    pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
+    i.e. only batch_size=1 is supported.
+
+    Parameters
+    ----------
+    pred
+    target_length
+    prior_n
+    prior_posz
+    prior_z
+    prior_xy
+    name
+    print_repr
+    """
+
     def __init__(self, pred, target_length=5.0, prior_n=0.0, prior_posz=0.0, prior_z=0.0, prior_xy=0.0,
                  name="skel_prior", print_repr=True):
-        """
-        pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
-        i.e. only batch_size=1 is supported
-        """
         super(SkelPrior, self).__init__(pred, name, print_repr)
 
         self.pred = pred.output
@@ -287,11 +305,21 @@ class SkelLossOP(theano.Op):
 
 
 class SkelLossN(Node):
+    """
+    pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
+    i.e. only batch_size=1 is supported
+
+    Parameters
+    ----------
+    pred
+    skel
+    trafo
+    loss_kwargs
+    name
+    print_repr
+    """
+
     def __init__(self, pred, skel, trafo, loss_kwargs, name="skel_loss", print_repr=True):
-        """
-        pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
-        i.e. only batch_size=1 is supported
-        """
         super(SkelLossN, self).__init__((pred, skel, trafo), name, print_repr)
 
         self.skel = skel.output
@@ -371,11 +399,20 @@ class SkelLossRecOP(theano.Op):
         return [[True, False],[False, False],[False, False]]
 
 class SkelLossRec(Node):
+    """
+    pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
+    i.e. only batch_size=1 is supported.
+
+    Parameters
+    ----------
+    pred
+    skel
+    loss_kwargs
+    name
+    print_repr
+    """
+
     def __init__(self, pred, skel, loss_kwargs, name="skel_loss", print_repr=True):
-        """
-        pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
-        i.e. only batch_size=1 is supported
-        """
         super(SkelLossRec, self).__init__((pred, skel), name, print_repr)
 
         self.skel = skel.output
@@ -437,12 +474,22 @@ class SkelGridUpdateOP(theano.Op):
 
 
 class SkelGridUpdateN(Node):
+    """
+    pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
+    i.e. only batch_size=1 is supported
+
+    Parameters
+    ----------
+    grid
+    skel
+    radius
+    bio
+    name
+    print_repr
+    """
+
     def __init__(self, grid, skel, radius, bio, name="grid2pred",
                  print_repr=True):
-        """
-        pred must be a vector of shape [(1,b),(3,f)] or [(3,f)]
-        i.e. only batch_size=1 is supported
-        """
         super(SkelGridUpdateN, self).__init__((grid, skel, radius, bio), name, print_repr)
 
         self.skel = skel.output
@@ -537,14 +584,22 @@ class SkelGetBatchOP(theano.Op):
 
 
 class SkelGetBatchN(Node):
+    """
+    Dummy Node to be used in the split-function.
+
+    Parameters
+    ----------
+    skel
+    aux
+    img_sh
+    get_batch_kwargs
+    scale_strenght
+    name
+    print_repr
+    """
+
     def __init__(self, skel, aux, img_sh, get_batch_kwargs, scale_strenght=None,
                  name='skel_batch', print_repr=False):
-        """
-        Dummy Node to be used in the split-function
-
-        Parameters
-        ----------
-        """
         super(SkelGetBatchN, self).__init__((skel, aux), name, print_repr)
         self.skel = skel
         self.aux  = aux
@@ -604,43 +659,44 @@ def SkelGetBatch(skel, aux, img_sh, t_img_sh, t_grid_sh, t_node_sh,
                               name=name+"_split")
 
 class ScanN(Node):
+    """
+    WARNING: this node may only be used in conjuction with ``scansplit``
+    because its ``output`` and ``shape`` attributes are lists which
+    will confuse normal nodes. The split wraps the outputs in indivdual
+    Nodes (FromTensor).
+
+    Parameters
+    ----------
+    step_result: node/list(nodes)
+        nodes that represent results of step function
+    in_memory: node/list(nodes)
+        nodes that inidcate at which place in the computational graph
+        the memory is feed back into the step function. If ``out_memory``
+        is not specified this must contain a node for *every* node in
+        ``step_result`` because then the whole result will be fed back.
+    out_memory: node/list(nodes)
+        (optional) must be subset of ``step_result`` and of same length
+        as ``in_memory``, tells which nodes of the result are fed back
+        to ``in_memory``. If ``None``, all are fed back.
+    in_iterate: node/list(nodes)
+        nodes with a leading ``'r'`` axis to be iterated over (e.g.
+        time series of shape [(30,r),(100,b),(50,f)]). In every step a slice
+        from the first axis is consumed.
+    in_iterate_0: node/list(nodes)
+        nodes that consume a single slice of the ``in_iterate`` nodes.
+        Part of "the inner function" of the scan loop in contrast to
+        ``in_iterate``
+
+    n_steps: int
+    unroll_scan: bool
+    last_only: bool
+    name: str
+    print_repr: bool
+    """
+
     def __init__(self, step_result, in_memory, out_memory=None,
                  in_iterate=None, in_iterate_0=None, n_steps=None,
                  unroll_scan=True, last_only=False, name="scan", print_repr=True):
-        """
-        WARNING: this node may only be used in conjuction with ``scansplit``
-        because its ``output`` and ``shape`` attributes are lists which
-        will confuse normal nodes. The split wraps the outputs in indivdual
-        Nodes (FromTensor).
-
-        Parameters
-        ----------
-        step_result: node/list(nodes)
-            nodes that represent results of step function
-        in_memory: node/list(nodes)
-            nodes that inidcate at which place in the computational graph
-            the memory is feed back into the step function. If ``out_memory``
-            is not specified this must contain a node for *every* node in
-            ``step_result`` because then the whole result will be fed back.
-        out_memory: node/list(nodes)
-            (optional) must be subset of ``step_result`` and of same length
-            as ``in_memory``, tells which nodes of the result are fed back
-            to ``in_memory``. If ``None``, all are fed back.
-        in_iterate: node/list(nodes)
-            nodes with a leading ``'r'`` axis to be iterated over (e.g.
-            time series of shape [(30,r),(100,b),(50,f)]). In every step a slice
-            from the first axis is consumed.
-        in_iterate_0: node/list(nodes)
-            nodes that consume a single slice of the ``in_iterate`` nodes.
-            Part of "the inner function" of the scan loop in contrast to
-            ``in_iterate``
-
-        n_steps: int
-        unroll_scan: bool
-        last_only: bool
-        name: str
-        print_repr: bool
-        """
         step_result = utils.as_list(step_result)
         in_memory = utils.as_list(in_memory)
         out_memory = utils.as_list(out_memory)
@@ -866,7 +922,21 @@ def Scan(step_result, in_memory, out_memory=None,
 
 
 class Reshape(Node):
+    """
+    Reshape node.
+
+    Parameters
+    ----------
+    parent
+    shape
+    tags
+    strides
+    fov
+    name
+    print_repr
+    """
     def __init__(self, parent, shape, tags=None, strides=None, fov=None, name="reshape", print_repr=True):
+
         super(Reshape, self).__init__(parent, name, print_repr)
         self.parent   = parent
         if isinstance(shape, TaggedShape):

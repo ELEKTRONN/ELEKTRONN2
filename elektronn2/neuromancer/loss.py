@@ -31,22 +31,23 @@ EPS = 1e-5
 
 
 class Softmax(Node):
+    """
+    Softmax node.
+
+    Parameters
+    ----------
+    parent: Node
+        Input node.
+    n_class
+    n_indep
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, parent, n_class='auto', n_indep=1, name="softmax",
                  print_repr=True):
-        """
-        Softmax node.
-
-        Parameters
-        ----------
-        parent: Node
-            Input node.
-        n_class
-        n_indep
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """  # TODO: Complete docstring
 
         super(Softmax, self).__init__(parent, name, print_repr)
 
@@ -93,22 +94,23 @@ class Softmax(Node):
 
 
 class OneHot(Node):
+    """
+    Onehot node.
+
+    Parameters
+    ----------
+    target: T.Tensor
+        Target tensor.
+    n_class: int
+    axis
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, target, n_class, axis='f', name="onehot",
                  print_repr=True):
-        """
-        Onehot node.
-
-        Parameters
-        ----------
-        target: T.Tensor
-            Target tensor.
-        n_class: int
-        axis
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """  # TODO: Complete docstring
         super(OneHot, self).__init__(target, name, print_repr)
 
         self.target = target
@@ -137,76 +139,77 @@ class OneHot(Node):
 
 
 class MultinoulliNLL(Node):
+    """
+    Returns the symbolic mean and instance-wise negative log-likelihood of the prediction
+    of this model under a given target distribution.
+
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    target: T.Tensor
+        corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
+        be used for label propagation).
+    target_is_sparse: bool
+        If the target is sparse.
+    class_weights: T.Tensor
+        weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
+        ``w > 1.0`` (more important class).
+    example_weights: T.Tensor
+        weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
+        output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
+        ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
+        effectively modified learning rate!
+
+    The following refers to lazy labels, the masks are always on a per patch basis, depending on the
+    origin cube of the patch. The masks are properties of the individual image cubes and must be loaded
+    into CNNData.
+
+    mask_class_labeled: T.Tensor
+        shape = (batchsize, num_classes).
+        Binary masks indicating whether a class is properly labeled in ``y``. If a class ``k``
+        is (in general) present in the image patches **and** ``mask_class_labeled[k]==1``, then
+        the labels  **must** obey ``y==k`` for all pixels where the class is present.
+        If a class ``k`` is present in the image, but was not labeled (-> cheaper labels), set
+        ``mask_class_labeled[k]=0``. Then all pixels for which the ``y==k`` will be ignored.
+        Alternative: set ``y=-1`` to ignore those pixels.
+        Limit case: ``mask_class_labeled[:]==1`` will result in the ordinary NLL.
+    mask_class_not_present: T.Tensor
+        shape = (batchsize, num_classes).
+        Binary mask indicating whether a class is present in the image patches.
+        ``mask_class_not_present[k]==1`` means that the image does **not** contain examples of class ``k``.
+        Then for all pixels in the patch, class ``k`` predictive probabilities are trained towards ``0``.
+        Limit case: ``mask_class_not_present[:]==0`` will result in the ordinary NLL.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+
+    Examples
+    --------
+
+    - A cube contains no class ``k``. Instead of labelling the remaining classes they can be
+      marked as unlabelled by the first mask (``mask_class_labeled[:]==0``, whether ``mask_class_labeled[k]``
+      is ``0`` or ``1`` is actually indifferent because the labels should not be ``y==k`` anyway in this case).
+      Additionally ``mask_class_not_present[k]==1`` (otherwise ``0``) to suppress predictions of ``k`` in
+      in this patch. The actual value of the labels is indifferent, it can either be ``-1`` or it could be the
+      background class, if the background is marked as unlabelled (i.e. then those labels are ignored).
+
+    - Only part of the cube is densely labelled. Set ``mask_class_labeled[:]=1`` for all classes, but set the
+      label values in the unlabelled part to ``-1`` to ignore this part.
+
+    - Only a particular class ``k`` is labelled in the cube. Either set all other label pixels to ``-1`` or the
+      corresponding flags in ``mask_class_labeled`` for the unlabelled classes.
+
+    ..  Note::
+        Using ``-1`` labels or telling that a class is not labelled, is somewhat redundant and just
+        supported for convenience.
+    """
+    # TODO: add comment on normalisation.
+
     def __init__(self, pred, target, target_is_sparse=False, class_weights=None,
                  example_weights=None, mask_class_labeled=None,
                  mask_class_not_present=None, name="nll", print_repr=True):
-        ###TODO add comment on normalisation
-        """
-        Returns the symbolic mean and instance-wise negative log-likelihood of the prediction
-        of this model under a given target distribution.
-
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        target: T.Tensor
-            corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
-            be used for label propagation).
-        target_is_sparse: bool
-            If the target is sparse.
-        class_weights: T.Tensor
-            weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
-            ``w > 1.0`` (more important class).
-        example_weights: T.Tensor
-            weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
-            output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
-            ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
-            effectively modified learning rate!
-
-        The following refers to lazy labels, the masks are always on a per patch basis, depending on the
-        origin cube of the patch. The masks are properties of the individual image cubes and must be loaded
-        into CNNData.
-
-        mask_class_labeled: T.Tensor
-            shape = (batchsize, num_classes).
-            Binary masks indicating whether a class is properly labeled in ``y``. If a class ``k``
-            is (in general) present in the image patches **and** ``mask_class_labeled[k]==1``, then
-            the labels  **must** obey ``y==k`` for all pixels where the class is present.
-            If a class ``k`` is present in the image, but was not labeled (-> cheaper labels), set
-            ``mask_class_labeled[k]=0``. Then all pixels for which the ``y==k`` will be ignored.
-            Alternative: set ``y=-1`` to ignore those pixels.
-            Limit case: ``mask_class_labeled[:]==1`` will result in the ordinary NLL.
-        mask_class_not_present: T.Tensor
-            shape = (batchsize, num_classes).
-            Binary mask indicating whether a class is present in the image patches.
-            ``mask_class_not_present[k]==1`` means that the image does **not** contain examples of class ``k``.
-            Then for all pixels in the patch, class ``k`` predictive probabilities are trained towards ``0``.
-            Limit case: ``mask_class_not_present[:]==0`` will result in the ordinary NLL.
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-
-        Examples
-        --------
-
-        - A cube contains no class ``k``. Instead of labelling the remaining classes they can be
-          marked as unlabelled by the first mask (``mask_class_labeled[:]==0``, whether ``mask_class_labeled[k]``
-          is ``0`` or ``1`` is actually indifferent because the labels should not be ``y==k`` anyway in this case).
-          Additionally ``mask_class_not_present[k]==1`` (otherwise ``0``) to suppress predictions of ``k`` in
-          in this patch. The actual value of the labels is indifferent, it can either be ``-1`` or it could be the
-          background class, if the background is marked as unlabelled (i.e. then those labels are ignored).
-
-        - Only part of the cube is densely labelled. Set ``mask_class_labeled[:]=1`` for all classes, but set the
-          label values in the unlabelled part to ``-1`` to ignore this part.
-
-        - Only a particular class ``k`` is labelled in the cube. Either set all other label pixels to ``-1`` or the
-          corresponding flags in ``mask_class_labeled`` for the unlabelled classes.
-
-        ..  Note::
-            Using ``-1`` labels or telling that a class is not labelled, is somewhat redundant and just
-            supported for convenience.
-        """
         parents = [pred, target]
         if class_weights is not None:
             if isinstance(class_weights, Node):
@@ -340,78 +343,79 @@ class MultinoulliNLL(Node):
 
 
 class BlockedMultinoulliNLL(Node):
+    """
+    Returns the symbolic mean and instance-wise negative log-likelihood of the prediction
+    of this model under a given target distribution.
+
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    target: T.Tensor
+        corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
+        be used for label propagation).
+    blocking_factor: float
+        Blocking factor.
+    target_is_sparse: bool
+        If the target is sparse.
+    class_weights: T.Tensor
+        weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
+        ``w > 1.0`` (more important class).
+    example_weights: T.Tensor
+        weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
+        output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
+        ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
+        effectively modified learning rate!
+
+    The following refers to lazy labels, the masks are always on a per patch basis, depending on the
+    origin cube of the patch. The masks are properties of the individual image cubes and must be loaded
+    into CNNData.
+
+    mask_class_labeled: T.Tensor
+        shape = (batchsize, num_classes).
+        Binary masks indicating whether a class is properly labeled in ``y``. If a class ``k``
+        is (in general) present in the image patches **and** ``mask_class_labeled[k]==1``, then
+        the labels  **must** obey ``y==k`` for all pixels where the class is present.
+        If a class ``k`` is present in the image, but was not labeled (-> cheaper labels), set
+        ``mask_class_labeled[k]=0``. Then all pixels for which the ``y==k`` will be ignored.
+        Alternative: set ``y=-1`` to ignore those pixels.
+        Limit case: ``mask_class_labeled[:]==1`` will result in the ordinary NLL.
+    mask_class_not_present: T.Tensor
+        shape = (batchsize, num_classes).
+        Binary mask indicating whether a class is present in the image patches.
+        ``mask_class_not_present[k]==1`` means that the image does **not** contain examples of class ``k``.
+        Then for all pixels in the patch, class ``k`` predictive probabilities are trained towards ``0``.
+        Limit case: ``mask_class_not_present[:]==0`` will result in the ordinary NLL.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+
+    Examples
+    --------
+    - A cube contains no class ``k``. Instead of labelling the remaining classes they can be
+      marked as unlabelled by the first mask (``mask_class_labeled[:]==0``, whether ``mask_class_labeled[k]``
+      is ``0`` or ``1`` is actually indifferent because the labels should not be ``y==k`` anyway in this case).
+      Additionally ``mask_class_not_present[k]==1`` (otherwise ``0``) to suppress predictions of ``k`` in
+      in this patch. The actual value of the labels is indifferent, it can either be ``-1`` or it could be the
+      background class, if the background is marked as unlabelled (i.e. then those labels are ignored).
+
+    - Only part of the cube is densely labelled. Set ``mask_class_labeled[:]=1`` for all classes, but set the
+      label values in the unlabelled part to ``-1`` to ignore this part.
+
+    - Only a particular class ``k`` is labelled in the cube. Either set all other label pixels to ``-1`` or the
+      corresponding flags in ``mask_class_labeled`` for the unlabelled classes.
+
+    ..  Note::
+        Using ``-1`` labels or telling that a class is not labelled, is somewhat redundant and just
+        supported for convenience.
+    """
+
     def __init__(self, pred, target, blocking_factor=0.5,
                  target_is_sparse=False, class_weights=None,
                  example_weights=None, mask_class_labeled=None,
                  mask_class_not_present=None, name="nll", print_repr=True):
         ###TODO add comment on normalisation
-        """
-        Returns the symbolic mean and instance-wise negative log-likelihood of the prediction
-        of this model under a given target distribution.
-
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        target: T.Tensor
-            corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
-            be used for label propagation).
-        blocking_factor: float
-            Blocking factor.
-        target_is_sparse: bool
-            If the target is sparse.
-        class_weights: T.Tensor
-            weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
-            ``w > 1.0`` (more important class).
-        example_weights: T.Tensor
-            weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
-            output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
-            ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
-            effectively modified learning rate!
-
-        The following refers to lazy labels, the masks are always on a per patch basis, depending on the
-        origin cube of the patch. The masks are properties of the individual image cubes and must be loaded
-        into CNNData.
-
-        mask_class_labeled: T.Tensor
-            shape = (batchsize, num_classes).
-            Binary masks indicating whether a class is properly labeled in ``y``. If a class ``k``
-            is (in general) present in the image patches **and** ``mask_class_labeled[k]==1``, then
-            the labels  **must** obey ``y==k`` for all pixels where the class is present.
-            If a class ``k`` is present in the image, but was not labeled (-> cheaper labels), set
-            ``mask_class_labeled[k]=0``. Then all pixels for which the ``y==k`` will be ignored.
-            Alternative: set ``y=-1`` to ignore those pixels.
-            Limit case: ``mask_class_labeled[:]==1`` will result in the ordinary NLL.
-        mask_class_not_present: T.Tensor
-            shape = (batchsize, num_classes).
-            Binary mask indicating whether a class is present in the image patches.
-            ``mask_class_not_present[k]==1`` means that the image does **not** contain examples of class ``k``.
-            Then for all pixels in the patch, class ``k`` predictive probabilities are trained towards ``0``.
-            Limit case: ``mask_class_not_present[:]==0`` will result in the ordinary NLL.
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-
-        Examples
-        --------
-        - A cube contains no class ``k``. Instead of labelling the remaining classes they can be
-          marked as unlabelled by the first mask (``mask_class_labeled[:]==0``, whether ``mask_class_labeled[k]``
-          is ``0`` or ``1`` is actually indifferent because the labels should not be ``y==k`` anyway in this case).
-          Additionally ``mask_class_not_present[k]==1`` (otherwise ``0``) to suppress predictions of ``k`` in
-          in this patch. The actual value of the labels is indifferent, it can either be ``-1`` or it could be the
-          background class, if the background is marked as unlabelled (i.e. then those labels are ignored).
-
-        - Only part of the cube is densely labelled. Set ``mask_class_labeled[:]=1`` for all classes, but set the
-          label values in the unlabelled part to ``-1`` to ignore this part.
-
-        - Only a particular class ``k`` is labelled in the cube. Either set all other label pixels to ``-1`` or the
-          corresponding flags in ``mask_class_labeled`` for the unlabelled classes.
-
-        ..  Note::
-            Using ``-1`` labels or telling that a class is not labelled, is somewhat redundant and just
-            supported for convenience.
-        """
         parents = [pred, target]
         if class_weights is not None:
             parents.append(class_weights)
@@ -545,33 +549,34 @@ class BlockedMultinoulliNLL(Node):
 
 
 class MalisNLL(Node):
+    """
+    Malis NLL node. (See https://github.com/TuragaLab/malis)
+
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    aff_gt: T.Tensor
+    seg_gt: T.Tensor
+    nhood: np.ndarray
+    unrestrict_neg: bool
+    class_weights: T.Tensor
+        weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
+        ``w > 1.0`` (more important class).
+    example_weights: T.Tensor
+        weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
+        output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
+        ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
+        effectively modified learning rate!
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, pred, aff_gt, seg_gt, nhood, unrestrict_neg=True,
                  class_weights=None, example_weights=None,
                  name="nll", print_repr=True):
-        """
-        Malis NLL node. (See https://github.com/TuragaLab/malis)
-
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        aff_gt: T.Tensor
-        seg_gt: T.Tensor
-        nhood: np.ndarray
-        unrestrict_neg: bool
-        class_weights: T.Tensor
-            weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
-            ``w > 1.0`` (more important class).
-        example_weights: T.Tensor
-            weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
-            output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
-            ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
-            effectively modified learning rate!
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
         parents = [pred, aff_gt, seg_gt]
         if class_weights is not None:
             parents.append(class_weights)
@@ -677,22 +682,23 @@ class MalisNLL(Node):
 
 
 class Classification(Node):
+    """
+    Classification node.
+
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    n_class
+    n_indep
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, pred, n_class='auto', n_indep='auto', name="cls",
                  print_repr=True):
-        """
-        Classification node.
-
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        n_class
-        n_indep
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
         super(Classification, self).__init__(pred, name, print_repr)
         if not isinstance(pred, Softmax):
             if pred.activation_func in ['sig', 'logistic', 'sigmoid']:
@@ -743,24 +749,24 @@ class Classification(Node):
 
 
 class _Errors(Node):
+    """
+    Errors node.
+
+    Parameters
+    ----------
+    cls: T.Tensor
+    target: T.Tensor
+        corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
+        be used for label propagation).
+    target_is_sparse: bool
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, cls, target, target_is_sparse=False,
                  name="errors", print_repr=True):
-        """
-        Errors node.
-
-        Parameters
-        ----------
-        cls
-        target: T.Tensor
-            corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
-            be used for label propagation).
-        target_is_sparse: bool
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
-
         parents = [cls, target]
         super(_Errors, self).__init__(parents, name, print_repr)
 
@@ -812,31 +818,32 @@ def Errors(pred, target, target_is_sparse=False, n_class='auto', n_indep='auto',
 
 
 class GaussianNLL(Node):
+    """
+    Similar to squared loss but "modulated" in scale by the variance.
+
+    Parameters
+    ----------
+    target: Node
+        True value (target), usually directly an input node
+    mu: Node
+        Mean of the predictive Gaussian density
+    sig: Node
+        Sigma of the predictive Gaussian density
+    sig_is_log: bool
+        Whether ``sig`` is actaully the ln(sig), then it is
+        exponentiated internally
+
+
+    Computes element-wise:
+
+     .. math::
+
+       0.5 \cdot  ( ln(2  \pi \sigma)) + (target-\mu)^2/\sigma^2 )
+
+    """
+
     def __init__(self, mu, sig, target, sig_is_log=False, name="g_nll",
                  print_repr=True):
-        """
-        Similar to squared loss but "modulated" in scale by the variance.
-
-        Parameters
-        ----------
-        target: Node
-            True value (target), usually directly an input node
-        mu: Node
-            Mean of the predictive Gaussian density
-        sig: Node
-            Sigma of the predictive Gaussian density
-        sig_is_log: bool
-            Whether ``sig`` is actaully the ln(sig), then it is
-            exponentiated internally
-
-
-        Computes element-wise:
-
-         .. math::
-
-           0.5 \cdot  ( ln(2  \pi \sigma)) + (target-\mu)^2/\sigma^2 )
-
-        """
         super(GaussianNLL, self).__init__((mu, sig, target), name, print_repr)
 
         self.target = target
@@ -872,30 +879,30 @@ class GaussianNLL(Node):
 
 
 class BetaNLL(Node):
+    """
+    Similar to BinaryNLL loss but "modulated" in scale by the variance.
+
+    Parameters
+    ----------
+
+    target: Node
+        True value (target), usually directly an input node, must be in range [0,1]
+    mode: Node
+        Mode of the predictive Beta density, must come from linear
+        activation function (will be transformed by exp(.) + 2 )
+    concentration: node
+        concentration of the predictive Beta density
+
+
+    Computes element-wise:
+
+     .. math::
+
+       0.5 \cdot  2
+    """
+
     def __init__(self, mode, concentration, target, name="beta_nll",
                  print_repr=True):
-        """
-        Similar to BinaryNLL loss but "modulated" in scale by the variance.
-
-        Parameters
-        ----------
-
-        target: Node
-            True value (target), usually directly an input node, must be in range [0,1]
-        mode: Node
-            Mode of the predictive Beta density, must come from linear
-            activation function (will be transformed by exp(.) + 2 )
-        concentration: node
-            concentration of the predictive Beta density
-
-
-
-        Computes element-wise:
-
-         .. math::
-
-           0.5 \cdot  2
-        """
         super(BetaNLL, self).__init__((mode, concentration, target), name,
                                       print_repr)
 
@@ -935,26 +942,27 @@ class BetaNLL(Node):
 
 
 class BinaryNLL(Node):
+    """
+    Binary NLL node. Identical to cross entropy.
+
+    Parameters
+    ----------
+
+    pred: Node
+        Predictive Bernoulli probability.
+    target: Node
+        True value (target), usually directly an input node.
+
+
+    Computes element-wise:
+
+     .. math::
+
+       -(target  ln(pred) + (1 - target) ln(1 - pred))
+    """
+
     def __init__(self, pred, target, subtract_label_entropy=False,
                  name="binary_nll", print_repr=True):
-        """
-        Binary NLL node. Identical to cross entropy.
-
-        Parameters
-        ----------
-
-        pred: Node
-            Predictive Bernoulli probability.
-        target: Node
-            True value (target), usually directly an input node.
-
-
-        Computes element-wise:
-
-         .. math::
-
-           -(target  ln(pred) + (1 - target) ln(1 - pred))
-        """
         super(BinaryNLL, self).__init__((pred, target), name, print_repr)
 
         self.target = target
@@ -995,30 +1003,31 @@ class BinaryNLL(Node):
 
 
 class SquaredLoss(Node):
+    """
+    Squared loss node.
+
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    target: T.Tensor
+        corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
+        be used for label propagation).
+    margin: float or None
+    scale_correction: float or None
+        Downweights absolute deviations for large target scale. The value specifies
+        the target value at which the square deviation has half weight compared to target=0
+        If the target is twice as large as this value the downweight is 1/3 and so on.
+        Note: the smaller this value the stronger the effect. No effect would be
+        +inf
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, pred, target, margin=None, scale_correction=None,
                  name="se", print_repr=True):
-        """
-        Squared loss node.
-
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        target: T.Tensor
-            corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
-            be used for label propagation).
-        margin: float or None
-        scale_correction: float or None
-            Downweights absolute deviations for large target scale. The value specifies
-            the target value at which the square deviation has half weight compared to target=0
-            If the target is twice as large as this value the downweight is 1/3 and so on.
-            Note: the smaller this value the stronger the effect. No effect would be
-            +inf
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
         super(SquaredLoss, self).__init__((pred, target), name, print_repr)
 
         self.target = target
@@ -1084,28 +1093,30 @@ class SquaredLoss(Node):
 
 
 class EuclideanDistance(Node):
-    def __init__(self, pred, target, name="se", print_repr=True):
-        """
+    """
+    Euclidian distance node.
 
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        target: T.Tensor
-            corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
-            be used for label propagation).
-        margin: float/None
-        scale_correction: float/None
-            Downweights absolute deviations for large target scale. The value specifies
-            the target value at which the square deviation has half weight compared to target=0
-            If the target is twice as large as this value the downweight is 1/3 and so on.
-            Note: the smaller this value the stronger the effect. No effect would be
-            +inf
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    target: T.Tensor
+        corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
+        be used for label propagation).
+    margin: float/None
+    scale_correction: float/None
+        Downweights absolute deviations for large target scale. The value specifies
+        the target value at which the square deviation has half weight compared to target=0
+        If the target is twice as large as this value the downweight is 1/3 and so on.
+        Note: the smaller this value the stronger the effect. No effect would be
+        +inf
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """  # TODO: Docstring Parameters do not match __init__ parameters.
+
+    def __init__(self, pred, target, name="se", print_repr=True):
         super(EuclideanDistance, self).__init__((pred, target), name,
                                                 print_repr)
 
@@ -1132,28 +1143,30 @@ class EuclideanDistance(Node):
 
 
 class RampLoss(Node):
-    def __init__(self, d_low, d_big, name="se", print_repr=True, margin=None):
-        """
+    """
+    RampLoss node.
 
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        target: T.Tensor
-            corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
-            be used for label propagation).
-        margin: float/None
-        scale_correction: float/None
-            downweights absolute deviations for large target scale. The value specifies
-            the target value at which the square deviation has half weight compared to target=0
-            If the target is twice as large as this value the downweight is 1/3 and so on.
-            Note: the smaller this value the stronger the effect. No effect would be
-            +inf
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    target: T.Tensor
+        corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
+        be used for label propagation).
+    margin: float/None
+    scale_correction: float/None
+        downweights absolute deviations for large target scale. The value specifies
+        the target value at which the square deviation has half weight compared to target=0
+        If the target is twice as large as this value the downweight is 1/3 and so on.
+        Note: the smaller this value the stronger the effect. No effect would be
+        +inf
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """  # TODO: Docstring parameters do not match __init__ parameters.
+
+    def __init__(self, d_low, d_big, name="se", print_repr=True, margin=None):
         super(RampLoss, self).__init__((d_low, d_big), name, print_repr)
 
         if margin is None:
@@ -1191,26 +1204,28 @@ class RampLoss(Node):
 
 
 class AbsLoss(SquaredLoss):
+    """
+    AbsLoss node.
+
+    Parameters
+    ----------
+    pred: Node
+        Prediction node.
+    target: T.Tensor
+        corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
+        be used for label propagation).
+    margin: float or None
+    scale_correction: float or None
+        Boosts loss for large target values: if target=1 the error
+        is multiplied by this value (and linearliy for other targets)
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, pred, target, margin=None, scale_correction=None,
                  name="absloss", print_repr=True):
-        """
-
-        Parameters
-        ----------
-        pred: Node
-            Prediction node.
-        target: T.Tensor
-            corresponds to a vector that gives the correct label for each example. Labels < 0 are ignored (e.g. can
-            be used for label propagation).
-        margin: float or None
-        scale_correction: float or None
-            Boosts loss for large target values: if target=1 the error
-            is multiplied by this value (and linearliy for other targets)
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
         super(AbsLoss, self).__init__(pred, target, margin=margin,
                                       scale_correction=scale_correction,
                                       name=name, print_repr=print_repr)
@@ -1253,43 +1268,45 @@ class AbsLoss(SquaredLoss):
 
 
 class AggregateLoss(Node):
+    """
+    This node is used to average the individual losses over a batch
+    (and possibly, spatial/temporal dimensions). Several losses can be
+    mixed for multi-target training.
+
+    Parameters
+    ----------
+
+    parent_nodes: list/tuple of graph or single node
+        each component is some (possibly element-wise) loss array
+    mixing_weights: list/None
+        Weights for the individual costs. If none, then all are weighted
+        equally. If mixing weights are used, they can be changed during
+        training by manipulating the attribute ``params['mixing_weights']``.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+
+    # The following is all wrong, mixing_weights are directly used:
+
+    The losses are first summed per component, and then the component sums
+    are summed using the relative weights. The resulting scalar is finally
+    normalised such that:
+        * The cost does not grow with the number of mixed components
+        * Components which consist of more individual losses have more weight
+          e.g. If there is a constraint on some hidden representation
+          with 20 features and a constraint the reconstruction of 100 features,
+          the reconstruction constraint has 5x more impact on the overall loss
+          than the constraint on the hidden state (provided those two loss
+          are initially on the same scale). If they are intended to have equal
+          impact, the weights should be used to upscale the constraint against
+          the reconstruction.
+
+    """  # TODO: What about the "all wrong" section?
+
     def __init__(self, parent_nodes, mixing_weights=None, name="total_loss",
                  print_repr=True):
-        """
-        This node is used to average the individual losses over a batch
-        (and possibly, spatial/temporal dimensions). Several losses can be
-        mixed for multi-target training.
 
-        Parameters
-        ----------
-
-        parent_nodes: list/tuple of graph or single node
-            each component is some (possibly element-wise) loss array
-        mixing_weights: list/None
-            Weights for the individual costs. If none, then all are weighted
-            equally. If mixing weights are used, they can be changed during
-            training by manipulating the attribute ``params['mixing_weights']``.
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-
-        # The following is all wrong, mixing_weights are directly used:
-
-        The losses are first summed per component, and then the component sums
-        are summed using the relative weights. The resulting scalar is finally
-        normalised such that:
-            * The cost does not grow with the number of mixed components
-            * Components which consist of more individual losses have more weight
-              e.g. If there is a constraint on some hidden representation
-              with 20 features and a constraint the reconstruction of 100 features,
-              the reconstruction constraint has 5x more impact on the overall loss
-              than the constraint on the hidden state (provided those two loss
-              are initially on the same scale). If they are intended to have equal
-              impact, the weights should be used to upscale the constraint against
-              the reconstruction.
-
-        """  # TODO: What about the "all wrong" section?
         if not isinstance(parent_nodes, (tuple, list)):
             parent_nodes = [parent_nodes, ]
 

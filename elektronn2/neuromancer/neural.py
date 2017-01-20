@@ -258,53 +258,53 @@ class NeuralLayer(Node):
 ###############################################################################
 
 class Perceptron(NeuralLayer):
+    """
+    Perceptron Layer.
+
+    Parameters
+    ----------
+    parent: Node or list of Node
+        The input node(s).
+    n_f: int
+        Number of filters (nodes) in layer.
+    activation_func: str
+        Activation function name.
+    flatten: bool
+    batch_normalisation: str or None
+        Batch normalisation mode.
+        Can be False (inactive), "train" or "fadeout".
+    dropout_rate: float
+        Dropout rate (probability that a node drops out in a training step).
+    name: str
+        Perceptron name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    w: np.ndarray or T.TensorVariable
+        Weight matrix.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    b: np.ndarray or T.TensorVariable
+        Bias vector.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    gamma
+        (For batch normalisation) Initializes gamma parameter.
+    mean
+        (For batch normalisation) Initializes mean parameter.
+    std
+        (For batch normalisation) Initializes std parameter.
+    gradnet_mode
+    """  # TODO: Write docs on batch normalisation modes.
+    # TODO: gradnet_mode seems to be unused. Should it be removed?
+
     def __init__(self, parent, n_f, activation_func='relu',
                  flatten=False, batch_normalisation=False, dropout_rate=0,
                  name="dot", print_repr=True, w=None, b=None, gamma=None,
                  mean=None, std=None, gradnet_mode=None):
-        """
-        Perceptron Layer.
-
-        Parameters
-        ----------
-        parent: Node or list of Node
-            The input node(s).
-        n_f: int
-            Number of filters (nodes) in layer.
-        activation_func: str
-            Activation function name.
-        flatten: bool
-
-        batch_normalisation: str or None
-            Batch normalisation mode.
-            Can be False (inactive), "train" or "fadeout".
-        dropout_rate: float
-            Dropout rate (probability that a node drops out in a training step).
-        name: str
-            Perceptron name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        w: np.ndarray or T.TensorVariable
-            Weight matrix.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        b: np.ndarray or T.TensorVariable
-            Bias vector.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        gamma
-            (For batch normalisation) Initializes gamma parameter.
-        mean
-            (For batch normalisation) Initializes mean parameter.
-        std
-            (For batch normalisation) Initializes std parameter.
-        gradnet_mode
-        """  # TODO: Write docs on batch normalisation modes.
-        # TODO: gradnet_mode seems to be unused. Should it be removed?
         super(Perceptron, self).__init__(parent, name, print_repr)
 
         self.n_f = n_f
@@ -494,68 +494,69 @@ Dot = Perceptron
 ###############################################################################
 
 class Conv(Perceptron):
+    """
+    Convolutional layer with subsequent pooling.
+
+    Examples
+    --------
+    Examples for constructing convolutional neural networks can be found
+    in examples/3d_cnn.py and examples/numa_mnist.py.
+
+    Parameters
+    ----------
+    parent: Node
+        The input node.
+    n_f: int
+        Number of features.
+    filter_shape: tuple
+        Shape of the convolution filter kernels.
+    pool_shape: tuple
+        Size/shape of pooling after the convolution.
+    conv_mode: str
+        Possible values:
+        * "valid": only apply filter to complete patches of the image.
+          Generates output of shape: image_shape -filter_shape + 1.
+        * "full" zero-pads image to multiple of filter shape to generate
+          output of shape: image_shape + filter_shape - 1.
+    activation_func: str
+        Activation function name.
+    mfp: bool
+        Whether to apply Max-Fragment-Pooling in this Layer.
+    batch_normalisation: str or None
+        Batch normalisation mode.
+        Can be False (inactive), "train" or "fadeout".
+    dropout_rate: float
+        Dropout rate (probability that a node drops out in a training step).
+    name: str
+        Layer name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    w: np.ndarray or T.TensorVariable
+        Weight matrix.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    b: np.ndarray or T.TensorVariable
+        Bias vector.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    gamma
+        (For batch normalisation) Initializes gamma parameter.
+    mean
+        (For batch normalisation) Initializes mean parameter.
+    std
+        (For batch normalisation) Initializes std parameter.
+    gradnet_mode
+    """
+
     def __init__(self, parent, n_f, filter_shape, pool_shape,
                  conv_mode='valid', activation_func='relu',
                  mfp=False, batch_normalisation=False, dropout_rate=0,
                  name="conv", print_repr=True, w=None, b=None, gamma=None,
                  mean=None, std=None, gradnet_mode=None):
-        """
-        Convolutional layer with subsequent pooling.
-
-        Examples
-        --------
-        Examples for constructing convolutional neural networks can be found
-        in examples/3d_cnn.py and examples/numa_mnist.py.
-
-        Parameters
-        ----------
-        parent: Node
-            The input node.
-        n_f: int
-            Number of features.
-        filter_shape: tuple
-            Shape of the convolution filter kernels.
-        pool_shape: tuple
-            Size/shape of pooling after the convolution.
-        conv_mode: str
-            Possible values:
-            * "valid": only apply filter to complete patches of the image.
-              Generates output of shape: image_shape -filter_shape + 1.
-            * "full" zero-pads image to multiple of filter shape to generate
-              output of shape: image_shape + filter_shape - 1.
-        activation_func: str
-            Activation function name.
-        mfp: bool
-            Whether to apply Max-Fragment-Pooling in this Layer.
-        batch_normalisation: str or None
-            Batch normalisation mode.
-            Can be False (inactive), "train" or "fadeout".
-        dropout_rate: float
-            Dropout rate (probability that a node drops out in a training step).
-        name: str
-            Layer name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        w: np.ndarray or T.TensorVariable
-            Weight matrix.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        b: np.ndarray or T.TensorVariable
-            Bias vector.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        gamma
-            (For batch normalisation) Initializes gamma parameter.
-        mean
-            (For batch normalisation) Initializes mean parameter.
-        std
-            (For batch normalisation) Initializes std parameter.
-        gradnet_mode
-        """
         super(Perceptron, self).__init__(parent, name, print_repr)
 
         self.n_f  = n_f
@@ -860,63 +861,64 @@ class FragmentsToDense(Node):
 ###############################################################################
 
 class UpConv(Conv):
+    """
+    Upconvolution layer.
+
+    E.g. pooling + upconv with p=3:
+
+          x x x x x x x x x    before pooling (not in this layer)
+           \|/   \|/   \|/     pooling (not in this layer)
+            x     x     x      input to this layer
+        0 0 x 0 0 x 0 0 x 0 0  unpooling + padding (done in this layer)
+           /|\   /|\   /|\     conv on unpooled (done in this layer)
+          y y y y y y y y y    result of this layer
+
+    Parameters
+    ----------
+    parent: Node
+        The input node.
+    n_f: int
+        Number of filters (nodes) in layer.
+    pool_shape: tuple
+        Size/shape of pooling.
+    activation_func: str
+        Activation function name.
+    identity_init: bool
+        Initialise weights to result in pixel repetition upsampling
+    batch_normalisation: str or None
+        Batch normalisation mode.
+        Can be False (inactive), "train" or "fadeout".
+    dropout_rate: float
+        Dropout rate (probability that a node drops out in a training step).
+    name: str
+        Layer name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    w: np.ndarray or T.TensorVariable
+        Weight matrix.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    b: np.ndarray or T.TensorVariable
+        Bias vector.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    gamma
+        (For batch normalisation) Initializes gamma parameter.
+    mean
+        (For batch normalisation) Initializes mean parameter.
+    std
+        (For batch normalisation) Initializes std parameter.
+    gradnet_mode
+    """
+
     def __init__(self, parent, n_f, pool_shape, activation_func='relu',
                  identity_init=True, batch_normalisation=False, dropout_rate=0,
                  name="upconv", print_repr=True, w=None, b=None, gamma=None,
                  mean=None, std=None, gradnet_mode=None):
-        """
-        Upconvolution layer.
-
-        E.g. pooling + upconv with p=3:
-
-              x x x x x x x x x    before pooling (not in this layer)
-               \|/   \|/   \|/     pooling (not in this layer)
-                x     x     x      input to this layer
-            0 0 x 0 0 x 0 0 x 0 0  unpooling + padding (done in this layer)
-               /|\   /|\   /|\     conv on unpooled (done in this layer)
-              y y y y y y y y y    result of this layer
-
-        Parameters
-        ----------
-        parent: Node
-            The input node.
-        n_f: int
-            Number of filters (nodes) in layer.
-        pool_shape: tuple
-            Size/shape of pooling.
-        activation_func: str
-            Activation function name.
-        identity_init: bool
-            Initialise weights to result in pixel repetition upsampling
-        batch_normalisation: str or None
-            Batch normalisation mode.
-            Can be False (inactive), "train" or "fadeout".
-        dropout_rate: float
-            Dropout rate (probability that a node drops out in a training step).
-        name: str
-            Layer name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        w: np.ndarray or T.TensorVariable
-            Weight matrix.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        b: np.ndarray or T.TensorVariable
-            Bias vector.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        gamma
-            (For batch normalisation) Initializes gamma parameter.
-        mean
-            (For batch normalisation) Initializes mean parameter.
-        std
-            (For batch normalisation) Initializes std parameter.
-        gradnet_mode
-        """
         filter_shape = pool_shape
         super(UpConv, self).__init__(parent, n_f, filter_shape, pool_shape,
                                      'valid', activation_func, mfp=False,
@@ -1075,21 +1077,22 @@ class UpConv(Conv):
 
 
 class Crop(Node):
-    def __init__(self, parent, crop, name="crop", print_repr=False):
-        """
-        This Node type crops the output of its parent.
+    """
+    This node type crops the output of its parent.
 
-        Parameters
-        ----------
-        parent: Node
-            The input node whose output should be cropped.
-        crop: tuple or list of ints
-            Crop each spatial axis from either side by this number.
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """  # TODO: Write an example
+    Parameters
+    ----------
+    parent: Node
+        The input node whose output should be cropped.
+    crop: tuple or list of ints
+        Crop each spatial axis from either side by this number.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """  # TODO: Write an example
+    def __init__(self, parent, crop, name="crop", print_repr=False):
+
         super(Crop, self).__init__(parent, name, print_repr)
         self.crop=crop
 
@@ -1242,37 +1245,38 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
 UpConvMerge = ImageAlign
 
 class Pool(Node):
+    """
+    Pooling layer.
+
+    Reduces the count of training parameters by reducing the spatial size
+    of its input by the factors given in ``pool_shape``.
+
+    Pooling modes other than max-pooling can only be selected if cuDNN is
+    available.
+
+    Parameters
+    ----------
+    parent: Node
+        The input node.
+    pool_shape: tuple
+        Tuple of pooling factors (per dimension) by which the input
+        is downsampled.
+    stride: tuple
+        Stride sizes (per dimension).
+    mfp: bool
+        If max-fragment-pooling should be used.
+    mode: str
+        (only if cuDNN is available)
+        Mode can be any of the modes supported by Theano's dnn_pool():
+        ('max', 'average_inc_pad', 'average_exc_pad', 'sum').
+    name: str
+        Name of the pooling layer.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, parent, pool_shape, stride=None, mfp=False, mode='max',
                  name="pool", print_repr=True):
-        """
-        Pooling layer.
-
-        Reduces the count of training parameters by reducing the spatial size
-        of its input by the factors given in ``pool_shape``.
-
-        Pooling modes other than max-pooling can only be selected if cuDNN is
-        available.
-
-        Parameters
-        ----------
-        parent: Node
-            The input node.
-        pool_shape: tuple
-            Tuple of pooling factors (per dimension) by which the input
-            is downsampled.
-        stride: tuple
-            Stride sizes (per dimension).
-        mfp: bool
-            If max-fragment-pooling should be used.
-        mode: str
-            (only if cuDNN is available)
-            Mode can be any of the modes supported by Theano's dnn_pool():
-            ('max', 'average_inc_pad', 'average_exc_pad', 'sum').
-        name: str
-            Name of the pooling layer.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
         super(Pool, self).__init__(parent, name, print_repr)
 
         if mfp and stride is not None:
@@ -1387,13 +1391,26 @@ class Pool(Node):
 
 
 class FaithlessMerge(Node):
+    """
+    FaithlessMerge node.
+
+    Parameters
+    ----------
+    hard_features: Node
+    easy_features: Node
+    axis
+    failing_prob: float
+        The higher the more often merge is unreliable
+    hardeasy_ratio: float
+        The higher the more often the harder features fail instead of the easy ones
+    name: str
+            Name of the pooling layer.
+        print_repr: bool
+            Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, hard_features, easy_features, axis='f', failing_prob=0.5,
                  hardeasy_ratio=0.8, name="faithless_merge", print_repr=True):
-        """
-        failing_prob: the higher the more often merge is unreliable
-        hardeasy_ratio: the higher the more often the harder features fail
-        instead of the easy ones
-        """
         parent_nodes = (hard_features, easy_features)
         super(FaithlessMerge, self).__init__(parent_nodes, name, print_repr)
 
@@ -1460,56 +1477,57 @@ class FaithlessMerge(Node):
 
 
 class GRU(NeuralLayer):
+    """
+    Gated Recurrent Unit Layer.
+
+    Parameters
+    ----------
+    parent: Node
+        The input node.
+    memory_state: Node
+        Memory node.
+    n_f: int
+        Number of features.
+    activation_func: str
+        Activation function name.
+    flatten: bool
+        (Unsupported).
+    batch_normalisation: str or None
+        Batch normalisation mode.
+        Can be False (inactive), "train" or "fadeout".
+    dropout_rate: float
+        Dropout rate (probability that a node drops out in a training step).
+    name: str
+        Layer name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    w: np.ndarray or T.TensorVariable
+        (Unsupported).
+        Weight matrix.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    b: np.ndarray or T.TensorVariable
+        (Unsupported).
+        Bias vector.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    gamma
+        (For batch normalisation) Initializes gamma parameter.
+    mean
+        (For batch normalisation) Initializes mean parameter.
+    std
+        (For batch normalisation) Initializes std parameter.
+    gradnet_mode
+    """
+
     def __init__(self, parent, memory_state, n_f, activation_func='tanh',
                  flatten=False, batch_normalisation=False, dropout_rate=0,
                  name="gru", print_repr=True, w=None, b=None,
                  gamma=None, mean=None, std=None, gradnet_mode=None):
-        """
-        Gated Recurrent Unit Layer.
-
-        Parameters
-        ----------
-        parent: Node
-            The input node.
-        memory_state: Node
-            Memory node.
-        n_f: int
-            Number of features.
-        activation_func: str
-            Activation function name.
-        flatten: bool
-            (Unsupported).
-        batch_normalisation: str or None
-            Batch normalisation mode.
-            Can be False (inactive), "train" or "fadeout".
-        dropout_rate: float
-            Dropout rate (probability that a node drops out in a training step).
-        name: str
-            Layer name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        w: np.ndarray or T.TensorVariable
-            (Unsupported).
-            Weight matrix.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        b: np.ndarray or T.TensorVariable
-            (Unsupported).
-            Bias vector.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        gamma
-            (For batch normalisation) Initializes gamma parameter.
-        mean
-            (For batch normalisation) Initializes mean parameter.
-        std
-            (For batch normalisation) Initializes std parameter.
-        gradnet_mode
-        """
         parent_nodes = (parent, memory_state)
         super(GRU, self).__init__(parent_nodes, name, print_repr)
 
@@ -1651,58 +1669,58 @@ class GRU(NeuralLayer):
 
 
 class LSTM(NeuralLayer):
+    """
+    Long short term memory layer.
+
+    Using an implementation without peepholes in f, i, o, i.e. weights
+    cell state is not taken into account for weights. See
+    http://colah.github.io/posts/2015-08-Understanding-LSTMs/.
+
+    Parameters
+    ----------
+    parent: Node
+        The input node.
+    memory_states: Node
+        Concatenated (initial) feed-back and cell state (one Node!).
+    n_f: int
+        Number of features.
+    activation_func: str
+        Activation function name.
+    flatten
+    batch_normalisation: str or None
+        Batch normalisation mode.
+        Can be False (inactive), "train" or "fadeout".
+    dropout_rate: float
+        Dropout rate (probability that a node drops out in a training step).
+    name: str
+        Layer name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    w: np.ndarray or T.TensorVariable
+        Weight matrix.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    b: np.ndarray or T.TensorVariable
+        Bias vector.
+        If this is a np.ndarray, its values are used to initialise a
+        shared variable for this layer.
+        If it is a T.TensorVariable, it is directly used (weight sharing
+        with the layer which this variable comes from).
+    gamma
+        (For batch normalisation) Initializes gamma parameter.
+    mean
+        (For batch normalisation) Initializes mean parameter.
+    std
+        (For batch normalisation) Initializes std parameter.
+    gradnet_mode
+    """
+
     def __init__(self, parent, memory_states, n_f, activation_func='tanh',
                  flatten=False, batch_normalisation=False, dropout_rate=0,
                  name="lstm", print_repr=True, w=None, b=None,
                  gamma=None, mean=None, std=None, gradnet_mode=None):
-        """
-        Long short term memory layer.
-
-        Using an implementation without peepholes in f, i, o, i.e. weights
-        cell state is not taken into account for weights. See
-        http://colah.github.io/posts/2015-08-Understanding-LSTMs/.
-
-        Parameters
-        ----------
-        parent: Node
-            The input node.
-        memory_states: Node
-            Concatenated (initial) feed-back and cell state (one Node!).
-        n_f: int
-            Number of features.
-        activation_func: str
-            Activation function name.
-        flatten
-        batch_normalisation: str or None
-            Batch normalisation mode.
-            Can be False (inactive), "train" or "fadeout".
-        dropout_rate: float
-            Dropout rate (probability that a node drops out in a training step).
-        name: str
-            Layer name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        w: np.ndarray or T.TensorVariable
-            Weight matrix.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        b: np.ndarray or T.TensorVariable
-            Bias vector.
-            If this is a np.ndarray, its values are used to initialise a
-            shared variable for this layer.
-            If it is a T.TensorVariable, it is directly used (weight sharing
-            with the layer which this variable comes from).
-        gamma
-            (For batch normalisation) Initializes gamma parameter.
-        mean
-            (For batch normalisation) Initializes mean parameter.
-        std
-            (For batch normalisation) Initializes std parameter.
-        gradnet_mode
-        """
-
         parent_nodes = (parent, memory_states)
         super(LSTM, self).__init__(parent_nodes, name, print_repr)
 
@@ -1854,26 +1872,27 @@ class LSTM(NeuralLayer):
 
 
 class LRN(Node):
+    """
+    LRN (Local Response Normalization) layer.
+
+    Parameters
+    ----------
+    parent: Node
+        The input node.
+    filter_shape: tuple
+    mode: str
+        Can be "spatial" or "channel".
+    alpha: float
+    k: float
+    beta: float
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, parent, filter_shape, mode='spatial',  alpha=0.0001,
                  k=1, beta=0.75, name="LRN", print_repr=True):
-        """
-        LRN (Local Response Normalization) layer.
-
-        Parameters
-        ----------
-        parent: Node
-            The input node.
-        filter_shape: tuple
-        mode: str
-            Can be "spatial" or "channel".
-        alpha: float
-        k: float
-        beta: float
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """  # TODO: Complete docstring.
         super(LRN, self).__init__(parent, name, print_repr)
 
         self.mode = mode

@@ -23,23 +23,29 @@ logger = logging.getLogger('elektronn2log')
 __all__ = ['VariableParam', 'VariableWeight', 'ConstantParam', 'initweights']
 
 class VariableParam(TensorSharedVariable):
+    """
+    Extension of theano ``TensorSharedVariable``. Additional features are
+    described by the parameters, otherwise identical
+
+    Parameters
+    ----------
+    value
+    name: str
+    apply_reg flag: bool
+        whether to apply regularisation (e.g. L2) on this param
+    apply_train flag: bool
+        whether to train this parameter (as opposed to a meta-parameter or
+        a parameter that is kept const. during a training phase)
+    dtype:
+    strict: bool
+    allow_downcast: bool
+    borrow: bool
+    broadcastable
+    """
+
     def __init__(self, value=None, name=None, apply_train=True, apply_reg=True,
                  dtype=None, strict=False, allow_downcast=None, borrow=False,
                  broadcastable=None):
-        """
-        Extension of theano ``TensorSharedVariable``. Additional features are
-        described by the parameters, otherwise identical
-
-        Parameters
-        ----------
-
-          apply_reg flag: Bool
-            whether to apply regularisation (e.g. L2) on this param
-          apply_train flag: Bool
-            whether to train this parameter (as opposed to a meta-parameter or
-            a parameter that is kept const. during a training phase)
-
-        """
         self.apply_reg   = apply_reg
         self.apply_train = apply_train
         self._updates     = None
@@ -95,17 +101,23 @@ class VariableWeight(VariableParam):
 
         Parameters
         ----------
-          shape: list/tuple of in
+        shape: list/tuple of int
             Shape of weights (if value=None)
-          init_kwargs: dict
-            Kwargs for the ``initweights``-function (if value=None)
-          value: numpy array
+        init_kwargs: dict
+            kwargs for the ``initweights``-function (if value=None)
+        value: numpy array
             initial value (if shape/init_kwargs=None)
-          apply_reg flag: Bool
-            whether to apply regularisation (e.g. L2) on this param
-          apply_train flag: Bool
-            whether to train this parameter (as opposed to a meta-parameter or
+        name: str
+        apply_train flag: bool
+            Whether to train this parameter (as opposed to a meta-parameter or
             a parameter that is kept const. during a training phase)
+        apply_reg flag: bool
+            Whether to apply regularisation (e.g. L2) on this param
+        dtype
+        strict: bool
+        allow_downcast: bool
+        borrow: bool
+        broadcastable
         """
         if value is None: # create new values
             if (shape is None) or (init_kwargs is None):
@@ -143,16 +155,18 @@ class VariableWeight(VariableParam):
                 raise
 
 class ConstantParam(TensorConstant):
+    """
+    Identical to theano ``VariableParam`` except that there are two
+    two addition attributes ``apply_train`` and `apply_reg``, which are
+    both false.
+    This is just to tell ELEKTRONN2 that this parameter is to be
+    exempted from training. Obviously the ``set_value`` method raises
+    an exception because this is a real constant. Constants are faster
+    in the theano graph.
+    """
+
     def __init__(self, value, name=None, dtype=None,
                  make_singletons_broadcastable=True):
-        """
-        Identical to theano ``VariableParam`` except that there are two
-        two addition attributes ``apply_train`` and `apply_reg`` which are
-        both false. This is just to tell elektronn2 that this parameter is to be
-        exempted from training. Obviously the ``set_value`` method raises
-        an exception because this is a real constant. Constants are faster
-        in the theano graph.
-        """
         name += "_const"
 
         if isinstance(value, (int, float)):

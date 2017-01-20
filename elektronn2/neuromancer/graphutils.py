@@ -25,32 +25,31 @@ __all__ = ['TaggedShape', 'floatX', 'as_floatX', 'make_func',
 floatX = theano.config.floatX
 
 class TaggedShape(object):
+    """
+    Object to manage shape and associated tags uniformly.
+    The ``[]``-operator can be used get shape values by either index (``int``) or tag (``str``)
+
+    Parameters
+    ----------
+    shape: list/tuple of int
+        shape of array, unspecified shapes are ``None``
+    tags: list/tuple of strings or comma-separated string
+        tags indicate which purpose the dimensions of the tensor serve. They are
+        sometimes used to decide about reshapes. The maximal tensor has tags:
+        "r, b, s, f, z, y, x, s" which denote:
+        * r: perform recurrence along this axis
+        * b: batch size
+        * s: samples of the same instance (over which expectations are calculated)
+        * f: features, filters, channels
+        * z: convolution no. 3 (slower than 1,2)
+        * y: convolution no. 1
+        * x: convolution no. 2
+    strides:
+        list of strides, only for spatial dimensions, so it is 1-3 long
+    mfp_offsets:
+    """
+
     def __init__(self, shape, tags, strides=None, mfp_offsets=None, fov=None,):
-        """
-        Object to manage shape and associated tags uniformly.
-        The []-operator can be used get shape values by either index (int) or tag (str)
-
-        Parameters
-        ----------
-
-        shape: list/tuple of int
-          shape of array, unspecified shapes are ``None``
-        tags: list/tuple of strings or comma-separated string
-          tags indicate which purpose the dimensions of the tensor serve. They are
-          sometimes used to decide about reshapes. The maximal tensor has tags:
-          "r, b, s, f, z, y, x, s" which denote:
-            * r: perform recurrence along this axis
-            * b: batch size
-            * s: samples of the same instance (over which expectations are calculated)
-            * f: features, filters, channels
-            * z: convolution no. 3 (slower than 1,2)
-            * y: convolution no. 1
-            * x: convolution no. 2
-        strides:
-          list of strides, only for spatial dimensions, so it is 1-3 long
-        mfp_offsets:
-
-        """
         self._shape = list(shape) # copy
         self._tags  = self._check_tags(tags) # is copied too
         if len(self._shape)!=len(self._tags):
@@ -313,20 +312,20 @@ class TaggedShape(object):
 
 
 class make_func(object):
+    """
+    Wrapper for compiled theano functions. Features:
+
+    * The function is compiled on demand (i.e. no wait at initialisation)
+    * Singleton return values are returned directly, multiple values as list
+    * The last execution time can inspected in the attribute ``last_exec_time``
+    * Functions can be timed: ``profile_execution`` is an ``int`` that specifies
+      the number of runs to average. The average time is printed then.
+    * In/Out values can have a ``borrow`` flag which might overwrite the numpy
+      arrays but might speed up execution (see theano doc)
+    """
+
     def __init__(self, tt_input, tt_output, updates=None, name='Unnamed Function',
                  borrow_inp=False, borrow_out=False, profile_execution=False):
-        """
-        Wrapper for compiled theano functions. Features:
-
-          * The function is compiled on demand (i.e. no wait at initialisation)
-          * Singleton return values are returned directly, multiple values as list
-          * The last execution time can inspected in the attribute ``last_exec_time``
-          * Functions can be timed: ``profile_execution`` is an ``int`` that specifies
-          the number of runs to average. The average time is printed then.
-          * In/Out values can have a ``borrow`` flag which might overwrite the numpy
-          arrays but might speed up execution (see theano doc)
-        """
-
         self.name = name
         self.func = None
         self.profile = profile_execution

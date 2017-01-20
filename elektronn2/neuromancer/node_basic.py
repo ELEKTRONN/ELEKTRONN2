@@ -196,11 +196,11 @@ def choose_name(proposal, names):
 
 class MetaNode(type):
     """
-    Metaclass for the Node class that manages automatic registration in the
-    current model_manager.
+    Metaclass for the ``Node`` class that manages automatic registration in the
+    current ``model_manager``.
 
-    This metaclass makes sure that the global model_manager, which keeps track
-    of the network models, is updated every time a new Node object is created.
+    This metaclass makes sure that the global ``model_manager``, which keeps track
+    of the network models, is updated every time a new ``Node`` object is created.
     """
     def __new__(mcs, name, bases, clsdict):
         if name=='Node': # Don't do anything to base class
@@ -302,121 +302,123 @@ class MetaNode(type):
 ###############################################################################
 
 class Node(with_metaclass(MetaNode, object)):
+    """
+    Basic node class. All neural network nodes should inherit from ``Node``.
+
+    Parameters
+    ----------
+    parent: Node or list of Node
+        The input node(s).
+    name: str
+        Given name of node, may be an empty string.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+
+
+    Models are built from the interplay of *node* to form a (directed,
+    acyclic) computational graph.
+
+    The **ELEKTRONN2**-framework can be seen as an intelligent abstraction level
+    that hides the raw theano-graph and manages the involved symbolic variables.
+    The overall goal is the intuitive, flexible and **easy** creation of
+    complicated graphs.
+
+    A *node* has an one or several inputs, called *parent*, (unless it is
+    an *source*, i.e. a node where external data is feed into the graph).
+    The inputs are node objects themselves.
+
+    Layers automatically keep track of their previous inputs,
+    parameters, computational cost etc. This allows to compile the
+    theano-functions without manually specifying the inputs, outputs and
+    parameters.
+    In the most simple case any node, which might be part of a more
+    complicated graph, can be called like as function (passing suitable
+    numpy arrays):
+
+     >>> import elektronn2.neuromancer.utils
+     >>> inp = neuromancer.Input((batch_size, in_dim))
+     >>> test_data = elektronn2.neuromancer.utils.as_floatX(np.random.rand(batch_size, in_dim))
+     >>> out = inp(test_data)
+     >>> np.allclose(out, test_data)
+     True
+
+    At the first time the theano-function is compiled and cached
+    for reuse in future calls.
+
+    Several properties (with respect to the sub-graph the node depends on, or
+    only from the of the node itself)
+    this can also be looked up externally e.g. required sources,
+    parameter count, computational count.
+
+    The theano variable that represents the output of a node is kept
+    in the attribute ``output``. Subsequent node must use this attribute of
+    their inputs to perform their calculation and write the result their own
+    output (this happens in the method ``_calc_output``, which is hidden
+    because it must be called only internally at initialisation).
+
+    A divergence in the computational graph is created by passing the *parent*
+    to several *children* as input:
+
+     >>> inp = neuromancer.Input((1,10), name='Input_1')
+     >>> node1 = neuromancer.ApplyFunc(inp, func1)
+     >>> node2 = neuromancer.ApplyFunc(inp, func2)
+
+
+    A convergence in the graph is created by passing several inputs to a node
+    that performs a reduction:
+
+     >>> out = neuromancer.Concat([node1, node2])
+
+    Although the node "out" has two immediate inputs, it is detected that the
+    required sources is only a single object:
+
+      >>> print(out.input_nodes)
+      Input_1
+
+    Computations that result in more than a single output for a node must be
+    broken apart using divergence and individual nodes for the several outputs.
+    Alternatively the function``split`` can be used to create two
+    dummy nodes of the output of a previous node, by splitting along specified
+    axis.
+    Note that possible redundant computations in nodes are most likely
+    eliminated by the theano graph optimiser.
+
+
+    Instructions for subclassing
+    ----------------------------
+
+    Overriding ``__init__``:
+        At the very first the base class' initialiser must be called, which just
+        assigns the names and emtpy default values for attributes.
+        Then node specific initialisations are made e.g. initialisation of shared
+        parameters / weights.
+        Finally the ``_finialise_init`` method of the base class is automatically
+        called:
+        This evokes the execution of the methods: ``_make_output``,
+        ``_calc_shape`` and ``self._calc_comp_cost``. Each of those updates
+        the corresponding attributes.
+        NOTE: if a node (except for the base ``Node``) is subclassed and the
+        derived calls ``__init__`` of the base node, this will also call
+        ``_finialise_init`` exactly right the call to the superclass'
+        ``__init__``.
+
+    For the graph serialisation and restoration to work, the following
+    conditions must additionally be met:
+
+    * The name of of a node's trainable parameter in the parameter dict must
+    be the same as the (optional) keyword used to initialise this parameter
+    in ``__init__``;
+    moreover parameters must not be initialised/shared from positional arguments.
+    * When serialising only the current state of parameters is kept, parameter
+    value arrays given for initialisation are never kept.
+
+    Depending on the purpose of the node the latter methods and others
+    (e.g. ``__repr__``) must be overridden. The default behaviour of the base
+    class is: output = input, outputs shape = input shape,
+    computational cost = tensor size (!) ...
+    """
+
     def __init__(self, parent, name="", print_repr=False):
-        """
-        Parameters
-        ----------
-
-        parent: Node or list of Node
-            The input node(s).
-        name: str
-            Given name of node, may be an empty string.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-
-
-        Models are built from the interplay of *node* to form a (directed,
-        acyclic) computational graph.
-
-        The **ELEKTRONN2**-framework can be seen as an intelligent abstraction level
-        that hides the raw theano-graph and manages the involved symbolic variables.
-        The overall goal is the intuitive, flexible and **easy** creation of
-        complicated graphs.
-
-        A *node* has an one or several inputs, called *parent*, (unless it is
-        an *source*, i.e. a node where external data is feed into the graph).
-        The inputs are node objects themselves.
-
-        Layers automatically keep track of their previous inputs,
-        parameters, computational cost etc. This allows to compile the
-        theano-functions without manually specifying the inputs, outputs and
-        parameters.
-        In the most simple case any node, which might be part of a more
-        complicated graph, can be called like as function (passing suitable
-        numpy arrays):
-
-         >>> import elektronn2.neuromancer.utils
-         >>> inp = neuromancer.Input((batch_size, in_dim))
-         >>> test_data = elektronn2.neuromancer.utils.as_floatX(np.random.rand(batch_size, in_dim))
-         >>> out = inp(test_data)
-         >>> np.allclose(out, test_data)
-          True
-
-        At the first time the theano-function is compiled and cached
-        for reuse in future calls.
-
-        Several properties (with respect to the sub-graph the node depends on, or
-        only from the of the node itself)
-        this can also be looked up externally e.g. required sources,
-        parameter count, computational count.
-
-        The theano variable that represents the output of a node is kept
-        in the attribute ``output``. Subsequent node must use this attribute of
-        their inputs to perform their calculation and write the result their own
-        output (this happens in the method ``_calc_output``, which is hidden
-        because it must be called only internally at initialisation).
-
-        A divergence in the computational graph is created by passing the *parent*
-        to several *children* as input:
-
-         >>> inp = neuromancer.Input((1,10), name='Input_1')
-         >>> node1 = neuromancer.ApplyFunc(inp, func1)
-         >>> node2 = neuromancer.ApplyFunc(inp, func2)
-
-
-        A convergence in the graph is created by passing several inputs to a node
-        that performs a reduction:
-
-         >>> out = neuromancer.Concat([node1, node2])
-
-        Although the node "out" has two immediate inputs, it is detected that the
-        required sources is only a single object:
-
-          >>> print(out.input_nodes)
-          Input_1
-
-        Computations that result in more than a single output for a node must be
-        broken apart using divergence and individual nodes for the several outputs.
-        Alternatively the function``split`` can be used to create two
-        dummy nodes of the output of a previous node, by splitting along specified
-        axis.
-        Note that possible redundant computations in nodes are most likely
-        eliminated by the theano graph optimiser.
-
-
-        Instructions for subclassing
-        ----------------------------
-
-        Overriding __init__:
-            At the very first the base class' initialiser must be called, which just
-            assigns the names and emtpy default values for attributes.
-            Then node specific initialisations are made e.g. initialisation of shared
-            parameters / weights.
-            Finally the ``_finialise_init`` method of the base class is automatically
-            called:
-            This evokes the execution of the methods: ``_make_output``,
-            ``_calc_shape`` and ``self._calc_comp_cost``. Each of those updates
-            the corresponding attributes.
-            NOTE: if a node (except for the base ``Node``) is subclassed and the
-            derived calls ``__init__`` of the base node, this will also call
-            ``_finialise_init`` exactly right the call to the superclass'
-            ``__init__``.
-
-        For the graph serialisation and restoration to work, the following
-        conditions must additionally be met:
-
-        * The name of of a node's trainable parameter in the parameter dict must
-        be the same as the (optional) keyword used to initialise this parameter
-        in __init__;
-        moreover parameters must not be initialised/shared from positional arguments.
-        * When serialising only the current state of parameters is kept, parameter
-        value arrays given for initialisation are never kept.
-
-        Depending on the purpose of the node the latter methods and others
-        (e.g. __repr__) must be overridden. The default behaviour of the base
-        class is: output = input, outputs shape = input shape,
-        computational cost = tensor size (!) ...
-        """
         self.parent             = parent
         self.children           = OrderedDict()
         self.name               = name
@@ -1173,38 +1175,45 @@ class Node(with_metaclass(MetaNode, object)):
 ###############################################################################
 
 class Input(Node):
+    """
+    Input Node
+
+    Parameters
+    ----------
+    shape: list/tuple of int
+        shape of input array, unspecified shapes are ``None``
+    tags: list/tuple of strings or comma-separated string
+        tags indicate which purpose the dimensions of the tensor serve. They are
+        sometimes used to decide about reshapes. The maximal tensor has tags:
+        "r, b, f, z, y, x, s" which denote:
+        * r: perform recurrence along this axis
+        * b: batch size
+        * f: features, filters, channels
+        * z: convolution no. 3 (slower than 1,2)
+        * y: convolution no. 1
+        * x: convolution no. 2
+        * s: samples of the same instance (over which expectations are calculated)
+        Unused axes are to be removed from this list, but ``b`` and ``f`` must
+        always remain.
+        To avoid bad memory layout, the order must not be changed.
+        For less than 3 convolutions conv1,conv2 are preferred for performance reasons.
+        Note that CNNs can mix nodes with 2d and 3d convolutions as 2d is a special
+        case of 3d with filter size 1 on the respective axis. In this case conv3
+        should be used for the axis with smallest filter size.
+    strides
+    fov
+    dtype: str
+        corresponding to numpy dtype (e.g., 'int64').
+        Default is floatX from theano config
+    hardcoded_shape
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, shape, tags, strides=None, fov=None, dtype=theano.config.floatX,
                  hardcoded_shape=False, name='input', print_repr=True):
-        """
-        Input Node
-
-        Parameters
-        ----------
-
-        shape: list/tuple of int
-            shape of input array, unspecified shapes are ``None``
-        tags: list/tuple of strings or comma-separated string
-            tags indicate which purpose the dimensions of the tensor serve. They are
-            sometimes used to decide about reshapes. The maximal tensor has tags:
-            "r, b, f, z, y, x, s" which denote:
-                * r: perform recurrence along this axis
-                * b: batch size
-                * f: features, filters, channels
-                * z: convolution no. 3 (slower than 1,2)
-                * y: convolution no. 1
-                * x: convolution no. 2
-                * s: samples of the same instance (over which expectations are calculated)
-            Unused axes are to be removed from this list, but ``b`` and ``f`` must
-            always remain.
-            To avoid bad memory layout, the order must not be changed.
-            For less than 3 convolutions conv1,conv2 are preferred for performance reasons.
-            Note that CNNs can mix nodes with 2d and 3d convolutions as 2d is a special
-            case of 3d with filter size 1 on the respective axis. In this case conv3
-            should be used for the axis with smallest filter size.
-        dtype: str
-            corresponding to numpy dtype (e.g., 'int64').
-            Default is floatX from theano config
-        """
         super(Input, self).__init__(None, name, print_repr)
 
         self.is_source = True
@@ -1261,7 +1270,14 @@ class GenericInput(Node):
     def __init__(self, name='generic_input',
                  print_repr=True):
         """
-        Input Node for arbitrary oject
+        Input Node for arbitrary oject.
+
+        Parameters
+        ----------
+        name: str
+            Node name.
+        print_repr: bool
+            Whether to print the node representation upon initialisation.
         """
         super(GenericInput, self).__init__(None, name, print_repr)
         self.is_source = True
@@ -1279,14 +1295,22 @@ class GenericInput(Node):
 
 
 class FromTensor(Node):
+    """
+    Dummy Node to be used in the split-function.
+
+    Parameters
+    ----------
+    tensor: T.Tensor
+    tensor_shape
+    tensor_parent: T.Tensor
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, tensor, tensor_shape, tensor_parent, name='from_tensor',
                  print_repr=False):
-        """
-        Dummy Node to be used in the split-function
-
-        Parameters
-        ----------
-        """
         super(FromTensor, self).__init__(tensor_parent, name, print_repr)
 
         self._shape = tensor_shape
@@ -1371,21 +1395,24 @@ def split(node, axis='f', index=None, n_out=None, strip_singleton_dims=False, na
 ###############################################################################
 
 class Concat(Node):
+    """
+    Node to concatenate the inputs. The inputs must have the same shape,
+    except in the dimension corresponding to ``axis``. This is not checked as
+    shapes might be unspecified prior to compilation!
+
+    Parameters
+    ----------
+    parent_nodes: list of Node
+        Inputs to be concatenated.
+    axis: int
+        Join axis.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, parent_nodes, axis='f', name="concat", print_repr=True):
-        """
-        Node to concatenate the inputs. The inputs must have the same shape,
-        except in the dimension corresponding to ``axis``. This is not checked as
-        shapes might be unspecified prior to compilation!
-
-        Parameters
-        ----------
-
-        parent_nodes: list/tuple of graph
-            inputs to be concatenated
-        axis: int
-            join axis
-
-        """
         super(Concat, self).__init__(parent_nodes, name, print_repr)
 
         if not isinstance(parent_nodes, (tuple, list)):
@@ -1415,24 +1442,25 @@ class Concat(Node):
     ###############################################################################
 
 class MultMerge(Node):
+    """
+    Node to concatenate the inputs. The inputs must have the same shape,
+    except in the dimension corresponding to ``axis``. This is not checked as
+    shapes might be unspecified prior to compilation!
+
+    Parameters
+    ----------
+    n1: Node
+        First input node.
+    n2: Node
+        Second input node.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, n1, n2, name="multmerge",
                  print_repr=True):
-        """
-        Node to concatenate the inputs. The inputs must have the same shape,
-        except in the dimension corresponding to ``axis``. This is not checked as
-        shapes might be unspecified prior to compilation!
-
-        Parameters
-        ----------
-        n1: Node
-            First input node.
-        n2: Node
-            Second input node.
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
         super(MultMerge, self).__init__((n1, n2), name, print_repr)
         assert n1.shape.shape==n2.shape.shape
 
@@ -1448,24 +1476,24 @@ class MultMerge(Node):
 ###############################################################################
 
 class ApplyFunc(Node):
+    """
+    Apply function to the input. If the function changes the output shape,
+    this node should not be used.
+
+    Parameters
+    ----------
+    parent: Node
+        Input (single).
+    functor: function
+        Function that acts on theano variables (e.g. ``theano.tensor.tanh``).
+    args: tuple
+        Arguments passed to ``functor`` **after** the input.
+    kwargs: dict
+        kwargs for ``functor``.
+    """
+
     def __init__(self, parent, functor, args=(), kwargs={}, name="apply",
                  print_repr=False):
-        """
-        Apply function to the input. If the function changes the output shape,
-        this node should not be used.
-
-        Parameters
-        ----------
-
-        parent: Node
-            input (single)
-        functor: function
-            Function that acts on theano variables (e.g. theano.tensor.tanh)
-        args: tuple
-            Arguments passed to ``functor`` **after** the input
-        kwargs: dict
-            kwargs for ``functor``
-        """
         super(ApplyFunc, self).__init__(parent, name, print_repr)
 
         self._functor = functor
@@ -1479,38 +1507,47 @@ class ApplyFunc(Node):
 
 
 class ValueNode(Node):
+    """
+    (Optinally) trainable Value Node
+
+    Parameters
+    ----------
+    shape: list/tuple of int
+        shape of input array, unspecified shapes are ``None``
+    tags: list/tuple of strings or comma-separated string
+        tags indicate which purpose the dimensions of the tensor serve. They are
+        sometimes used to decide about reshapes. The maximal tensor has tags:
+        "r, b, f, z, y, x, s" which denote:
+            * r: perform recurrence along this axis
+            * b: batch size
+            * f: features, filters, channels
+            * z: convolution no. 3 (slower than 1,2)
+            * y: convolution no. 1
+            * x: convolution no. 2
+            * s: samples of the same instance (over which expectations are calculated)
+        Unused axes are to be removed from this list, but ``b`` and ``f`` must
+        always remain.
+        To avoid bad memory layout, the order must not be changed.
+        For less than 3 convolutions conv1,conv2 are preferred for performance reasons.
+        Note that CNNs can mix nodes with 2d and 3d convolutions as 2d is a special
+        case of 3d with filter size 1 on the respective axis. In this case conv3
+        should be used for the axis with smallest filter size.
+    strides
+    fov
+    dtype: str
+        corresponding to numpy dtype (e.g., 'int64').
+        Default is floatX from theano config
+    apply_train: bool
+    value
+    init_kwargs: dict
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, shape, tags, strides=None, fov=None, dtype=theano.config.floatX, apply_train=False,
                  value=None, init_kwargs=None, name='value_state', print_repr=True):
-        """
-        (Optinally) trainable Value Node
-
-        Parameters
-        ----------
-
-        shape: list/tuple of int
-            shape of input array, unspecified shapes are ``None``
-        tags: list/tuple of strings or comma-separated string
-            tags indicate which purpose the dimensions of the tensor serve. They are
-            sometimes used to decide about reshapes. The maximal tensor has tags:
-            "r, b, f, z, y, x, s" which denote:
-                * r: perform recurrence along this axis
-                * b: batch size
-                * f: features, filters, channels
-                * z: convolution no. 3 (slower than 1,2)
-                * y: convolution no. 1
-                * x: convolution no. 2
-                * s: samples of the same instance (over which expectations are calculated)
-            Unused axes are to be removed from this list, but ``b`` and ``f`` must
-            always remain.
-            To avoid bad memory layout, the order must not be changed.
-            For less than 3 convolutions conv1,conv2 are preferred for performance reasons.
-            Note that CNNs can mix nodes with 2d and 3d convolutions as 2d is a special
-            case of 3d with filter size 1 on the respective axis. In this case conv3
-            should be used for the axis with smallest filter size.
-        dtype: str
-            corresponding to numpy dtype (e.g., 'int64').
-            Default is floatX from theano config
-        """
         super(ValueNode, self).__init__(None, name, print_repr)
 
         if isinstance(value, list): # Handle locking of params
@@ -1559,9 +1596,20 @@ class ValueNode(Node):
 
 
 class InitialState_like(Node):
+    """
+
+    Parameters
+    ----------
+    parent
+    override_f
+    dtype
+    name
+    print_repr
+    init_kwargs
+    """
+
     def __init__(self, parent, override_f, dtype=None, name='initial_state',
                print_repr=True, init_kwargs=None):
-
         assert isinstance(parent, Node)
         super(InitialState_like, self).__init__(parent, name, print_repr)
 
