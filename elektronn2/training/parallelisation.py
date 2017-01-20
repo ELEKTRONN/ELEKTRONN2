@@ -197,47 +197,48 @@ class Proc(mp.Process):
 
 
 class BackgroundProc(SharedMem):
+    """
+    Data structure to manage repeated background tasks by reusing a fixed number of *initially* created
+    background process with the same arguments at every time. (E.g. retrieving an augmented batch)
+    Remember to call ``BackgroundProc.shutdown`` after use to avoid zombie process and RAM clutter.
+
+    Parameters
+    ----------
+
+    dtypes:
+      list of dtypes of the target return values
+    shapes:
+      list of shapes of the target return values
+    n_proc: int
+      number of background procs to use
+    target: callable
+      target function for background proc. Can even be a method of an object, if object\
+    data is read-only (then data will not be copied in RAM and the new process is lean). If\
+    several procs use random modules, new seeds must be created inside target because they\
+    have the same random state at the beginning.
+    target_args:  tuple
+      Proc args (constant)
+    target_kwargs: dict
+      Proc kwargs (constant)
+    profile: Bool
+      Whether to print timing results in to stdout
+
+    Examples
+    --------
+
+    Use case to retrieve batches from a data structure ``D``:
+
+    >>> data, label = D.getbatch(2, strided=False, flip=True, grey_augment_channels=[0])
+    >>> kwargs = {'strided': False, 'flip': True, 'grey_augment_channels': [0]}
+    >>> bg = BackgroundProc([np.float32, np.int16], [data.shape,label.shape], \
+                            D.getbatch, n_proc=2, target_args=(2,), \
+                            target_kwargs=kwargs, profile=False)
+    >>> for i in range(100):
+    >>>    data, label = bg.get()
+
+    """
+
     def __init__(self, target, dtypes=None, shapes=None, n_proc=1, target_args=(), target_kwargs={}, profile=False):
-        """
-        Data structure to manage repeated background tasks by reusing a fixed number of *initially* created
-        background process with the same arguments at every time. (E.g. retrieving an augmented batch)
-        Remember to call ``BackgroundProc.shutdown`` after use to avoid zombie process and RAM clutter.
-
-        Parameters
-        ----------
-
-        dtypes:
-          list of dtypes of the target return values
-        shapes:
-          list of shapes of the target return values
-        n_proc: int
-          number of background procs to use
-        target: callable
-          target function for background proc. Can even be a method of an object, if object\
-        data is read-only (then data will not be copied in RAM and the new process is lean). If\
-        several procs use random modules, new seeds must be created inside target because they\
-        have the same random state at the beginning.
-        target_args:  tuple
-          Proc args (constant)
-        target_kwargs: dict
-          Proc kwargs (constant)
-        profile: Bool
-          Whether to print timing results in to stdout
-
-        Examples
-        --------
-
-        Use case to retrieve batches from a data structure ``D``:
-
-          >>> data, label = D.getbatch(2, strided=False,
-          flip=True, grey_augment_channels=[0])
-          >>> kwargs = {'strided': False, 'flip': True, 'grey_augment_channels': [0]}
-          >>> bg = BackgroundProc([np.float32, np.int16], [data.shape,label.shape],
-          D.getbatch,n_proc=2, target_args=(2,), target_kwargs=kwargs, profile=False)
-          >>> for i in range(100):
-          >>>   data, label = bg.get()
-
-        """
         self.dtypes    = dtypes
         self.shapes    = shapes
         self.target    = target
@@ -340,8 +341,6 @@ class SharedQ(SharedMem):
 
     Parameters
     ----------
-
-
     n_proc: int
       If larger than 0, a message is printed if to few processes are running
     default_target: callable
@@ -354,19 +353,18 @@ class SharedQ(SharedMem):
       Whether to print timing results in terminal
 
     Examples
-    ---------
-
+    --------
     Automatic use:
 
-      >>> Q = SharedQ(n_proc=2)
-      >>> Q.startproc(target=, shape= args=, kwargs=)
-      >>> Q.startproc(target=, shape= args=, kwargs=)
-      >>> for i in range(5):
-      >>>   Q.startproc(target=, shape= args=, kwargs=)
-      >>>   item = Q.get() # starts as many new jobs as to maintain n_proc
-      >>>   dosomehtingelse(item) # processes work in background to pre-fetch data for next iteration
+    >>> Q = SharedQ(n_proc=2)
+    >>> Q.startproc(target=, shape= args=, kwargs=)
+    >>> Q.startproc(target=, shape= args=, kwargs=)
+    >>> for i in range(5):
+    >>>     Q.startproc(target=, shape= args=, kwargs=)
+    >>>     item = Q.get() # starts as many new jobs as to maintain n_proc
+    >>>     dosomehtingelse(item) # processes work in background to pre-fetch data for next iteration
+    """  # TODO: Docstring describes unsupported arguments. Either remove them or support them.
 
-    """
     def __init__(self, n_proc=0, profile=False):
 
         self.data           = deque() # items of type [shm, shape, proc]

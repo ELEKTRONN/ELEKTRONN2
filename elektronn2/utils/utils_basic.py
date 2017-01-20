@@ -102,19 +102,20 @@ def parallel_accum(func, n_ret, var_args, const_args, proc=-1,
 ### Decorator Collection ###
 
 class DecoratorBase(object):
-    def __init__(self, *args, **kwargs):
-        """
-        If used as
-        @DecoratorBase
-        this initialiser receives only the function to be wrapped (no wrapper args)
-        Then __call__ receives the arguments for the underlying function.
-        Alternatively
-        @DecoratorBase(wrapper_print=True, n_times=10)
-        this initialiser receives wrapper args, the function is passed to __call__
-        and call returns a wrapped function.
+    """
+    If used as
+    ``@DecoratorBase``
+    this initialiser receives only the function to be wrapped (no wrapper args)
+    Then ``__call__`` receives the arguments for the underlying function.
 
-        This base class completely ignores all wrapper arguments.
-        """
+    Alternatively, if used as
+    ``@DecoratorBase(wrapper_print=True, n_times=10)``
+    this initialiser receives wrapper args, the function is passed to ``__call__``
+    and ``__call__`` returns a wrapped function.
+
+    This base class completely ignores all wrapper arguments.
+    """
+    def __init__(self, *args, **kwargs):
         self.func = None
         self.dec_args = None
         self.dec_kwargs = None

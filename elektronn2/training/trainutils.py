@@ -146,19 +146,20 @@ def user_input(local_vars):
 
 
 class Schedule(object):
+    """
+    Create a schedule for parameter or property
+
+    Examples
+    --------
+
+    >>> lr_schedule = Schedule(dec=0.95) # decay by 0.95 every 1000 steps
+    >>> wd_schedule = Schedule(lindec=[4000, 0.001]) # from 0.001 to 0 in 400 steps
+    >>> mom_schedule = Schedule(updates=[(500,0.8), (1000,0.7), (1500,0.9), (2000, 0.2)])
+    >>> dropout_schedule = Schedule(updates=[(1000,[0.2, 0.2])]) # set rates per Layer
+
+    """
+
     def __init__(self, **kwargs):
-        """
-        Create a schedule for parameter or property
-
-        Examples
-        --------
-
-            lr_schedule = Schedule(dec=0.95) # decay by 0.95 every 1000 steps
-            wd_schedule = Schedule(lindec=[4000, 0.001]) # from 0.001 to 0 in 400 steps
-            mom_schedule = Schedule(updates=[(500,0.8), (1000,0.7), (1500,0.9), (2000, 0.2)])
-            dropout_schedule = Schedule(updates=[(1000,[0.2, 0.2])]) # set rates per Layer
-
-        """
         ###TODO setting of categorical values (True/False) via 'updates'
         # multiplicative decay
         self._target = None

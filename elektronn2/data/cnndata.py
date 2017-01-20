@@ -101,8 +101,6 @@ def border_treatment(data_list, ps, border_mode, ndim):
 
 
 class BatchCreatorImage(object):
-    """
-    """
     def __init__(self, input_node, target_node=None, d_path=None, l_path=None,
                  d_files=None, l_files=None, cube_prios=None, valid_cubes=None,
                  border_mode='crop', aniso_factor=2, target_vec_ix=None,
