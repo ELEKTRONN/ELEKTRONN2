@@ -406,11 +406,11 @@ class Node(with_metaclass(MetaNode, object)):
     conditions must additionally be met:
 
     * The name of of a node's trainable parameter in the parameter dict must
-    be the same as the (optional) keyword used to initialise this parameter
-    in ``__init__``;
-    moreover parameters must not be initialised/shared from positional arguments.
+      be the same as the (optional) keyword used to initialise this parameter
+      in ``__init__``;
+      moreover parameters must not be initialised/shared from positional arguments.
     * When serialising only the current state of parameters is kept, parameter
-    value arrays given for initialisation are never kept.
+      value arrays given for initialisation are never kept.
 
     Depending on the purpose of the node the latter methods and others
     (e.g. ``__repr__``) must be overridden. The default behaviour of the base
