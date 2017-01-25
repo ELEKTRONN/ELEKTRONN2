@@ -1267,18 +1267,19 @@ def Input_like(ref, dtype=None, name='input',
 
 
 class GenericInput(Node):
+    """
+    Input Node for arbitrary oject.
+
+    Parameters
+    ----------
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
     def __init__(self, name='generic_input',
                  print_repr=True):
-        """
-        Input Node for arbitrary oject.
-
-        Parameters
-        ----------
-        name: str
-            Node name.
-        print_repr: bool
-            Whether to print the node representation upon initialisation.
-        """
         super(GenericInput, self).__init__(None, name, print_repr)
         self.is_source = True
         self._shape = None

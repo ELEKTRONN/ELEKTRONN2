@@ -421,26 +421,30 @@ class Perceptron(NeuralLayer):
 
     def make_dual(self, parent, share_w=False, **kwargs):
         """
-        Invert the Layer, most options same as for Layer. If kwargs
-        are not specified the values of the primal layers are used
-        and new parameters are created
-        :param parent:
-        :param share_w:
+        Create the inverse of this ``Perceptron``.
 
-            Kwargs
-            ------
-            :param activation_func:
-            :param dropout_rate:
-            :param name:
-            :param print_repr:
-            :param w:
-            :param b:
-            :param gamma:
-            :param mean:
-            :param std:
+        Most options are the same as for the layer itself.
+        If ``kwargs`` are not specified, the values of the primal
+        layers are re-used and new parameters are created.
 
-        :return:
+        Parameters
+        ----------
+        parent: Node
+            The input node.
+        share_w: bool
+            If the weights (``w``) should be shared from the primal layer.
+        kwargs: dict
+            kwargs that are passed through to the constructor of the inverted
+            Perceptron (see signature of ``Perceptron``).
+            ``n_f`` is copied from the existing node on
+            which ``make_dual`` is called.
+            Every other parameter can be changed from the original
+            ``Perceptron``'s defaults by specifying it in ``kwargs``.
 
+        Returns
+        -------
+        Perceptron
+            The inverted perceptron layer.
         """
         if self.flatten:
             raise NotImplementedError("Cannot make dual Layer for flattened"
@@ -763,6 +767,34 @@ class Conv(Perceptron):
 
 
     def make_dual(self, parent, share_w=False, mfp=False, **kwargs):
+        """
+        Create the inverse (``UpConv``) of this ``Conv`` node.
+
+        Most options are the same as for the layer itself.
+        If ``kwargs`` are not specified, the values of the primal
+        layers are re-used and new parameters are created.
+
+        Parameters
+        ----------
+        parent: Node
+            The input node.
+        share_w: bool
+            If the weights (``w``) should be shared from the primal layer.
+        mfp: bool
+            If max-fragment-pooling is used.
+        kwargs: dict
+            kwargs that are passed through to the new ``UpConv`` node (see
+            signature of ``UpConv``).
+            ``n_f`` and ``pool_shape`` are copied from the existing node on
+            which ``make_dual`` is called.
+            Every other parameter can be changed from the original
+            ``Conv``'s defaults by specifying it in ``kwargs``.
+
+        Returns
+        -------
+        UpConv
+            The inverted conv layer (as an ``UpConv`` node).
+        """
         if mfp:
             parent = FragmentsToDense(parent, print_repr=False)
 
