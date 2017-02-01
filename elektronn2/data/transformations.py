@@ -16,13 +16,13 @@ import logging
 from functools import reduce
 
 import numpy as np
-from ..utils import my_guvectorize
+import numba
 
+from .. import utils
 
 logger = logging.getLogger('elektronn2log')
 inspection_logger = logging.getLogger('elektronn2log-inspection')
 
-from .. import utils
 
 # @utils.my_jit(nopython=True, cache=True)
 # def map_coordinates_nearest(src, coords, lo, dest):
@@ -39,7 +39,7 @@ from .. import utils
 #                 w = coords[z, x, y, 2] - lo[2]
 #                 dest[z,x,y] = src[u,v,w]
 
-@my_guvectorize(['void(float32[:,:,:], float32[:], float32[:], float32[:,],)'],
+@numba.guvectorize(['void(float32[:,:,:], float32[:], float32[:], float32[:,],)'],
               '(x,y,z),(i),(i)->()', target='parallel', nopython=True)
 def map_coordinates_nearest(src, coords, lo, dest):
     u = np.int32(np.round(coords[0] - lo[0]))
@@ -47,7 +47,7 @@ def map_coordinates_nearest(src, coords, lo, dest):
     w = np.int32(np.round(coords[2] - lo[2]))
     dest[0] = src[u,v,w]
 
-@my_guvectorize(['void(float32[:,:,:], float32[:], float32[:], float32[:,],)'],
+@numba.guvectorize(['void(float32[:,:,:], float32[:], float32[:], float32[:,],)'],
               '(x,y,z),(i),(i)->()', target='parallel', nopython=True)
 def map_coordinates_linear(src, coords, lo, dest):
     u = coords[0] - lo[0]

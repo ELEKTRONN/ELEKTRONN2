@@ -48,10 +48,8 @@ setup(
         'scikit-learn<0.20',  # >=0.20 requires change, see todo-note in data.traindata import
         'psutil>=5.0.1',
         'scikit-image>=0.12.3',
+        'numba>=0.25'
     ],
-    extras_require={
-        'numba': ['numba>=0.25'],
-    },
     include_package_data=True,
     author="Marius Killinger",
     author_email="Marius.Killinger@mailbox.org",

@@ -9,7 +9,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 __all__ = ['CircularBuffer', 'AccumulationArray', 'DynamicKDT', 'KDT',
            'pickleload', 'picklesave', 'h5load', 'h5save', 'pretty_string_ops',
            'import_variable_from_file', 'timeit', 'Timer',
-           'cache', 'my_jit', 'my_guvectorize', 'pretty_string_time', 'unique_rows',
+           'cache', 'my_jit', 'pretty_string_time', 'unique_rows',
            'get_free_cpu_count', 'parallel_accum', 'makeversiondir', 'as_list']
 
 from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
@@ -165,19 +165,9 @@ class my_jit(DecoratorBase):
     """
     pass
 
-class my_guvectorize(DecoratorBase):
-    """
-    This mock decorator is used as a pure-Python fallback for
-    ``numba.guvectorize`` if numba is not availabe.
-
-    If numba is available, the decorator is later replaced by the real numba code.
-    """
-    pass
-
 try:
     import numba
     my_jit = numba.jit
-    my_guvectorize = numba.guvectorize
 except:
     logger.warning("numba could not be imported, falling back to slow Python.")
 
