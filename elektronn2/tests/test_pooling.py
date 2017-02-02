@@ -4,7 +4,8 @@
 # All rights reserved
 
 from __future__ import absolute_import, division, print_function
-from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
+from builtins import filter, hex, input, int, map, next, oct, pow, range, \
+    super, zip
 
 import logging
 
@@ -14,23 +15,28 @@ import theano
 from theano import tensor as T
 
 from .. import neuromancer
-from ..neuromancer.computations import pooling, fragmentpool, fragments2dense, upsampling, unpooling
+from ..neuromancer.computations import pooling, fragmentpool, fragments2dense, \
+    upsampling, unpooling
+
 
 logger = logging.getLogger('elektronn2log')
 
 import theano.sandbox.cuda
 import matplotlib.pyplot as plt
+
+
 theano.sandbox.cuda.use("gpu0")
 
 from ..neuromancer import graphutils as utils
 
 
 def test_pooling_3d():
-    sig_shape  = (1, 4, 30, 200, 200)
-    spatial_axes = (2,3,4)
+    sig_shape = (1, 4, 30, 200, 200)
+    spatial_axes = (2, 3, 4)
     x_val = np.random.rand(*sig_shape).astype(np.float32)
-    x = T.TensorType('float32', (False,)*len(sig_shape), name='x_cnn_input')()
-    y1 = pooling(x, (3,2,2), spatial_axes)
+    x = T.TensorType('float32', (False,) * len(sig_shape),
+                     name='x_cnn_input')()
+    y1 = pooling(x, (3, 2, 2), spatial_axes)
     g1 = theano.grad(T.log(y1).sum(), [x])
 
     f1 = utils.make_func([x], y1, profile_execution=20, name='poolnew')
@@ -56,27 +62,28 @@ def test_pooling_3d():
     r8 = f8(x_val)
 
 
-
 def test_pooling_2d():
-    img = plt.imread(os.path.expanduser('~/devel/Lichtenstein.png')).transpose((2,0,1))[None,]
-    sig_shape  = img.shape
-    #x_val = np.random.rand(*sig_shape).astype(np.float32)
+    img = plt.imread(os.path.expanduser('~/devel/Lichtenstein.png')).transpose(
+        (2, 0, 1))[None,]
+    sig_shape = img.shape
+    # x_val = np.random.rand(*sig_shape).astype(np.float32)
     inp = neuromancer.Input(sig_shape, 'b,f,x,y')
-    conv = neuromancer.Conv(inp, 3, (3,3), (3,3), activation_func='tanh')
-    w = np.zeros((3,3,3,3), dtype=np.float32)
-    w[[0,1,2],[0,1,2]] = 1
-    upconv = neuromancer.UpConv(conv, 3, (3,3), activation_func='tanh')
-    upconv.w.set_value(upconv.w.get_value()*0.07+w)
-    
+    conv = neuromancer.Conv(inp, 3, (3, 3), (3, 3), activation_func='tanh')
+    w = np.zeros((3, 3, 3, 3), dtype=np.float32)
+    w[[0, 1, 2], [0, 1, 2]] = 1
+    upconv = neuromancer.UpConv(conv, 3, (3, 3), activation_func='tanh')
+    upconv.w.set_value(upconv.w.get_value() * 0.07 + w)
+
     y0 = conv(img)
     y2 = upconv(img)
-    
-    
-    plt.imshow(y0[0].transpose((1,2,0)), interpolation='none')
-    plt.show()  
+
+    plt.imshow(y0[0].transpose((1, 2, 0)), interpolation='none')
+    plt.show()
     plt.figure()
-    plt.imshow(y2[0].transpose((1,2,0)), interpolation='none')
-    plt.show() 
+    plt.imshow(y2[0].transpose((1, 2, 0)), interpolation='none')
+    plt.show()
+
+
 #    x = T.TensorType('float32', (False,)*len(sig_shape), name='x_cnn_input')()
 #    pool = (1,2,2)
 #    offsets = [[0,0,0]]
