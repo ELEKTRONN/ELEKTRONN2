@@ -7,8 +7,13 @@ from __future__ import absolute_import, division, print_function
 from builtins import filter, hex, input, int, map, next, oct, pow, range, \
     super, zip
 
-from builtins import filter, hex, input, int, map, next, oct, pow, range, \
-    super, zip
+__all__ = ['CircularBuffer', 'AccumulationArray', 'DynamicKDT', 'KDT',
+           'pickleload', 'picklesave', 'h5load', 'h5save', 'pretty_string_ops',
+           'import_variable_from_file', 'timeit', 'Timer',
+           'cache', 'my_jit', 'my_guvectorize', 'pretty_string_time', 'unique_rows',
+           'get_free_cpu_count', 'parallel_accum', 'makeversiondir', 'as_list']
+
+from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
 
 import os
 import re
@@ -20,6 +25,7 @@ try:
     import cPickle as pkl
 except:
     import pickle as pkl
+
 
 import psutil
 from multiprocessing import Pool
@@ -34,7 +40,7 @@ import sklearn
 from sklearn.neighbors import NearestNeighbors as NearestNeighbors_
 
 
-__all__ = ['get_free_cpu_count', 'parallel_accum', 'my_jit', 'my_guvectorize',
+__all__ = ['get_free_cpu_count', 'parallel_accum', 'my_jit',
            'timeit', 'cache', 'CircularBuffer', 'AccumulationArray', 'KDT',
            'DynamicKDT', 'import_variable_from_file', 'pickleload', 'picklesave',
            'h5save', 'h5load', 'pretty_string_ops', 'pretty_string_time',
@@ -169,22 +175,10 @@ class my_jit(DecoratorBase):
     """
     pass
 
-
-class my_guvectorize(DecoratorBase):
-    """
-    This mock decorator is used as a pure-Python fallback for
-    ``numba.guvectorize`` if numba is not availabe.
-
-    If numba is available, the decorator is later replaced by the real numba code.
-    """
-    pass
-
-
 try:
     import numba
 
     my_jit = numba.jit
-    my_guvectorize = numba.guvectorize
 except:
     logger.warning("numba could not be imported, falling back to slow Python.")
 
@@ -332,9 +326,7 @@ class AccumulationArray(object):
             dtype = data.dtype
 
         self._n_init = n_init
-        self._right_shape = (right_shape,) if isinstance(right_shape,
-                                                         int) else tuple(
-            right_shape)
+        self._right_shape = (right_shape,) if isinstance(right_shape, int) else tuple(right_shape)
         self.dtype = dtype
         self.length = 0
         self._buffer = self._alloc(n_init)
@@ -364,7 +356,7 @@ class AccumulationArray(object):
         return ret
 
     def append(self, data):
-        #        data = self.normalise_data(data)
+        # data = self.normalise_data(data)
         if len(self._buffer)==self.length:
             tmp = self._alloc(len(self._buffer) * 2)
             tmp[:self.length] = self._buffer
@@ -438,8 +430,7 @@ class KDT(NearestNeighbors_):
                  n_jobs=1, **kwargs):
         if sklearn.__version__=="0.16.1":
             if not KDT.warning_shown:
-                logger.warning(
-                    "sklearn version does not support MP, try to upgrade it.")
+                logger.warning("sklearn version does not support MP, try to upgrade it.")
                 KDT.warning_shown = True
 
             if "n_jobs" in kwargs:
@@ -762,8 +753,10 @@ def pretty_string_ops(n):
     """
     Return a humanized string representation of a large number.
     """
-    abbrevs = [(1000000000000, 'Tera Ops'), (1000000000, 'Giga Ops'),
-               (1000000, 'Mega Ops'), (1000, 'kilo Ops')]
+    abbrevs = [(1000000000000, 'Tera Ops'),
+               (1000000000, 'Giga Ops'),
+               (1000000, 'Mega Ops'),
+               (1000, 'kilo Ops')]
     for factor, suffix in abbrevs:
         if n>=factor:
             break
@@ -818,9 +811,8 @@ class Timer(object):
             self.accumulator[name] = accum + dt
 
     def plot(self, accum=False):
-        import \
-            matplotlib.pyplot as plt  # I don't want this import every time utils is used
-
+        # I don't want this import every time utils is used
+        import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         if accum:
             times = list(self.accumulator.values())
@@ -841,14 +833,14 @@ class Timer(object):
             ix = np.argsort(self.accumulator.values())
             for i in ix:
                 name, dt = self.accumulator.items()[i]
-                s += "%s:\t\t%.3gs\t%.3g%%\n" % (
-                    name, dt, dt / self.total * 100.0)
+                s += "%s:\t\t%.3gs\t%.3g%%\n"\
+                     %(name, dt, dt/self.total*100.0)
         else:
             ix = np.argsort(self.checktimes)
             for i in ix:
                 name, dt = self.checknames[i], self.checktimes[i]
-                s += "%s:\t\t%.3gs\t%.3g%%\n" % (
-                    name, dt.dt / self.total * 100.0)
+                s += "%s:\t\t%.3gs\t%.3g%%\n"\
+                     % (name, dt. dt/self.total*100.0)
         if silent:
             return s
         else:
