@@ -5,38 +5,45 @@
 # All rights reserved
 
 from __future__ import absolute_import, division, print_function
-from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
+from builtins import filter, hex, input, int, map, next, oct, pow, range, \
+    super, zip
 
 import logging
 import numpy as np
 
+
+__all__ = ["cnncalculator", "get_cloesest_valid_patch_size",
+           "get_valid_patch_sizes"]
+
 logger = logging.getLogger('elektronn2log')
 
-__all__ = ['cnncalculator', 'get_valid_patch_sizes', 'get_cloesest_valid_patch_size']
 
-class Layer(object):
+class _Layer(object):
     def __init__(self, patch_size, filter=1, pool=1, stride=1, mfp=True):
         self.field = None
         self.overlap = None
 
-        self.out = patch_size-filter+1
+        self.out = patch_size - filter + 1
         if self.out <= 0:
-            raise ValueError('CNN has no output for Layer with patch_size',patch_size)
+            raise ValueError('CNN has no output for Layer with patch_size',
+                             patch_size)
         self.stride = stride
-        rest = self.out%pool
+        rest = self.out % pool
         self.pool_out = self.out // pool
-        if pool>1:
+        if pool > 1:
             if mfp and rest!=1:
-                raise ValueError('mfp fails for Layer with patch_size',patch_size)
-            elif not mfp and rest>0:
-                raise ValueError('Uneven Pools for Layer with patch_size',patch_size)
+                raise ValueError('mfp fails for Layer with patch_size',
+                                 patch_size)
+            elif not mfp and rest > 0:
+                raise ValueError('Uneven Pools for Layer with patch_size',
+                                 patch_size)
 
     def setfield(self, field):
         self.field = field
         self.overlap = field - self.stride
 
 
-class Cnncalculator(object):
+class _Cnncalculator(object):
     def __init__(self, filters, poolings, desired_patch_size, mfp,
                  force_center, desired_output):
         self.layers = None
@@ -46,16 +53,16 @@ class Cnncalculator(object):
         self.mfp = mfp
         self.fields = self.getFields(filters, poolings)
         fow = self.fields[-1]
-        if fow%2==0:
+        if fow % 2==0:
             if force_center:
                 raise ValueError('Receptive Fields are not '
-                                 'centered with field of view (%i)' %fow)
+                                 'centered with field of view (%i)' % fow)
             else:
                 logger.warning('WARNING: Receptive Fields are not centered '
-                               'with even field of view (%i)' %fow)
-        self.offset = float(fow)/2
+                               'with even field of view (%i)' % fow)
+        self.offset = float(fow) / 2
 
-        valid_patch_sizes  = []
+        valid_patch_sizes = []
         valid_outputs = []
         for inp in range(2, 5000):
             try:
@@ -71,9 +78,9 @@ class Cnncalculator(object):
                 patch_size = valid_patch_sizes[i]
             else:
                 valid_outputs = np.array(valid_outputs)
-                patch_size = valid_outputs[valid_outputs<=desired_output][-1]
+                patch_size = valid_outputs[valid_outputs <= desired_output][-1]
                 logger.info("Info: output size requires patch_size>5000, "
-                            "next smaller output (%i) is used" %patch_size)
+                            "next smaller output (%i) is used" % patch_size)
                 valid_outputs = list(valid_outputs)
 
             # patch_size corresponding to that output
@@ -89,11 +96,13 @@ class Cnncalculator(object):
             if desired_patch_size < valid_patch_sizes[0]:
                 patch_size = valid_patch_sizes[0]
                 logger.info("patch_size (%i) changed to (%i) "
-                            "(size too small)" %(desired_patch_size, patch_size))
+                            "(size too small)" % (
+                                desired_patch_size, patch_size))
             else:
-                patch_size = valid_patch_sizes[valid_patch_sizes<=desired_patch_size][-1]
-                logger.info("patch_size (%i) changed to (%i) (size not possible)"\
-                            %(desired_patch_size, patch_size))
+                patch_size = valid_patch_sizes[
+                    valid_patch_sizes <= desired_patch_size][-1]
+                logger.info("patch_size (%i) changed to (%i) (size not "
+                            "possible)" % (desired_patch_size, patch_size))
                 valid_patch_sizes = list(valid_patch_sizes)
 
         self.valid_patch_sizes = valid_patch_sizes
@@ -103,20 +112,21 @@ class Cnncalculator(object):
         for lay, field in zip(self.layers, self.fields):
             lay.setfield(field)
 
-        self.overlap  = [l.overlap for l in self.layers]
+        self.overlap = [l.overlap for l in self.layers]
 
     def calclayers(self, patch_size, filters, poolings, mfp):
         stride = poolings[0]
-        self.layers = [Layer(patch_size, filters[0], poolings[0], stride, mfp=mfp[0])]
+        lay0 = _Layer(patch_size, filters[0], poolings[0], stride, mfp=mfp[0])
+        self.layers = [lay0,]
         for i in range(1, len(filters)):
             stride = np.multiply(stride, poolings[i])
-            lay = Layer(self.layers[i-1].pool_out, filters[i], poolings[i], stride, mfp[i])
+            lay = _Layer(self.layers[i - 1].pool_out, filters[i], poolings[i],
+                         stride, mfp[i])
             self.layers.append(lay)
 
         self.pool_out = [l.pool_out for l in self.layers]
-        self.out      = [l.out for l in self.layers]
-        self.stride   = [l.stride for l in self.layers]
-
+        self.out = [l.out for l in self.layers]
+        self.stride = [l.stride for l in self.layers]
 
     def __repr__(self):
         if not isinstance(self.pool_out[0], list):
@@ -140,32 +150,35 @@ class Cnncalculator(object):
         else:
             overlap = list(zip(*self.overlap))[::-1]
 
-        s = "patch_size: "+repr(self.patch_size)+"\nLayer/Fragment sizes:\t"+repr(ls)+\
-            "\nUnpooled Layer sizes:\t"+repr(out)+"\nReceptive fields:\t"+\
-            repr(fields)+"\nStrides:\t\t"+repr(stride)+"\nOverlap:\t\t"+\
-            repr(overlap)+"\nOffset:\t\t"+repr(self.offset)+"\nIf offset is " \
-            "non-int: output neurons lie centered on patch_size neurons,they have " \
-                                                            "an odd FOV\n"
+        s = "patch_size: " + repr(
+            self.patch_size) + "\nLayer/Fragment sizes:\t" + repr(ls)\
+            + "\nUnpooled Layer sizes:\t" + repr(out)\
+            + "\nReceptive fields:\t" + repr(fields)\
+            + "\nStrides:\t\t" + repr(stride)\
+            + "\nOverlap:\t\t" + repr(overlap) + "\nOffset:\t\t"\
+            + repr(self.offset) + "\nIf offset is non-int: output neurons " \
+            + "lie centered on patch_size neurons,they have an odd FOV\n"
         return s
 
     @staticmethod
     def getFields(filter, pool):
         def recFields_helper(filter, pool):
-            rf = [None]*(len(filter)+1)
+            rf = [None] * (len(filter) + 1)
             rf[-1] = 1
-            for i in range(len(filter), 0 ,-1):
-                rf[i-1] = rf[i] * pool[i-1] + filter[i-1] - 1
+            for i in range(len(filter), 0, -1):
+                rf[i - 1] = rf[i] * pool[i - 1] + filter[i - 1] - 1
             return rf[0]
 
         fields = []
-        for i in range(1, len(filter)+1):
+        for i in range(1, len(filter) + 1):
             fields.append(recFields_helper(filter[:i], pool[:i]))
 
         return fields
 
 
-class Multi_cnncalculator(Cnncalculator):
+class _Multi_cnncalculator(_Cnncalculator):
     """ Adaptor Class to unify multiple CNNCalculators"""
+
     def __init__(self, calcs):
         self.fields = []
         self.offset = []
@@ -186,7 +199,6 @@ class Multi_cnncalculator(Cnncalculator):
             self.pool_out.append(c.pool_out)
             self.out.append(c.out)
             self.stride.append(c.stride)
-
 
 
 def cnncalculator(filters, poolings, desired_patch_size=None, mfp=False,
@@ -251,60 +263,67 @@ def cnncalculator(filters, poolings, desired_patch_size=None, mfp=False,
     assert len(poolings)==len(filters)
 
     if mfp is False:
-        mfp = [False,]*len(filters)
+        mfp = [False, ] * len(filters)
 
-    if ndim==1: #not hasattr(filters[0], '__len__') :
-        return Cnncalculator(filters, poolings, desired_patch_size, mfp,
+    if ndim==1:  # not hasattr(filters[0], '__len__') :
+        return _Cnncalculator(filters, poolings, desired_patch_size, mfp,
                               force_center, desired_output)
     else:
         if desired_patch_size is None:
-            desired_patch_size = (None,)*ndim
+            desired_patch_size = (None,) * ndim
         elif not hasattr(desired_patch_size, '__len__'):
-            desired_patch_size = (desired_patch_size,)*ndim
+            desired_patch_size = (desired_patch_size,) * ndim
         if desired_output is None:
-            desired_output = (None,)*ndim
+            desired_output = (None,) * ndim
         elif not hasattr(desired_output, '__len__'):
-            desired_output = (desired_output,)*ndim
+            desired_output = (desired_output,) * ndim
         if not hasattr(poolings[0], '__len__'):
-            poolings = [[p,]*ndim for p in poolings]
+            poolings = [[p, ] * ndim for p in poolings]
         if not hasattr(filters[0], '__len__'):
-            filters = [[f,]*ndim for f in filters]
+            filters = [[f, ] * ndim for f in filters]
         if not hasattr(mfp[0], '__len__'):
-            mfp = [[m,]*ndim for m in mfp]
+            mfp = [[m, ] * ndim for m in mfp]
 
         assert len(mfp)==len(filters)
 
-        filters  = [list(l) for l in zip(*filters)]
+        filters = [list(l) for l in zip(*filters)]
         poolings = [list(l) for l in zip(*poolings)]
-        mfp      = [list(l) for l in zip(*mfp)]
+        mfp = [list(l) for l in zip(*mfp)]
 
-        calcs=[]
-        for f,p,d,o, mfp in zip(filters, poolings, desired_patch_size,
-                                desired_output, mfp):
-            c = Cnncalculator(f, p, d, mfp, force_center, o)
+        calcs = []
+        for f, p, d, o, mfp in zip(filters, poolings, desired_patch_size,
+                                   desired_output, mfp):
+            c = _Cnncalculator(f, p, d, mfp, force_center, o)
             calcs.append(c)
 
-        return Multi_cnncalculator(calcs)
+        return _Multi_cnncalculator(calcs)
 
-def get_valid_patch_sizes(filters, poolings, desired_patch_size=100, mfp=False, ndim=1):
-    calc = cnncalculator(filters, poolings, desired_patch_size, mfp=mfp, ndim=ndim)
+
+def get_valid_patch_sizes(filters, poolings, desired_patch_size=100,mfp=False,
+                          ndim=1):
+    calc = cnncalculator(filters, poolings, desired_patch_size, mfp=mfp,
+                         ndim=ndim)
     return calc.valid_patch_sizes
 
-def get_cloesest_valid_patch_size(filters, poolings, desired_patch_size=100, mfp=False, ndim=1):
-    calc = cnncalculator(filters, poolings, desired_patch_size, mfp=mfp, ndim=ndim)
+
+def get_cloesest_valid_patch_size(filters, poolings, desired_patch_size=100,
+                                  mfp=False, ndim=1):
+    calc = cnncalculator(filters, poolings, desired_patch_size, mfp=mfp,
+                         ndim=ndim)
     return calc.patch_size
+
 
 if __name__=="__main__":
     logger.debug("Testing cnncalculator")
-    desired_patch_size   = 200
+    desired_patch_size = 200
     mfp = False
-    filters         = [6,5,4,4, 1,4,4,4, 4,2]
-    pool            = [1,2,2,1, 1,1,1,1, 1,1]
+    filters = [6, 5, 4, 4, 1, 4, 4, 4, 4, 2]
+    pool = [1, 2, 2, 1, 1, 1, 1, 1, 1, 1]
 
-#    filters         = [1,1,1,1, 4,3,3,2, 2,1]
-#    pool            = [1,1,1,1, 2,1,1,1, 1,1]
+    #    filters         = [1,1,1,1, 4,3,3,2, 2,1]
+    #    pool            = [1,1,1,1, 2,1,1,1, 1,1]
 
-    ndim=1
+    ndim = 1
     d = cnncalculator(filters, pool, desired_patch_size, mfp=mfp,
                       force_center=True, desired_output=None, ndim=ndim)
     print(d)

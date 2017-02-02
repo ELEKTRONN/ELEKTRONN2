@@ -42,31 +42,28 @@ which both are available under the following license (thanks, Jonathan and contr
     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from __future__ import unicode_literals, absolute_import, division, print_function
+from __future__ import unicode_literals, absolute_import, division, \
+    print_function
 
 import jedi
 from prompt_toolkit.completion import Completer, Completion
 from prompt_toolkit.contrib.completers import PathCompleter
-from prompt_toolkit.contrib.regular_languages.compiler import compile as compile_grammar
-from prompt_toolkit.contrib.regular_languages.completion import GrammarCompleter
+from prompt_toolkit.contrib.regular_languages.compiler import \
+    compile as compile_grammar
+from prompt_toolkit.contrib.regular_languages.completion import \
+    GrammarCompleter
 
 import re
 
-__all__ = (
-    'NumaCompleter',
-)
-
 
 # From https://github.com/jonathanslenders/ptpython/blob/master/ptpython/utils.py
-def get_jedi_script_from_document(document, locals, globals):
-
+def _get_jedi_script_from_document(document, locals, globals):
     try:
-        return jedi.Interpreter(
-            document.text,
-            column=document.cursor_position_col,
-            line=document.cursor_position_row + 1,
-            path='input-text',
-            namespaces=[locals, globals])
+        return jedi.Interpreter(document.text,
+                                column=document.cursor_position_col,
+                                line=document.cursor_position_row + 1,
+                                path='input-text',
+                                namespaces=[locals, globals])
     except ValueError:
         # Invalid cursor position.
         # ValueError('`column` parameter is not in a valid range.')
@@ -89,7 +86,9 @@ class NumaCompleter(Completer):
     """
     Completer for Python, file system paths and custom words
     """
-    def __init__(self, get_globals, get_locals, words=None, words_metastring=''):
+
+    def __init__(self, get_globals, get_locals, words=None,
+                 words_metastring=''):
         super(NumaCompleter, self).__init__()
 
         if words is None:
@@ -109,10 +108,9 @@ class NumaCompleter(Completer):
     def _path_completer(self):
         if self._path_completer_cache is None:
             self._path_completer_cache = GrammarCompleter(
-                self._path_completer_grammar, {
-                    'var1': PathCompleter(expanduser=True),
-                    'var2': PathCompleter(expanduser=True),
-                })
+                self._path_completer_grammar,
+                {'var1': PathCompleter(expanduser=True),
+                 'var2': PathCompleter(expanduser=True),})
         return self._path_completer_cache
 
     @property
@@ -162,16 +160,11 @@ class NumaCompleter(Completer):
                 )
         """
 
-        return compile_grammar(
-            grammar,
-            escape_funcs={
-                'var1': single_quoted_wrapper,
-                'var2': double_quoted_wrapper,
-            },
-            unescape_funcs={
-                'var1': unwrapper,
-                'var2': unwrapper,
-            })
+        return compile_grammar(grammar,
+                               escape_funcs={'var1': single_quoted_wrapper,
+                                             'var2': double_quoted_wrapper,},
+                               unescape_funcs={'var1': unwrapper,
+                                               'var2': unwrapper,})
 
     def _complete_path_while_typing(self, document):
         char_before_cursor = document.char_before_cursor
@@ -189,8 +182,10 @@ class NumaCompleter(Completer):
         """
 
         # Do Path completions
-        if complete_event.completion_requested or self._complete_path_while_typing(document):
-            for c in self._path_completer.get_completions(document, complete_event):
+        if complete_event.completion_requested or self._complete_path_while_typing(
+                document):
+            for c in self._path_completer.get_completions(document,
+                                                          complete_event):
                 yield c
 
         # If we are inside a string, Don't do Jedi completion.
@@ -198,15 +193,19 @@ class NumaCompleter(Completer):
             return
 
         # Do custom word completions (only if the word is at the beginning of the line)
-        if complete_event.completion_requested or self._complete_python_while_typing(document):
+        if complete_event.completion_requested or self._complete_python_while_typing(
+                document):
             for word in self.words:
                 line_before_cursor = document.current_line_before_cursor
                 if word.startswith(line_before_cursor):
-                    yield Completion(word, -len(line_before_cursor), display_meta=self.words_metastring)
+                    yield Completion(word, -len(line_before_cursor),
+                                     display_meta=self.words_metastring)
 
         # Do Jedi Python completions.
-        if complete_event.completion_requested or self._complete_python_while_typing(document):
-            script = get_jedi_script_from_document(document, self.get_locals(), self.get_globals())
+        if complete_event.completion_requested or self._complete_python_while_typing(
+                document):
+            script = _get_jedi_script_from_document(document, self.get_locals(),
+                                                    self.get_globals())
 
             if script:
                 try:
@@ -235,5 +234,7 @@ class NumaCompleter(Completer):
                     pass
                 else:
                     for c in completions:
-                        yield Completion(c.name_with_symbols, len(c.complete) - len(c.name_with_symbols),
+                        yield Completion(c.name_with_symbols,
+                                         len(c.complete) - len(
+                                             c.name_with_symbols),
                                          display=c.name_with_symbols)

@@ -7,7 +7,8 @@ containing directory).
 """
 
 from __future__ import absolute_import, division, print_function
-from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
+from builtins import filter, hex, input, int, map, next, oct, pow, range, \
+    super, zip
 
 import future.utils
 import re
@@ -17,7 +18,10 @@ import logging
 from collections import OrderedDict
 
 from ...neuromancer.graphutils import TaggedShape
+
+
 logger = logging.getLogger('elektronn2log')
+
 
 __path__ = os.path.dirname(os.path.realpath(__file__))
 
@@ -25,12 +29,16 @@ pydot_imported = False
 try:
     # pydot2 supports py3
     import pydotplus as pd
+
+
     if pd.find_graphviz():
         pydot_imported = True
 except ImportError:
     try:
         # fall back on pydot if necessary
         import pydot as pd
+
+
         if pd.find_graphviz():
             pydot_imported = True
     except ImportError:
@@ -38,8 +46,9 @@ except ImportError:
 
 if not pydot_imported:
     logger.warning('Failed to import pydot/pydotplus. You must install '
-                      'graphviz and either pydot or pydotplus for '
-                      '`PyDotFormatter` to work.')
+                   'graphviz and either pydot or pydotplus for '
+                   '`PyDotFormatter` to work.')
+
 
 def sort(model, select_outputs):
     graph_sorted = OrderedDict()
@@ -50,16 +59,16 @@ def sort(model, select_outputs):
         else:
             graph_unsorted[n] = True
 
-
     for n in graph_unsorted:
-        if not len(n.children) and select_outputs: # output node
+        if not len(n.children) and select_outputs:  # output node
             ### TODO
-            raise NotImplementedError("Select outputs does not work. Make sure "
-                                      "that outputs which are needed from scan "
-                                      "are not removed, that edges to removed "
-                                      "nodes are not drawn and and that after "
-                                      "removing unwanted output nodes in one sort "
-                                      "there will be new unwanted terminal nodes")
+            raise NotImplementedError(
+                "Select outputs does not work. Make sure "
+                "that outputs which are needed from scan "
+                "are not removed, that edges to removed "
+                "nodes are not drawn and and that after "
+                "removing unwanted output nodes in one sort "
+                "there will be new unwanted terminal nodes")
             if n.name in select_outputs:
                 graph_sorted[n] = True
         else:
@@ -89,9 +98,10 @@ class PyDotFormatter2(object):
     def __init__(self, compact=True):
         """Construct PyDotFormatter object."""
         if not pydot_imported:
-            raise ImportError('Failed to import pydot/pydotplus. You must install '
-                              'graphviz and either pydot or pydotplus for '
-                              '`PyDotFormatter` to work.')
+            raise ImportError(
+                'Failed to import pydot/pydotplus. You must install '
+                'graphviz and either pydot or pydotplus for '
+                '`PyDotFormatter` to work.')
 
         self.compact = compact
         self.__node_prefix = 'n'
@@ -138,9 +148,11 @@ class PyDotFormatter2(object):
             cls_name = cls_name[1:]
         __node_id = self.__node_id(node)
 
-        node_type = 0 # normal
-        if node.is_source: node_type = 1
-        elif len(node.children)==0: node_type = 2
+        node_type = 0  # normal
+        if node.is_source:
+            node_type = 1
+        elif len(node.children)==0:
+            node_type = 2
 
         nparams = {}
         nparams['name'] = __node_id
@@ -149,8 +161,8 @@ class PyDotFormatter2(object):
         nparams['style'] = 'filled'
         nparams['type'] = 'colored'
 
-        nparams['shape'] =  'ellipse'
-        nparams['fillcolor'] = '#008000' #'green'
+        nparams['shape'] = 'ellipse'
+        nparams['fillcolor'] = '#008000'  # 'green'
         if cls_name=='Conv':
             nparams['shape'] = 'invtrapezium'
         if cls_name=='UpConv':
@@ -164,8 +176,7 @@ class PyDotFormatter2(object):
         if cls_name=='ScanN':
             nparams['shape'] = 'doublecircle'
             nparams['fillcolor'] = 'red'
-        if 'loss' in cls_name.lower() or 'nll' in cls_name.lower():# in ['GaussianNLL', 'BinaryNLL', 'SquaredLoss', 'AbsLoss',
-                        #'MultinoulliNLL', 'MalisNLL', '_Errors', 'BetaNLL', 'SkelLoss']:
+        if 'loss' in cls_name.lower() or 'nll' in cls_name.lower():
             nparams['shape'] = 'diamond'
             nparams['fillcolor'] = '#FFAA22'
         if cls_name=='ValueNode':
@@ -179,15 +190,14 @@ class PyDotFormatter2(object):
             nparams['shape'] = 'box'
 
         if isinstance(node.shape, TaggedShape) and node.shape.ndim:
-            nparams['dtype'] = node.shape #.ext_repr
+            nparams['dtype'] = node.shape  # .ext_repr
         elif node.shape:
             nparams['dtype'] = node.shape
 
-        nparams['tag'] = None #'tag' # Noone Not needed?
-        nparams['node_type'] = 'node type' # not needed?
-        nparams['apply_op'] = 'apply_op' # not needed?
+        nparams['tag'] = None  # 'tag' # Noone Not needed?
+        nparams['node_type'] = 'node type'  # not needed?
+        nparams['apply_op'] = 'apply_op'  # not needed?
         return nparams
-
 
     def __call__(self, model, select_outputs=None):
         """Create pydot graph from function.
@@ -204,7 +214,7 @@ class PyDotFormatter2(object):
         graph = pd.Dot()
         self.__nodes = {}
         if select_outputs is not None and isinstance(select_outputs, str):
-            select_outputs = [select_outputs,]
+            select_outputs = [select_outputs, ]
 
         nodes = sort(model, select_outputs)
         # Create nodes
@@ -216,22 +226,20 @@ class PyDotFormatter2(object):
         # Create edges
         for node in nodes:
             for i, c in enumerate(node.children.values()):
-                if c.__class__.__name__ == "ScanN":
+                if c.__class__.__name__=="ScanN":
                     if node in c.in_memory:
-                        #print("Skippnig",node,'for',c)
+                        # print("Skippnig",node,'for',c)
                         continue
                 p_id = self.__node_id(node)
                 c_id = self.__node_id(c)
                 edge_params = {}
                 edge_params['color'] = 'black'
-                edge_label = " " #str(i)
-                pdedge = pd.Edge(p_id, c_id, label=edge_label,
-                                 **edge_params)
+                edge_label = " "  # str(i)
+                pdedge = pd.Edge(p_id, c_id, label=edge_label, **edge_params)
                 graph.add_edge(pdedge)
 
-            if node.__class__.__name__ == 'ScanN':
+            if node.__class__.__name__=='ScanN':
                 self.add_scan_edges(node, graph, nodes)
-
 
         return graph
 
@@ -251,13 +259,13 @@ class PyDotFormatter2(object):
             else:
                 out.append("NotFound")
 
-        #out = [nodes[name] for name in scan.output_name]
+        # out = [nodes[name] for name in scan.output_name]
 
-        for p,c in zip(out, scan.in_memory):
+        for p, c in zip(out, scan.in_memory):
             for ci in c.children.values():
-                if ci.__class__.__name__ == "ScanN":
+                if ci.__class__.__name__=="ScanN":
                     continue
-                    #if c in c.in_memory:
+                    # if c in c.in_memory:
 
                 p_id = self.__node_id(p)
                 c_id = self.__node_id(ci)
@@ -265,9 +273,8 @@ class PyDotFormatter2(object):
                 edge_params['color'] = 'red'
                 edge_params['constraint'] = False
                 edge_params['penwidth'] = 3
-                edge_label = n + "x recur.\nreplace %s"%c.name
-                pdedge = pd.Edge(p_id, c_id, label=edge_label,
-                                 **edge_params)
+                edge_label = n + "x recur.\nreplace %s" % c.name
+                pdedge = pd.Edge(p_id, c_id, label=edge_label, **edge_params)
                 graph.add_edge(pdedge)
 
         if scan.in_iterate:
@@ -279,10 +286,8 @@ class PyDotFormatter2(object):
                 edge_params['constraint'] = False
                 edge_params['penwidth'] = 3
                 edge_label = n + "x recur.\niteration"
-                pdedge = pd.Edge(p_id, c_id, label=edge_label,
-                                 **edge_params)
+                pdedge = pd.Edge(p_id, c_id, label=edge_label, **edge_params)
                 graph.add_edge(pdedge)
-
 
 
 def dict_to_pdnode(d):
@@ -299,7 +304,6 @@ def dict_to_pdnode(d):
             e[k] = v
     pynode = pd.Node(**e)
     return pynode
-
 
 
 def replace_patterns(x, replace):
@@ -330,7 +334,8 @@ def escape_quotes(s):
     return s
 
 
-def visualise_model(model, outfile, copy_deps=True, select_outputs=None, image_format='png', *args, **kwargs):
+def visualise_model(model, outfile, copy_deps=True, select_outputs=None,
+                    image_format='png', *args, **kwargs):
     """
     Parameters
     ----------
@@ -357,11 +362,12 @@ def visualise_model(model, outfile, copy_deps=True, select_outputs=None, image_f
     dot_graph_raw = graph.create_dot()
     if not future.utils.PY2:
         dot_graph_raw = dot_graph_raw.decode('utf8')
-    dot_graph = escape_quotes(dot_graph_raw).replace('\n', '').replace('\r', '')
+    dot_graph = escape_quotes(dot_graph_raw).replace('\n', '').replace('\r',
+                                                                       '')
 
     # Create output directory if not existing
     outdir = os.path.dirname(outfile)
-    if not outdir == '' and not os.path.exists(outdir):
+    if not outdir=='' and not os.path.exists(outdir):
         os.makedirs(outdir)
 
     # Read template HTML file
@@ -381,15 +387,13 @@ def visualise_model(model, outfile, copy_deps=True, select_outputs=None, image_f
         dst_deps = src_deps
 
     # Replace patterns in template
-    replace = {
-        '%% JS_DIR %%': os.path.join(dst_deps, 'js'),
-        '%% CSS_DIR %%': os.path.join(dst_deps, 'css'),
-        '%% DOT_GRAPH %%': dot_graph,
-    }
+    replace = {'%% JS_DIR %%': os.path.join(dst_deps, 'js'),
+               '%% CSS_DIR %%': os.path.join(dst_deps, 'css'),
+               '%% DOT_GRAPH %%': dot_graph,}
     html = replace_patterns(template, replace)
 
     # Write HTML file
-    with open(outfile+'.html', 'w') as f:
+    with open(outfile + '.html', 'w') as f:
         f.write(html)
 
-    graph.write(outfile+'.'+image_format, prog='dot', format=image_format)
+    graph.write(outfile + '.' + image_format, prog='dot', format=image_format)

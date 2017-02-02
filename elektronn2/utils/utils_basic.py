@@ -4,26 +4,22 @@
 # All rights reserved
 
 from __future__ import absolute_import, division, print_function
-from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
+from builtins import filter, hex, input, int, map, next, oct, pow, range, \
+    super, zip
 
-__all__ = ['CircularBuffer', 'AccumulationArray', 'DynamicKDT', 'KDT',
-           'pickleload', 'picklesave', 'h5load', 'h5save', 'pretty_string_ops',
-           'import_variable_from_file', 'timeit', 'Timer',
-           'cache', 'my_jit', 'my_guvectorize', 'pretty_string_time', 'unique_rows',
-           'get_free_cpu_count', 'parallel_accum', 'makeversiondir', 'as_list']
-
-from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
+from builtins import filter, hex, input, int, map, next, oct, pow, range, \
+    super, zip
 
 import os
 import re
 import time
 import logging
 from functools import reduce
+
 try:
     import cPickle as pkl
 except:
     import pickle as pkl
-
 
 import psutil
 from multiprocessing import Pool
@@ -37,6 +33,13 @@ from scipy.spatial.distance import cdist
 import sklearn
 from sklearn.neighbors import NearestNeighbors as NearestNeighbors_
 
+
+__all__ = ['get_free_cpu_count', 'parallel_accum', 'my_jit', 'my_guvectorize',
+           'timeit', 'cache', 'CircularBuffer', 'AccumulationArray', 'KDT',
+           'DynamicKDT', 'import_variable_from_file', 'pickleload', 'picklesave',
+           'h5save', 'h5load', 'pretty_string_ops', 'pretty_string_time',
+           'makeversiondir', 'Timer', 'unique_rows', 'as_list']
+
 logger = logging.getLogger('elektronn2log')
 
 
@@ -45,13 +48,13 @@ def get_free_cpu_count():
     if m<=2:
         return 1
     else:
-        load = float(psutil.cpu_percent(interval=0.4))/100
+        load = float(psutil.cpu_percent(interval=0.4)) / 100
         free = 1 - load
-        n = min(max(3, m*free*0.8), m-1)
+        n = min(max(3, m * free * 0.8), m - 1)
         return int(n)
 
-def parallel_accum(func, n_ret, var_args, const_args, proc=-1,
-                   debug=False):
+
+def parallel_accum(func, n_ret, var_args, const_args, proc=-1, debug=False):
     if proc==-1:
         proc = get_free_cpu_count()
     args = []
@@ -64,7 +67,7 @@ def parallel_accum(func, n_ret, var_args, const_args, proc=-1,
         arg = v + tuple(const_args)
         args.append(arg)
 
-    assert len(args) > 0
+    assert len(args)>0
     if not debug:
         p = Pool(proc)
         try:
@@ -115,6 +118,7 @@ class DecoratorBase(object):
 
     This base class completely ignores all wrapper arguments.
     """
+
     def __init__(self, *args, **kwargs):
         self.func = None
         self.dec_args = None
@@ -129,7 +133,6 @@ class DecoratorBase(object):
             self.dec_args = args
             self.dec_kwargs = kwargs
 
-
     def __call__(self, *args, **kwargs):
         # The decorator was initialised with the func, it now has apply the decoration itself
         if not self.func is None:
@@ -142,11 +145,12 @@ class DecoratorBase(object):
         elif len(args)==1 and not len(kwargs):
             assert hasattr(args[0], '__call__')
             func = args[0]
+
             @functools.wraps(func)
             def decorated(*args0, **kwargs0):
                 # do something with args0, read the decorator arguments
-                #print(self.dec_args)
-                #print(self.dec_kwargs)
+                # print(self.dec_args)
+                # print(self.dec_kwargs)
                 ret = func(*args0, **kwargs0)
                 # do something with ret
                 return ret
@@ -165,6 +169,7 @@ class my_jit(DecoratorBase):
     """
     pass
 
+
 class my_guvectorize(DecoratorBase):
     """
     This mock decorator is used as a pure-Python fallback for
@@ -174,8 +179,10 @@ class my_guvectorize(DecoratorBase):
     """
     pass
 
+
 try:
     import numba
+
     my_jit = numba.jit
     my_guvectorize = numba.guvectorize
 except:
@@ -196,24 +203,27 @@ class timeit(DecoratorBase):
         elif len(args)==1 and not len(kwargs):
             assert hasattr(args[0], '__call__')
             func = args[0]
-            n = self.dec_kwargs.get('n',1)
+            n = self.dec_kwargs.get('n', 1)
+
             @functools.wraps(func)
             def decorated(*args0, **kwargs0):
                 t0 = time.time()
-                if n > 1:
+                if n>1:
                     for i in range(n - 1):
                         func(*args0, **kwargs0)
 
                 ret = func(*args0, **kwargs0)
                 t = time.time() - t0
                 print("Function <%s> took %.5g s averaged over %i execs" % (
-                            func.__name__, t / n, n))
+                    func.__name__, t / n, n))
 
                 return ret
+
             return decorated
 
         else:
             raise ValueError()
+
 
 class cache(DecoratorBase):
     def __init__(self, *args, **kwargs):
@@ -234,7 +244,6 @@ class cache(DecoratorBase):
 
         return reduce(lambda x, y: x + y, tmp, 0)
 
-
     def __call__(self, *args, **kwargs):
         # The nor args for the decorator --> n=1
         if not self.func is None:
@@ -254,6 +263,7 @@ class cache(DecoratorBase):
         elif len(args)==1 and not len(kwargs):
             assert hasattr(args[0], '__call__')
             func = args[0]
+
             @functools.wraps(func)
             def decorated(*args0, **kwargs0):
                 if len(args0)==0 and len(kwargs0)==0:
@@ -297,7 +307,7 @@ class CircularBuffer(object):
             return 0.0
 
     def setvals(self, val):
-        self._buffer[:] =  val
+        self._buffer[:] = val
 
     def __len__(self):
         return self.length
@@ -310,8 +320,8 @@ class CircularBuffer(object):
 
 
 class AccumulationArray(object):
-    def __init__(self, right_shape=(), dtype=np.float32, n_init=100,
-                 data=None, ema_factor=0.95):
+    def __init__(self, right_shape=(), dtype=np.float32, n_init=100, data=None,
+                 ema_factor=0.95):
         if isinstance(dtype, dict) and right_shape!=():
             raise ValueError("If dict is used as dtype, right shape must be"
                              "unchanged (i.e it is 1d)")
@@ -321,10 +331,10 @@ class AccumulationArray(object):
             right_shape = data.shape[1:]
             dtype = data.dtype
 
-
-
         self._n_init = n_init
-        self._right_shape = (right_shape,) if isinstance(right_shape, int) else tuple(right_shape)
+        self._right_shape = (right_shape,) if isinstance(right_shape,
+                                                         int) else tuple(
+            right_shape)
         self.dtype = dtype
         self.length = 0
         self._buffer = self._alloc(n_init)
@@ -346,17 +356,17 @@ class AccumulationArray(object):
 
     def _alloc(self, n):
         if isinstance(self._right_shape, (tuple, list, np.ndarray)):
-            ret = np.zeros((n,)+tuple(self._right_shape), dtype=self.dtype)
-        elif isinstance(self.dtype, dict): # rec array
+            ret = np.zeros((n,) + tuple(self._right_shape), dtype=self.dtype)
+        elif isinstance(self.dtype, dict):  # rec array
             ret = np.zeros(n, dtype=self.dtype)
         else:
             raise ValueError("dtype not understood")
         return ret
 
     def append(self, data):
-#        data = self.normalise_data(data)
-        if len(self._buffer) == self.length:
-            tmp = self._alloc(len(self._buffer)*2)
+        #        data = self.normalise_data(data)
+        if len(self._buffer)==self.length:
+            tmp = self._alloc(len(self._buffer) * 2)
             tmp[:self.length] = self._buffer
             self._buffer = tmp
 
@@ -369,7 +379,7 @@ class AccumulationArray(object):
                 self._ema = self._buffer[self.length]
             else:
                 f = self._ema_factor
-                fc = 1-f
+                fc = 1 - f
                 self._ema = self._ema * f + self._buffer[self.length] * fc
 
         self.length += 1
@@ -378,10 +388,9 @@ class AccumulationArray(object):
         self._max = np.maximum(data, self._max)
         self._sum = self._sum + np.asanyarray(data)
 
-
     def add_offset(self, off):
         self.data[:] += off
-        if off.ndim > np.ndim(self._sum):
+        if off.ndim>np.ndim(self._sum):
             off = off[0]
         self._min += off
         self._max += off
@@ -422,12 +431,15 @@ class AccumulationArray(object):
 
 class KDT(NearestNeighbors_):
     warning_shown = False
+
     @functools.wraps(NearestNeighbors_.__init__)
-    def __init__(self, n_neighbors=5, radius=1.0, algorithm='auto', leaf_size=30,
-                 metric='minkowski', p=2, metric_params=None, n_jobs=1, **kwargs):
+    def __init__(self, n_neighbors=5, radius=1.0, algorithm='auto',
+                 leaf_size=30, metric='minkowski', p=2, metric_params=None,
+                 n_jobs=1, **kwargs):
         if sklearn.__version__=="0.16.1":
             if not KDT.warning_shown:
-                logger.warning("sklearn version does not support MP, try to upgrade it.")
+                logger.warning(
+                    "sklearn version does not support MP, try to upgrade it.")
                 KDT.warning_shown = True
 
             if "n_jobs" in kwargs:
@@ -440,7 +452,7 @@ class KDT(NearestNeighbors_):
                                   metric=metric, p=p,
                                   metric_params=metric_params, **kwargs)
 
-    __init__.__doc__  = NearestNeighbors_.__init__.__doc__
+    __init__.__doc__ = NearestNeighbors_.__init__.__doc__
 
 
 @my_jit(nopython=True, looplift=True, cache=True)
@@ -448,18 +460,18 @@ def _merge(distances, indices, coordinates, pairwise_dist, sort_ix, new_points,
            k, query_points):
     q = len(query_points)
     dim = query_points.shape[1:]
-    distances_new   = np.zeros((q,k), dtype=np.float32)  # (q,k)
-    indices_new     = np.zeros((q,k), dtype=np.int64)  # (q,k)
-    coordinates_new = np.zeros((q,k,)+dim, dtype=np.float32)  # (q,k,2/3)
-    kdt_pointer     = np.zeros(q, dtype=np.int64)  # (q) should be maximal k+1
-    new_pointer     = np.zeros(q, dtype=np.int64)  # (q) should be maximal m+1
+    distances_new = np.zeros((q, k), dtype=np.float32)  # (q,k)
+    indices_new = np.zeros((q, k), dtype=np.int64)  # (q,k)
+    coordinates_new = np.zeros((q, k,) + dim, dtype=np.float32)  # (q,k,2/3)
+    kdt_pointer = np.zeros(q, dtype=np.int64)  # (q) should be maximal k+1
+    new_pointer = np.zeros(q, dtype=np.int64)  # (q) should be maximal m+1
 
     for p in range(q):  # over query points
         for c in range(k):  # over #NNs
             new_ix = sort_ix[p, new_pointer[p]]
             d_new = pairwise_dist[p, new_ix]
             d_kdt = distances[p, kdt_pointer[p]]
-            if d_kdt > d_new:
+            if d_kdt>d_new:
                 distances_new[p, c] = d_new
                 indices_new[p, c] = -666
                 coordinates_new[p, c] = new_points[new_ix]
@@ -467,11 +479,10 @@ def _merge(distances, indices, coordinates, pairwise_dist, sort_ix, new_points,
             else:
                 distances_new[p, c] = d_kdt
                 indices_new[p, c] = indices[p, kdt_pointer[p]]
-                coordinates_new[p, c] = coordinates[p,kdt_pointer[p]]
+                coordinates_new[p, c] = coordinates[p, kdt_pointer[p]]
                 kdt_pointer[p] += 1
 
     return distances_new, indices_new, coordinates_new
-
 
 
 class DynamicKDT(object):
@@ -495,22 +506,24 @@ class DynamicKDT(object):
         if points is not None:
             if len(points)<=k:
                 raise ValueError("points must be longer than k")
-            self._kdt = KDT(n_neighbors=k, n_jobs=n_jobs,
-                            algorithm='kd_tree', leaf_size=20)
+            self._kdt = KDT(n_neighbors=k, n_jobs=n_jobs, algorithm='kd_tree',
+                            leaf_size=20)
 
             self._kdt.fit(points * self.aniso_scale)
             self._static_points = points
 
     def append(self, point):
         point = np.asarray(point)
-        if self._new_points == []:
-            self._new_points = AccumulationArray(right_shape=point.shape, n_init=self._rebuild_thresh)
+        if self._new_points==[]:
+            self._new_points = AccumulationArray(right_shape=point.shape,
+                                                 n_init=self._rebuild_thresh)
 
-        if len(self._new_points) == self._rebuild_thresh:
-            if self._static_points == []:
+        if len(self._new_points)==self._rebuild_thresh:
+            if self._static_points==[]:
                 self._static_points = self._new_points.data.copy()
             else:
-                self._static_points = np.concatenate([self._static_points, self._new_points.data], axis=0)
+                self._static_points = np.concatenate(
+                    [self._static_points, self._new_points.data], axis=0)
             self._new_points.clear()
             self._kdt = KDT(n_neighbors=self._k, n_jobs=self._jobs,
                             algorithm='kd_tree', leaf_size=20)
@@ -518,37 +531,37 @@ class DynamicKDT(object):
 
         self._new_points.append(point)
 
-
     def get_knn(self, query_points, k=None):
         if k is None:
             k = self._k
 
-        if k > (len(self._new_points) + len(self._static_points)):
+        if k>(len(self._new_points) + len(self._static_points)):
             raise ValueError("The requested number of neigbours is larger "
-                               "than the number of stored points")
+                             "than the number of stored points")
         if query_points.ndim==1:
             query_points = query_points[None]
         q = len(query_points)
 
         if len(self._static_points):
-            #assert k==self._kdt.n_neighbors
-            distances, indices = self._kdt.kneighbors(query_points * self.aniso_scale, n_neighbors=k)
+            # assert k==self._kdt.n_neighbors
+            distances, indices = self._kdt.kneighbors(
+                query_points * self.aniso_scale, n_neighbors=k)
             # Add inf for stopping
-            distances = np.hstack([distances, np.ones((q,1)) * np.inf])
+            distances = np.hstack([distances, np.ones((q, 1)) * np.inf])
         else:
-            distances = np.ones((q,1)) * np.inf
-            indices   = np.zeros((q,1), dtype=np.int)
+            distances = np.ones((q, 1)) * np.inf
+            indices = np.zeros((q, 1), dtype=np.int)
 
         if len(self._new_points):
             new_points = self._new_points.data
             pairwise_dist = cdist(query_points * self.aniso_scale,
-                                      new_points * self.aniso_scale,
-                                      p=2)
+                                  new_points * self.aniso_scale, p=2)
             # Add inf for stopping
-            pairwise_dist = np.hstack([pairwise_dist, np.ones((q,1)) * np.inf])
+            pairwise_dist = np.hstack(
+                [pairwise_dist, np.ones((q, 1)) * np.inf])
         else:
-            new_points = np.zeros((0,1), dtype=query_points.dtype)
-            pairwise_dist = np.ones((q,1)) * np.inf # (q,1)
+            new_points = np.zeros((0, 1), dtype=query_points.dtype)
+            pairwise_dist = np.ones((q, 1)) * np.inf  # (q,1)
 
         if k==1:
             indices = indices[:, 0]
@@ -558,13 +571,16 @@ class DynamicKDT(object):
             else:
                 coordinates = new_points[indices]
             # Override found neighbours if a closer neighbour is in new_points
-            replace_by_new = pairwise_dist.min(axis=1) < distances
+            replace_by_new = pairwise_dist.min(axis=1)<distances
             distances[replace_by_new] = pairwise_dist[replace_by_new]
             new_index = pairwise_dist.argmin(axis=1)
             if np.any(replace_by_new):
-                coordinates[replace_by_new] = new_points[new_index[replace_by_new]]
-                indices[replace_by_new]     = new_index[replace_by_new]+len(self._static_points) #-666 # This is just a dummy, atm indices is not used anyway
-                distances[replace_by_new]   = pairwise_dist[replace_by_new, new_index[replace_by_new]]
+                coordinates[replace_by_new] = new_points[
+                    new_index[replace_by_new]]
+                indices[replace_by_new] = new_index[replace_by_new] + len(
+                    self._static_points)  # -666 # This is just a dummy, atm indices is not used anyway
+                distances[replace_by_new] = pairwise_dist[
+                    replace_by_new, new_index[replace_by_new]]
         else:
             if len(self._static_points):
                 coordinates = self._static_points[indices]
@@ -572,15 +588,16 @@ class DynamicKDT(object):
                 coordinates = np.zeros_like(new_points)
 
             sort_ix = pairwise_dist.argsort(axis=1)  # (q,n) this is ascending
-            distances, indices, coordinates  = _merge(
-                distances, indices, coordinates,
-                pairwise_dist, sort_ix, new_points, k, query_points)
+            distances, indices, coordinates = _merge(distances, indices,
+                                                     coordinates,
+                                                     pairwise_dist, sort_ix,
+                                                     new_points, k,
+                                                     query_points)
 
         if q==1:
             distances = distances[0]
             indices = indices[0]
             coordinates = coordinates[0]
-
 
         return distances, indices, coordinates
 
@@ -602,6 +619,7 @@ def import_variable_from_file(file_path, class_name):
     cls = getattr(mod, class_name)
     return cls
 
+
 def picklesave(data, file_name):
     """
     Writes one or many objects to pickle file
@@ -616,6 +634,7 @@ def picklesave(data, file_name):
     with open(file_name, 'wb') as f:
         pkl.dump(data, f, protocol=2)
 
+
 def pickleload(file_name):
     """
     Loads all object that are saved in the pickle file.
@@ -629,7 +648,7 @@ def pickleload(file_name):
                 while True:
                     # Python 3 needs explicit encoding specification,
                     # which Python 2 lacks:
-                    if sys.version_info.major >= 3:
+                    if sys.version_info.major>=3:
                         ret.append(pkl.load(f, encoding='latin1'))
                     else:
                         ret.append(pkl.load(f))
@@ -647,7 +666,7 @@ def pickleload(file_name):
                 while True:
                     # Python 3 needs explicit encoding specification,
                     # which Python 2 lacks:
-                    if sys.version_info.major >= 3:
+                    if sys.version_info.major>=3:
                         ret.append(pkl.load(f, encoding='latin1'))
                     else:
                         ret.append(pkl.load(f))
@@ -658,6 +677,7 @@ def pickleload(file_name):
             return ret[0]
         else:
             return ret
+
 
 def h5save(data, file_name, keys=None, compress=True):
     """
@@ -683,7 +703,7 @@ def h5save(data, file_name, keys=None, compress=True):
     if isinstance(data, list) or isinstance(data, tuple):
         if keys is not None:
             assert len(keys)==len(data)
-        for i,d in enumerate(data):
+        for i, d in enumerate(data):
             if keys is None:
                 f.create_dataset(str(i), data=d, compression=compr)
             else:
@@ -714,7 +734,7 @@ def h5load(file_name, keys=None):
     try:
         f = h5py.File(file_name, "r")
     except IOError:
-        raise IOError("Could not open h5-File %s" %(file_name))
+        raise IOError("Could not open h5-File %s" % (file_name))
 
     if keys is not None:
         try:
@@ -725,7 +745,7 @@ def h5load(file_name, keys=None):
                     ret.append(f[k].value)
         except KeyError:
             raise KeyError("Could not read h5-dataset named %s. Available "
-                           "datasets: %s" %(keys, list(f.keys())))
+                           "datasets: %s" % (keys, list(f.keys())))
     else:
         for k in f.keys():
             ret.append(f[k].value)
@@ -742,12 +762,10 @@ def pretty_string_ops(n):
     """
     Return a humanized string representation of a large number.
     """
-    abbrevs = [(1000000000000, 'Tera Ops'),
-               (1000000000, 'Giga Ops'),
-               (1000000, 'Mega Ops'),
-               (1000, 'kilo Ops')]
+    abbrevs = [(1000000000000, 'Tera Ops'), (1000000000, 'Giga Ops'),
+               (1000000, 'Mega Ops'), (1000, 'kilo Ops')]
     for factor, suffix in abbrevs:
-        if n >= factor:
+        if n>=factor:
             break
     return "%.1f %s" % (float(n) / factor, suffix)
 
@@ -761,7 +779,7 @@ def makeversiondir(path, dir_name=None, cd=False):
             try:
                 num = re.findall(r"-v(\d+)$", path)[0]
                 num = int(num)
-                i = 2 + np.int(np.log10(num)+1)
+                i = 2 + np.int(np.log10(num) + 1)
                 num = "-v" + str(int(num) + 1)
                 path = path[:-i] + num
             except:
@@ -773,8 +791,6 @@ def makeversiondir(path, dir_name=None, cd=False):
     if cd:
         os.chdir(path)
     return path
-
-
 
 
 class Timer(object):
@@ -793,7 +809,7 @@ class Timer(object):
         self.last_t = t
         name = name if name is not None else ""
         if not silent and not self.silent_all:
-            print("%s\tdt=%.3g s,\tt=%.3g s" %(name, dt, self.total))
+            print("%s\tdt=%.3g s,\tt=%.3g s" % (name, dt, self.total))
 
         self.checknames.append(name)
         self.checktimes.append(dt)
@@ -802,7 +818,9 @@ class Timer(object):
             self.accumulator[name] = accum + dt
 
     def plot(self, accum=False):
-        import matplotlib.pyplot as plt # I don't want this import every time utils is used
+        import \
+            matplotlib.pyplot as plt  # I don't want this import every time utils is used
+
         fig, ax = plt.subplots()
         if accum:
             times = list(self.accumulator.values())
@@ -823,12 +841,14 @@ class Timer(object):
             ix = np.argsort(self.accumulator.values())
             for i in ix:
                 name, dt = self.accumulator.items()[i]
-                s += "%s:\t\t%.3gs\t%.3g%%\n" %(name, dt, dt/self.total*100.0)
+                s += "%s:\t\t%.3gs\t%.3g%%\n" % (
+                    name, dt, dt / self.total * 100.0)
         else:
             ix = np.argsort(self.checktimes)
             for i in ix:
                 name, dt = self.checknames[i], self.checktimes[i]
-                s += "%s:\t\t%.3gs\t%.3g%%\n" % (name, dt. dt/self.total*100.0)
+                s += "%s:\t\t%.3gs\t%.3g%%\n" % (
+                    name, dt.dt / self.total * 100.0)
         if silent:
             return s
         else:
@@ -839,14 +859,14 @@ class Timer(object):
 
 
 def pretty_string_time(t):
-  """Custom printing of elapsed time"""
-  if t > 4000:
-    s = 't=%.1fh' %(t/3600)
-  elif t > 300:
-    s = 't=%.0fm' %(t/60)
-  else:
-    s = 't=%.0fs' %(t)
-  return s
+    """Custom printing of elapsed time"""
+    if t>4000:
+        s = 't=%.1fh' % (t / 3600)
+    elif t>300:
+        s = 't=%.0fm' % (t / 60)
+    else:
+        s = 't=%.0fs' % (t)
+    return s
 
 
 def unique_rows(a):
@@ -854,8 +874,10 @@ def unique_rows(a):
     a = np.ascontiguousarray(a)
     unique_a, index = np.unique(a.view([('', a.dtype)] * a.shape[1]),
                                 return_index=True)
-    ret = unique_a.view(a.dtype).reshape((unique_a.shape[0], a.shape[1])), index
-    print("Removed %i of %i (new %i)" %(len(a)-len(index), len(a), len(index)))
+    ret = unique_a.view(a.dtype).reshape(
+        (unique_a.shape[0], a.shape[1])), index
+    print("Removed %i of %i (new %i)" % (
+        len(a) - len(index), len(a), len(index)))
     return ret
 
 

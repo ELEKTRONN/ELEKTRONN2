@@ -4,11 +4,13 @@
 # All rights reserved
 
 from __future__ import absolute_import, division, print_function
-from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
+from builtins import filter, hex, input, int, map, next, oct, pow, range, \
+    super, zip
 
 import logging
 import os
 import getpass
+
 try:
     import colorlog
     colorize = True
@@ -16,40 +18,33 @@ except ImportError:
     colorize = False
     print('Please (pip) install colorlog.')
 
-__all__ = []
 
 # Formats for colorlog.LevelFormatter
-log_level_formats = {
-    'DEBUG': '%(log_color)s%(msg)s (%(module)s:%(lineno)d)',
-    'INFO': '%(log_color)s%(msg)s',
-    'WARNING': '%(log_color)sWARNING: %(msg)s (%(module)s:%(lineno)d)',
-    'ERROR': '%(log_color)sERROR: %(msg)s (%(module)s:%(lineno)d)',
-    'CRITICAL': '%(log_color)sCRITICAL: %(msg)s (%(module)s:%(lineno)d)',
-}
+log_level_formats = {'DEBUG': '%(log_color)s%(msg)s (%(module)s:%(lineno)d)',
+                     'INFO': '%(log_color)s%(msg)s',
+                     'WARNING': '%(log_color)sWARNING: %(msg)s (%(module)s:%(lineno)d)',
+                     'ERROR': '%(log_color)sERROR: %(msg)s (%(module)s:%(lineno)d)',
+                     'CRITICAL': '%(log_color)sCRITICAL: %(msg)s (%(module)s:%(lineno)d)',}
 
-log_colors = {
-    'DEBUG': 'blue',
-    'INFO': 'cyan',
-    'WARNING': 'bold_yellow',
-    'ERROR': 'red',
-    'CRITICAL': 'red,bg_white'}
+log_colors = {'DEBUG': 'blue', 'INFO': 'cyan', 'WARNING': 'bold_yellow',
+              'ERROR': 'red', 'CRITICAL': 'red,bg_white'}
 
-log_colors_inspection = {
-    'DEBUG': 'purple',
-    'INFO': 'purple',
-    'WARNING': 'yellow',
-    'ERROR': 'red',
-    'CRITICAL': 'red,bg_white'}
+log_colors_inspection = {'DEBUG': 'purple', 'INFO': 'purple',
+                         'WARNING': 'yellow', 'ERROR': 'red',
+                         'CRITICAL': 'red,bg_white'}
 
 # Initialize logger that can be used
 # from any submodule via logging.getLogger('elektronn2log'):
 user_name = getpass.getuser()
 logger = logging.getLogger('elektronn2log')
-if not len(logger.handlers) > 0:  # Only set up the logger if it hasn't already been initialised before:
+# Only set up the logger if it hasn't already been initialised before:
+if not len(logger.handlers) > 0:
     logger.setLevel(logging.DEBUG)
 
-    lfile_formatter = logging.Formatter('[%(asctime)s] [%(levelname)s]\t%(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-    lfile_path = os.path.abspath('/tmp/elektronn2-%s.log' %user_name)
+    lfile_formatter = logging.Formatter(
+        '[%(asctime)s] [%(levelname)s]\t%(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S')
+    lfile_path = os.path.abspath('/tmp/elektronn2-%s.log' % user_name)
     lfile_level = logging.DEBUG
     lfile_handler = logging.FileHandler(lfile_path)
     lfile_handler.setLevel(lfile_level)
@@ -58,10 +53,13 @@ if not len(logger.handlers) > 0:  # Only set up the logger if it hasn't already 
 
     if colorize:
         lstream_handler = colorlog.StreamHandler()
-        lstream_handler.setFormatter(colorlog.LevelFormatter(fmt=log_level_formats, log_colors=log_colors))
+        lstream_handler.setFormatter(
+            colorlog.LevelFormatter(fmt=log_level_formats,
+                                    log_colors=log_colors))
     else:
         lstream_handler = logging.StreamHandler()  # log to stderr
-    lstream_level = logging.INFO  # set this to logging.DEBUG to enable output for logger.debug() calls
+    # set this to logging.DEBUG to enable output for logger.debug() calls
+    lstream_level = logging.INFO
     lstream_handler.setLevel(lstream_level)
     logger.addHandler(lstream_handler)
 
@@ -76,11 +74,14 @@ if not len(logger.handlers) > 0:  # Only set up the logger if it hasn't already 
 
 from .config import config  # import default config
 
+
 inspection_logger = logging.getLogger('elektronn2log-inspection')
-if not len(inspection_logger.handlers) > 0:  # Only set up the logger if it hasn't already been initialised before:
+# Only set up the logger if it hasn't already been initialised before:
+if not len(inspection_logger.handlers) > 0:
     inspection_logger.setLevel(logging.DEBUG)
     lfile_formatter = logging.Formatter('%(message)s')
-    lfile_path = os.path.abspath(os.path.expanduser('~/elektronn2-inspection.log'))
+    lfile_path = os.path.abspath(
+        os.path.expanduser('~/elektronn2-inspection.log'))
     lfile_level = logging.DEBUG
     lfile_handler = logging.FileHandler(lfile_path)
     lfile_handler.setLevel(lfile_level)
@@ -90,11 +91,15 @@ if not len(inspection_logger.handlers) > 0:  # Only set up the logger if it hasn
     if config.inspection:
         if colorize:
             lstream_handler = colorlog.StreamHandler()
-            lstream_handler.setFormatter(colorlog.LevelFormatter(fmt=log_level_formats, log_colors=log_colors_inspection))
+            lstream_handler.setFormatter(
+                colorlog.LevelFormatter(fmt=log_level_formats,
+                                        log_colors=log_colors_inspection))
         else:
             lstream_handler = logging.StreamHandler()  # log to stderr
-        lstream_level = logging.INFO  # set this to logging.DEBUG to enable output for inspection_logger.debug() calls
+        # set this to logging.DEBUG to enable output for inspection_logger.debug() calls
+        lstream_level = logging.INFO
         lstream_handler.setLevel(lstream_level)
-        inspection_logger.addHandler(lstream_handler)  # comment out to supress printing
+        inspection_logger.addHandler(
+            lstream_handler)  # comment out to supress printing
 
     inspection_logger.propagate = False
