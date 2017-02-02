@@ -326,7 +326,10 @@ class AccumulationArray(object):
             dtype = data.dtype
 
         self._n_init = n_init
-        self._right_shape = (right_shape,) if isinstance(right_shape, int) else tuple(right_shape)
+        if isinstance(right_shape, int):
+            self._right_shape = (right_shape,)
+        else:
+            self._right_shape = tuple(right_shape)
         self.dtype = dtype
         self.length = 0
         self._buffer = self._alloc(n_init)
