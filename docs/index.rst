@@ -1,14 +1,20 @@
-.. ELEKTRONN2 documentation master file, created by
-   sphinx-quickstart on Tue Jan 17 17:07:17 2017.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Welcome to ELEKTRONN2's documentation!
 ======================================
 
+User guide
+----------
+
 .. toctree::
    :maxdepth: 3
-   :caption: API documentation:
+
+   examples
+
+
+API documentation
+-----------------
+
+.. toctree::
+   :maxdepth: 3
 
    source/elektronn2.neuromancer
    source/elektronn2.training
