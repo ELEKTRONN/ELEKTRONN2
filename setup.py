@@ -29,6 +29,9 @@ ext_modules = [
     ),
 ]
 
+# Disable malis build again until we can reliably build manylinux1 wheels.
+ext_modules = []
+
 setup(
     name="elektronn2",
     version="0.1",
