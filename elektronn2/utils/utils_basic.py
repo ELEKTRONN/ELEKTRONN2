@@ -10,7 +10,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
 __all__ = ['CircularBuffer', 'AccumulationArray', 'DynamicKDT', 'KDT',
            'pickleload', 'picklesave', 'h5load', 'h5save', 'pretty_string_ops',
            'import_variable_from_file', 'timeit', 'Timer',
-           'cache', 'my_jit', 'my_guvectorize', 'pretty_string_time', 'unique_rows',
+           'cache', 'my_jit', 'pretty_string_time', 'unique_rows',
            'get_free_cpu_count', 'parallel_accum', 'makeversiondir', 'as_list']
 
 from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
