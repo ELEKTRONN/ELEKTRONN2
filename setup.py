@@ -16,7 +16,7 @@ def read(fname):
 
 ext_modules = [
     Extension(
-        "elektronn2.malis._malis",
+        "elektronn2.malis._malis",  # Note: _malis_lib.cpp requires boost!
         sources=[
             "elektronn2/malis/_malis.pyx",
             "elektronn2/malis/_malis_lib.cpp",
