@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 import os
 from setuptools import setup, find_packages, Extension
+import numpy as np
 
 
 # Utility function to read the README file.
@@ -14,13 +15,19 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 ext_modules = [
-    Extension("elektronn2.malis._malis",
-              sources=["elektronn2/malis/_malis.pyx", "elektronn2/malis/_malis_lib.cpp"],
-              include_dirs=['malis/'],
-              language='c++'),
+    Extension(
+        "elektronn2.malis._malis",
+        sources=[
+            "elektronn2/malis/_malis.pyx",
+            "elektronn2/malis/_malis_lib.cpp",
+        ],
+        include_dirs=[
+            'malis/',
+            np.get_include(),
+        ],
+        language='c++'
+    ),
 ]
-
-ext_modules = []  # Temporary workaround for broken malis build
 
 setup(
     name="elektronn2",
@@ -30,7 +37,10 @@ setup(
         'scripts/elektronn2-train',
     ],
     ext_modules=ext_modules,
-    setup_requires=['cython>=0.23'],
+    setup_requires=[
+        'cython>=0.23',
+        'numpy>=1.12',
+    ],
     install_requires=[
         'cython>=0.23',
         'numpy>=1.8',
@@ -63,5 +73,4 @@ setup(
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering :: Artificial Intelligence"
         "Topic :: Scientific/Engineering :: Information Analysis", ],
-    # package_data={'': ['*.so']},
 )
