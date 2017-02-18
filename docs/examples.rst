@@ -42,7 +42,8 @@ built using ELEKTRONN2.
 .. [#f2] For complete network config files that you can directly run with little
    to no modification, see the `"examples" directory
    <https://github.com/ELEKTRONN/ELEKTRONN2/tree/master/examples>`_ in the code
-   repository.
+   repository, especially
+   `3d_cnn.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/3d_cnn.py>`_.
 
 .. code-block:: python
 
