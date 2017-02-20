@@ -8,6 +8,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 
 __all__ = ['Data', 'MNISTData', 'PianoData', 'PianoData_perc']
 
+import hashlib
 import logging
 import os
 import time
@@ -185,9 +186,10 @@ class MNISTData(Data):
     @staticmethod
     def download():
         if os.name == 'nt':
-            dest = os.path.join(os.environ['APPDATA'], 'ELEKTRONN')
+            dest = os.path.join(os.environ['APPDATA'], 'ELEKTRONN2')
         else:
-            dest = os.path.join(os.path.expanduser('~'), '.ELEKTRONN')
+            xdg_cache_home = os.environ.get('XDG_CACHE_HOME', os.path.expanduser('~/.cache'))
+            dest = os.path.join(xdg_cache_home, 'ELEKTRONN2')
 
         if not os.path.exists(dest):
             os.makedirs(dest)
@@ -195,18 +197,25 @@ class MNISTData(Data):
         dest = os.path.join(dest, 'mnist.pkl.gz')
 
         if os.path.exists(dest):
-            print("Found existing mnist data")
-            return pickleload(dest)
+            print("Found existing MNIST data at {}".format(dest))
         else:
-            print("Downloading mnist data from"
-            "http://www.elektronn.org/downloads/mnist.pkl.gz")
-            f = urllib2.urlopen("http://www.elektronn.org/downloads/mnist.pkl.gz")
-            data = f.read()
-            print("Saving data to %s" %(dest,))
-            with open(dest, "wb") as code:
-                code.write(data)
+            download_url = "http://www.elektronn.org/downloads/mnist.pkl.gz"
+            print("Downloading MNIST data from {}".format(download_url))
+            # TODO: We could use a progress bar here.
+            response = urllib2.urlopen(download_url)
+            data = response.read()
+            print("Saving data to {}".format(dest))
+            with open(dest, "wb") as f:
+                f.write(data)
+            response.close()
+            # Check if download is complete
+            with open(dest, "rb") as f:
+                mnist_sha256_abbr = '4b950cea3877c03ea8db5cb4'
+                response_sha256 = hashlib.sha256(f.read()).hexdigest()
+                if not response_sha256.startswith(mnist_sha256_abbr):
+                    raise IOError('{} is corrupted. Please delete it and retry.'.format(dest))
 
-            return pickleload(dest)
+        return pickleload(dest)
 
     def convert_to_image(self):
         """For MNIST / flattened 2d, single-Layer, square images"""
