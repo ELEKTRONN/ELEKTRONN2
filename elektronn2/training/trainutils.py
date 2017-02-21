@@ -9,6 +9,7 @@ import getpass
 import logging
 import os
 import shutil
+import traceback
 from itertools import repeat
 from multiprocessing import Pool
 from os.path import abspath, dirname
@@ -130,23 +131,23 @@ def user_input(local_vars):
 
             plt.pause(0.00001)
         except KeyboardInterrupt:
-            print("Exit with 'q'")
-        except IndexError:
-            if any([inp.startswith(shortcut) for shortcut in
-                    shortcut_completions]):  # ignore trailing spaces
-                print(
-                    'IndexError. Probably you forgot to type a value after the shortcut "{}".'.format(
-                        inp))
+            print('Enter "q" to leave the shell and continue training.\n'
+                  'Enter "kill" to kill the training, saving current parameters.')
+        except IndexError as err:
+            if any([inp.startswith(shortcut) for shortcut in shortcut_completions]):  # ignore trailing spaces
+                print('IndexError. Probably you forgot to type a value after the shortcut "{}".'.format(inp))
             else:
-                raise IndexError  # All other IndexErrors are already correctly handled by the console.
-        except ValueError:
-            if any([inp.startswith(shortcut) for shortcut in
-                    shortcut_completions]):  # ignore trailing spaces
-                print(
-                    'ValueError. The "{}" shortcut received an unexpected argument.'.format(
-                        inp))
+                raise err  # All other IndexErrors are already correctly handled by the console.
+        except ValueError as err:
+            if any([inp.startswith(shortcut) for shortcut in shortcut_completions]):  # ignore trailing spaces
+                print('ValueError. The "{}" shortcut received an unexpected argument.'.format(inp))
             else:
-                raise ValueError  # All other IndexErrors are already correctly handled by the console.
+                raise err  # All other IndexErrors are already correctly handled by the console.
+        except Exception:
+            traceback.print_exc()
+            print('\n\nUnhandled exception occured. See above traceback for debug info.\n'
+                  'If you think this is a bug, please consider reporting it at '
+                  'https://github.com/ELEKTRONN/ELEKTRONN2/issues.')
 
     return inp
 
