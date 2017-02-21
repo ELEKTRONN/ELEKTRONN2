@@ -2,15 +2,10 @@
 # ELEKTRONN2 Toolkit
 # Copyright (c) 2016 Philipp J. Schubert
 # All rights reserved
-from elektronn2 import neuromancer
-import numpy as np
 
 save_path = '~/elektronn2_examples/'
-save_name = "piano_perceptron"
-
 data_class = 'PianoData_perc'
 background_processes = 2
-
 n_steps=10000
 max_runtime = 4 * 24 * 3600 # in seconds
 history_freq = 200
@@ -74,7 +69,7 @@ if __name__ == "__main__":
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        vispath = '/tmp/' + save_name + '_model-graph'
+        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
         visualise_model(model, vispath)
         print('Visualisation files are saved at {}'.format(
             vispath + '.{png,html}'))

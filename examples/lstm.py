@@ -4,7 +4,6 @@
 # All rights reserved
 
 save_path = '~/elektronn2_examples/'
-save_name = 'piano_lstm_sgd'
 preview_data_path = None
 preview_kwargs    = {
     'export_class': 'all',
@@ -93,7 +92,7 @@ if __name__ == "__main__":
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        vispath = '/tmp/' + save_name + '_model-graph'
+        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
         visualise_model(model, vispath)
         print('Visualisation files are saved at {}'.format(
             vispath + '.{png,html}'))
