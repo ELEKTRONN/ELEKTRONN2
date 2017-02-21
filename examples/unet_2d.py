@@ -1,46 +1,58 @@
 # -*- coding: utf-8 -*-
+# TODO: Rewrite this to use publicly available data (e.g. neuro_data).
 save_path = '~/CNN_Training/2D/'
-
-
 preview_data_path = '~/lustre/mkilling/BirdGT/test_cubes_zyx.h5'
 preview_kwargs    = dict(export_class=[1,2,3,7,8], max_z_pred=3)
 initial_prev_h   = 0.3                  # hours: time after which first preview is made
 prev_save_h      = 3.0
 data_class = 'BatchCreatorImage' # <String>: Name of Data Class in TrainData or <tuple>: (path_to_file, class_name)
 background_processes = 8
-
-data_init_kwargs = dict(d_path='~/lustre/mkilling/BirdGT/', l_path='~/lustre/mkilling/BirdGT/',
-                    d_files=[('j0126_old/v2_old_%i-raw-zyx.h5' % ii, 'raw') for ii in range(6)]+\
-                    [('j0126_new/v2_new_%i-raw-zyx.h5' % ii, 'raw') for ii in range(22)]+\
-                    [('neg_ex/v2_neg_%i-raw-zyx.h5' % ii, 'raw') for ii in range(5)]+\
-                    [('myelin/v2_myelin_%i-raw-zyx.h5' % ii, 'raw') for ii in range(19)]+\
-                    [('objects/v2_center_cube-raw-zyx.h5', 'raw'),],
-                    l_files=[('j0126_old/v2_old_%i-combo-sparse-zyx.h5' % ii, 'combo') for ii in range(6)]+\
-                    [('j0126_new/v2_new_%i-combo-sparse-zyx.h5' % ii, 'combo') for ii in range(22)]+\
-                    [('neg_ex/v2_neg_%i-combo-sparse.h5' % ii, 'combo') for ii in range(5)]+\
-                    [('myelin/v2_myelin_%i-combo-propagate-sparse.h5' % ii, 'combo') for ii in range(19)]+\
-                    [('objects/v2_center_cube-combo-sparse-zyx.h5', 'combo'),],
-                    cube_prios= [3,]*(6-1+22-2)+[1,]*5+[0.3,]*19+[10,],
-                    aniso_factor=2.0,
-                    valid_cubes=[0,6,7],
-                    target_discrete_ix=[0,1,2],
-                    h5stream=True)
-
-sample_warp_params = dict(sample_aniso=True, lock_z=False,
-                          no_x_flip=False, warp_amount=0.4, perspective=True)
-
-data_batch_args = dict(grey_augment_channels=[0],
-                       ret_ll_mask=False,
-                       warp=0.4,
-                       warp_args=sample_warp_params,
-                       ignore_thresh=False)
-
+data_init_kwargs = {
+    'd_path': '~/lustre/mkilling/BirdGT/',
+    'l_path': '~/lustre/mkilling/BirdGT/',
+    'd_files':
+        [('j0126_old/v2_old_%i-raw-zyx.h5' % ii, 'raw') for ii in range(6)] + \
+        [('j0126_new/v2_new_%i-raw-zyx.h5' % ii, 'raw') for ii in range(22)] + \
+        [('neg_ex/v2_neg_%i-raw-zyx.h5' % ii, 'raw') for ii in range(5)] + \
+        [('myelin/v2_myelin_%i-raw-zyx.h5' % ii, 'raw') for ii in range(19)] + \
+        [('objects/v2_center_cube-raw-zyx.h5', 'raw'), ],
+    'l_files':
+        [('j0126_old/v2_old_%i-combo-sparse-zyx.h5' % ii, 'combo') for ii in range(6)] + \
+        [('j0126_new/v2_new_%i-combo-sparse-zyx.h5' % ii, 'combo') for ii in range(22)] + \
+        [('neg_ex/v2_neg_%i-combo-sparse.h5' % ii, 'combo') for ii in range(5)] + \
+        [('myelin/v2_myelin_%i-combo-propagate-sparse.h5' % ii, 'combo') for ii in range(19)] + \
+        [('objects/v2_center_cube-combo-sparse-zyx.h5', 'combo'), ],
+    'cube_prios':
+        [3, ] * (6 - 1 + 22 - 2) + [1, ] * 5 + [0.3, ] * 19 + [10, ],
+    'aniso_factor': 2.0,
+    'valid_cubes': [0, 6, 7],
+    'target_discrete_ix': [0, 1, 2],
+    'h5stream': True
+}
+data_batch_args = {
+    'grey_augment_channels': [0],
+    'ret_ll_mask': False,
+    'warp': 0.4,
+    'warp_args': {
+        'sample_aniso': True,
+        'lock_z': False,
+        'no_x_flip': False,
+        'warp_amount': 0.4,
+        'perspective': True
+    },
+    'ignore_thresh': False
+}
 n_steps = 800000
 max_runtime = 4 * 24 * 3600 # in seconds
 history_freq = 150
 monitor_batch_size = 10
 optimiser = 'Adam'
-optimiser_params = dict(lr=0.7e-5, mom=0.95, wd=0.5e-3, beta2=0.995)
+optimiser_params = {
+    'lr': 0.7e-5,
+    'mom': 0.95,
+    'wd': 0.5e-3,
+    'beta2': 0.995
+}
 batch_size = 1
 
 def create_model():
@@ -130,24 +142,32 @@ def create_model():
 
     return model
 
-if __name__ == "__main__":
-    import traceback
-    model = create_model()
 
+if __name__ == "__main__":
+    print('Testing and visualising model...\n(If you want to train with this '
+          'config file instead, run '
+          '"$ elektronn2-train {}".)\n\n'.format(__file__))
+    import traceback
+
+    model = create_model()
 
     try:
         model.test_run_prediction()
     except Exception as e:
         traceback.print_exc()
-        print("Test run failed. In case your GPU ran out of memory the \
-               principal setup might still be working")
+        print('Test run failed.\nIn case your GPU ran out of memory, the '
+              'principal setup might still be working')
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        visualise_model(model, 'model-graph')
+        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
+        visualise_model(model, vispath)
+        print('Visualisation files are saved at {}'.format(
+            vispath + '.{png,html}'))
         import webbrowser
-        webbrowser.open('model-graph.png')
-        webbrowser.open('model-graph.html')
+        webbrowser.open(vispath + '.png')
+        webbrowser.open(vispath + '.html')
     except Exception as e:
         traceback.print_exc()
-        print("Could not print model model graph. Is pydot/graphviz properly installed?")
+        print('Could not visualise model graph.\n'
+              'Are pydotplus and graphviz properly installed?')

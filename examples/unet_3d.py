@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+# TODO: Rewrite this to use publicly available data (e.g. neuro_data).
+
 save_path = '~/CNN_Training/3D/'
 
 
@@ -130,7 +132,32 @@ def create_model():
 
     return model
 
+
 if __name__ == "__main__":
-    from elektronn2 import neuromancer
+    print('Testing and visualising model...\n(If you want to train with this '
+          'config file instead, run '
+          '"$ elektronn2-train {}".)\n\n'.format(__file__))
+    import traceback
+
     model = create_model()
-    model.test_run_prediction()
+
+    try:
+        model.test_run_prediction()
+    except Exception as e:
+        traceback.print_exc()
+        print('Test run failed.\nIn case your GPU ran out of memory, the '
+              'principal setup might still be working')
+
+    try:
+        from elektronn2.utils.d3viz import visualise_model
+        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
+        visualise_model(model, vispath)
+        print('Visualisation files are saved at {}'.format(
+            vispath + '.{png,html}'))
+        import webbrowser
+        webbrowser.open(vispath + '.png')
+        webbrowser.open(vispath + '.html')
+    except Exception as e:
+        traceback.print_exc()
+        print('Could not visualise model graph.\n'
+              'Are pydotplus and graphviz properly installed?')
