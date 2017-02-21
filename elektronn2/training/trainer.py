@@ -26,6 +26,7 @@ from ..neuromancer.loss import SquaredLoss
 from .. import utils
 from ..config import config
 from ..utils.plotting import plot_trainingtarget, my_quiver
+from ..utils.locking import FileLock
 from ..data import transformations
 from . import trainutils
 from .parallelisation import BackgroundProc
@@ -259,10 +260,11 @@ class Trainer(object):
                                                      lr, mom, gradnetrate])
 
                         ### Plotting / Saving ###
-                        self.model.save(save_name+'-LAST.mdl')
-                        self.tracker.save(os.path.join('Backup', save_name))
-                        if config.plot_on and ((i>=exp_config.history_freq*3) or i>60):
-                            self.tracker.plot(save_name)
+                        with FileLock(save_name):
+                            self.model.save(save_name+'-LAST.mdl')
+                            self.tracker.save(os.path.join('Backup', save_name))
+                            if config.plot_on and ((i>=exp_config.history_freq*3) or i>60):
+                                self.tracker.plot(save_name)
 
                         if config.print_status:
                             t = utils.pretty_string_time(t_passed)
