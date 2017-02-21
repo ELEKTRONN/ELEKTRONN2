@@ -58,7 +58,6 @@ def user_input(local_vars):
     'load <filename>' (param files only, no model files),
     'preview'
 
-    Change Training Optimizer :('SGD','AdaGrad')\n\
     For everything else enter a command in the command line\n""" % (save_name,)
     print(banner)
     data = local_vars['data']
@@ -113,7 +112,13 @@ def user_input(local_vars):
                             break
 
             elif inp=='preview':
-                trainer.preview_slice(**exp_config.preview_kwargs)
+                try:
+                    trainer.preview_slice(**exp_config.preview_kwargs)
+                except Exception:
+                    traceback.print_exc()
+                    print('\n\nPlease check if/how you have configured previews '
+                          'in your config file.\n(Look for "preview_data_path" '
+                          'and "preview_kwargs" variables.)')
             elif inp=='paramstats':
                 model.paramstats()
             elif inp=='gradstats':
