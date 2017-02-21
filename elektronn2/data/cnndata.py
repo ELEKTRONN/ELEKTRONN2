@@ -246,7 +246,7 @@ class BatchCreatorImage(object):
           (optional) [bs, n_target]
         ll_mask2:
           (optional) [bs, n_target]
-        """
+        """  # TODO: Clean this up. Docstring and implementation have diverged.
         # This is especially required for multiprocessing
         self._reseed()
         images, target = self._allocbatch(batch_size)

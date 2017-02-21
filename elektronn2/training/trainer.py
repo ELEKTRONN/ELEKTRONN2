@@ -433,7 +433,10 @@ class Trainer(object):
             plt.pause(0.01)
             return batch
         else:
-            logger.warning("This function is only available for 'img-img' training mode")
+            logger.warning('debug_getcnnbatch() is only available for "img-img"'
+                           ' training mode.\nCheck if your prediction node'
+                           ' has the right shape.ndim\n(look if'
+                           ' model.prediction_node.shape.ndim is >=2.)')
 
 
     def predict_and_write(self, pred_node, raw_img, number=0, export_class='all', block_name='', z_thick=5):
