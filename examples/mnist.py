@@ -4,9 +4,9 @@
 # All rights reserved
 save_path = '~/elektronn2_examples/'
 save_name = 'MNIST'
-data_class = 'MNISTData' # <String>: Name of the data class in
-                         # ``elektronn2.data.traindata`` (as used here) or
-                         # <tuple>: (path_to_file, class_name)
+data_class = 'MNISTData'  # <String>: Name of the data class in
+                          # ``elektronn2.data.traindata`` (as used here) or
+                          # <tuple>: (path_to_file, class_name)
 background_processes = 2
 n_steps = 30000
 max_runtime = 10 * 60 # in seconds
@@ -52,6 +52,7 @@ def create_model():
         prediction_ext=[loss, errors, out]
     )
     return model
+
 
 if __name__ == "__main__":
     print('Testing and visualising model...\n(If you want to train with this '

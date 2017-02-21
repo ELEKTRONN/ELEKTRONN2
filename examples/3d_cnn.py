@@ -9,9 +9,9 @@ preview_kwargs    = {
 }
 initial_prev_h = 0.5  # hours: time after which the first preview is made
 prev_save_h = 1.0  # hours: time interval between planned previews.
-data_class = 'BatchCreatorImage' # <String>: Name of the data class in
-                                 # ``elektronn2.data.traindata`` (as used here) or
-                                 # <tuple>: (path_to_file, class_name)
+data_class = 'BatchCreatorImage'  # <String>: Name of the data class in
+                                  # ``elektronn2.data.traindata`` (as used here)
+                                  # or <tuple>: (path_to_file, class_name)
 background_processes = 2
 data_init_kwargs = {
     'd_path' : '~/neuro_data/',
