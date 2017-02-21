@@ -8,7 +8,6 @@ data_class = 'MNISTData' # <String>: Name of the data class in
                          # ``elektronn2.data.traindata`` (as used here) or
                          # <tuple>: (path_to_file, class_name)
 background_processes = 2
-
 n_steps = 30000
 max_runtime = 10 * 60 # in seconds
 history_freq = 500
@@ -16,7 +15,12 @@ monitor_batch_size = 20
 optimiser = 'Adam'
 data_batch_args = {}
 data_init_kwargs = {}
-optimiser_params = dict(lr=2e-4, mom=0.9, beta2=0.99, wd=0.5e-3)
+optimiser_params = {
+    'lr': 2e-4,
+    'mom': 0.9,
+    'beta2': 0.99,
+    'wd': 0.5e-3
+}
 batch_size = 20
 
 def create_model():
@@ -36,7 +40,7 @@ def create_model():
     loss  = neuromancer.MultinoulliNLL(out, target, name='nll_', target_is_sparse=True)
     # Objective
     loss = neuromancer.AggregateLoss(loss)
-    # Monitoring  / Debug outputs
+    # Monitoring / Debug outputs
     errors = neuromancer.Errors(out, target, target_is_sparse=True)
 
     model = neuromancer.model_manager.getmodel()
@@ -45,11 +49,16 @@ def create_model():
         target_node=target,
         loss_node=loss,
         prediction_node=out,
-        prediction_ext=[loss, errors, out])
+        prediction_ext=[loss, errors, out]
+    )
     return model
 
 if __name__ == "__main__":
+    print('Testing and visualising model...\n(If you want to train with this '
+          'config file instead, run '
+          '"$ elektronn2-train {}".)\n\n'.format(__file__))
     import traceback
+
     model = create_model()
 
     try:
