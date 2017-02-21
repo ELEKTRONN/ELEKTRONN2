@@ -99,11 +99,14 @@ if __name__ == "__main__":
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        visualise_model(model, 'model-graph')
+        vispath = '/tmp/' + save_name + '_model-graph'
+        visualise_model(model, vispath)
+        print('Visualisation files are saved at {}'.format(
+            vispath + '.{png,html}'))
         import webbrowser
-        webbrowser.open('model-graph.png')
-        webbrowser.open('model-graph.html')
+        webbrowser.open(vispath + '.png')
+        webbrowser.open(vispath + '.html')
     except Exception as e:
         traceback.print_exc()
-        print('Could not print model model graph.\n'
-              'Are pydot and graphviz properly installed?')
+        print('Could not visualise model graph.\n'
+              'Are pydotplus and graphviz properly installed?')
