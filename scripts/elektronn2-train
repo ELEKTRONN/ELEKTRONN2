@@ -42,11 +42,11 @@ with open(os.devnull, 'w') as devnull:
     try:
         # "xset q" will always succeed to run if an X server is currently running
         check_call(['xset', 'q'], stdout=devnull, stderr=devnull)
-        print('X available')
+        print('X11 server available. Using the {} backend for matplotlib.'.format(matplotlib.get_backend()))
         # Don't set backend explicitly, use system default...
     # if "xset q" fails, conclude that X is not running
     except (OSError, CalledProcessError):
-        print('X unavailable')
+        print('No X11 server found. Falling back to AGG backend for matplotlib.')
         matplotlib.use('AGG')
 
 
