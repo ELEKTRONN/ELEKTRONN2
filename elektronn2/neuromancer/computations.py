@@ -173,7 +173,7 @@ def dot(x, W, axis=1):
     Calculate a tensordot between 1 axis of ``x`` and the first axis of ``W``.
 
     Requires ``x.shape[axis]==W.shape[0]``.
-    Identical to dot if ``x``,``W`` 2d and ``axis==1``.
+    Identical to dot if ``x``, ``W`` 2d and ``axis==1``.
 
     Parameters
     ----------

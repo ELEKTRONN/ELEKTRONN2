@@ -156,7 +156,7 @@ class MultinoulliNLL(Node):
         weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
         ``w > 1.0`` (more important class).
     example_weights: T.Tensor
-        weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
+        weight vector of float32 of shape ``(bs, z, x, y)`` that can give the individual examples (i.e. labels for
         output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
         ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
         effectively modified learning rate!
@@ -362,7 +362,7 @@ class BlockedMultinoulliNLL(Node):
         weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
         ``w > 1.0`` (more important class).
     example_weights: T.Tensor
-        weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
+        weight vector of float32 of shape ``(bs, z, x, y)`` that can give the individual examples (i.e. labels for
         output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
         ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
         effectively modified learning rate!
@@ -564,7 +564,7 @@ class MalisNLL(Node):
         weight vector of float32 of length  ``n_lab``. Values: ``1.0`` (default), ``w < 1.0`` (less important),
         ``w > 1.0`` (more important class).
     example_weights: T.Tensor
-        weight vector of float32 of shape ``(bs, z, x, y) that can give the individual examples (i.e. labels for
+        weight vector of float32 of shape ``(bs, z, x, y)`` that can give the individual examples (i.e. labels for
         output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
         ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
         effectively modified learning rate!

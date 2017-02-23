@@ -377,7 +377,7 @@ class Node(with_metaclass(MetaNode, object)):
 
     Computations that result in more than a single output for a node must be
     broken apart using divergence and individual nodes for the several outputs.
-    Alternatively the function``split`` can be used to create two
+    Alternatively the function ``split`` can be used to create two
     dummy nodes of the output of a previous node, by splitting along specified
     axis.
     Note that possible redundant computations in nodes are most likely
