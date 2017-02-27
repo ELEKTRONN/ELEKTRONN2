@@ -14,7 +14,9 @@ import time
 
 
 def initgpu(gpu):
-    no_gpu = [None, False, 'False', 'None']
+    if gpu is None:
+        gpu = 'none'
+    no_gpu = ['none', 'None']
     import theano.sandbox.cuda
 
     if theano.sandbox.cuda.cuda_available:
@@ -36,7 +38,7 @@ def initgpu(gpu):
         if gpu in no_gpu and gpu != 0:
             pass
         else:
-            print("'gpu' is not 'False' but CUDA is not available. "
+            print("'--gpu' argument is not 'none' but CUDA is not available. "
                   "Falling back to CPU.")
 
 
