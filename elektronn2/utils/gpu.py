@@ -18,11 +18,11 @@ def initgpu(gpu):
     import theano.sandbox.cuda
 
     if theano.sandbox.cuda.cuda_available:
-        if gpu in ['auto', 'Auto']:
+        if gpu.lower() == 'auto':
             gpu = int(get_free_gpu())
-            print("Automatically assigned free gpu%i" % (gpu,))
+            print("Automatically assigned free GPU %i" % (gpu,))
 
-        if gpu in no_gpu and gpu!=0:
+        if gpu in no_gpu and gpu != 0:
             pass
         else:
             try:
@@ -30,14 +30,14 @@ def initgpu(gpu):
                 print("Initialising GPU to %s" % gpu)
             except:
                 sys.excepthook(*sys.exc_info())
-                print("Failed to init gpu, argument not understood")
+                print("Failed to init GPU, argument not understood.")
 
     else:
-        if gpu in no_gpu and gpu!=0:
+        if gpu in no_gpu and gpu != 0:
             pass
         else:
             print("'gpu' is not 'False' but CUDA is not available. "
-                  "Falling back to cpu.")
+                  "Falling back to CPU.")
 
 
 def _check_if_gpu_is_free(nb_gpu):
