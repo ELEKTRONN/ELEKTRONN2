@@ -46,7 +46,7 @@ def user_input(local_vars):
     save_name = local_vars['exp_config'].save_name
     banner = """
     ======================
-    === ELEKTRONN MENU ===
+    === ELEKTRONN2 MENU ===
     ======================
     >> %s <<
     Shortcuts:
