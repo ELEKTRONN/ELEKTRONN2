@@ -5,10 +5,10 @@ save_path = '~/elektronn2_examples/'
 preview_data_path = '~/neuro_data/preview_cubes.h5'
 preview_kwargs    = {
     'export_class': 'all',
-    'max_z_pred': 5
+    'max_z_pred': 3
 }
 initial_prev_h = 0.5  # hours: time after which the first preview is made
-prev_save_h = 1.0  # hours: time interval between planned previews.
+prev_save_h = 0.5  # hours: time interval between planned previews.
 data_class = 'BatchCreatorImage'  # <String>: Name of the data class in
                                   # ``elektronn2.data.traindata`` (as used here)
                                   # or <tuple>: (path_to_file, class_name)
@@ -30,18 +30,18 @@ data_batch_args = {
     }
 }
 n_steps = 150000
-max_runtime = 4 * 24 * 3600 # in seconds
-history_freq = 600
+max_runtime = 24 * 3600 # in seconds
+history_freq = 200
 monitor_batch_size = 30
 optimiser = 'Adam'
 optimiser_params = {
-    'lr': 0.0005,
+    'lr': 0.005,
     'mom': 0.9,
     'beta2': 0.999,
     'wd': 0.5e-4
 }
-lr_schedule = None  # dict(updates=[])
-mom_schedule = None  # dict(updates=[])
+lr_schedule = {'dec': 0.95}  # Multiply learning rate by 0.95 every 1000 iterations.
+mom_schedule = None
 batch_size = 1
 
 
@@ -82,7 +82,7 @@ def create_model():
     return model
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     print('Testing and visualising model...\n(If you want to train with this '
           'config file instead, run '
           '"$ elektronn2-train {}".)\n\n'.format(__file__))
