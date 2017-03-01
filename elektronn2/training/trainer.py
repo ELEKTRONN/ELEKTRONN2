@@ -169,6 +169,8 @@ class Trainer(object):
             i = -1
             t0 = time.time()
             while i < exp_config.n_steps:
+                print('{:05d}'.format(i), end='\r')
+                sys.stdout.flush()
                 try:
                     if config.background_processes:
                         batch = bg_worker.get()
