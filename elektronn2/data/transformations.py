@@ -199,7 +199,7 @@ def get_random_flipmat(no_x_flip=False, rng=None):
     rng = np.random.RandomState() if rng is None else rng
     F = np.eye(4, dtype=np.float32)
     flips = rng.binomial(1, 0.5, 4) * 2 - 1
-    flips[3] = 1 # don't flip homogenious dimension
+    flips[3] = 1 # don't flip homogeneous dimension
     if no_x_flip:
         flips[2] = 1
 
@@ -278,14 +278,14 @@ class Transform(object):
     @property
     def M_lin(self):
         if self.is_projective:
-            raise ValueError("This transform requires homogenious coordinates")
+            raise ValueError("This transform requires homogeneous coordinates")
         else:
             return self.M[:3,:3]
 
     @property
     def M_lin_inv(self):
         if self.is_projective:
-            raise ValueError("This transform requires homogenious coordinates")
+            raise ValueError("This transform requires homogeneous coordinates")
         else:
             return self.M_inv[:3, :3]
 
