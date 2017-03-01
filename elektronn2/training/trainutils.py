@@ -10,6 +10,7 @@ import logging
 import os
 import shutil
 import traceback
+import datetime
 from itertools import repeat
 from multiprocessing import Pool
 from os.path import abspath, dirname
@@ -164,7 +165,7 @@ class Schedule(object):
     Examples
     --------
 
-    >>> lr_schedule = Schedule(dec=0.95) # decay by 0.95 every 1000 steps
+    >>> lr_schedule = Schedule(dec=0.95) # decay by factor 0.95 every 1000 steps (i.e. decreasing by 5%)
     >>> wd_schedule = Schedule(lindec=[4000, 0.001]) # from 0.001 to 0 in 400 steps
     >>> mom_schedule = Schedule(updates=[(500,0.8), (1000,0.7), (1500,0.9), (2000, 0.2)])
     >>> dropout_schedule = Schedule(updates=[(1000,[0.2, 0.2])]) # set rates per Layer
@@ -534,9 +535,12 @@ class ExperimentConfig(object):
         if self.save_name is None:
             fname = os.path.basename(self.exp_file)
             fname_without_ext = os.path.splitext(fname)[0]
-            self.save_name = fname_without_ext
+            timestamp = datetime.datetime.now().strftime('%y-%m-%d_%H-%M-%S')
+            self.save_name = fname_without_ext + '__' + timestamp
+            logger.info('Auto-assigned save_name = "{}"'.format(self.save_name))
 
         self.save_path = os.path.join(path, self.save_name)
+        logger.info('Writing files to directory "{}"'.format(self.save_path))
 
         self.check_config()
 
