@@ -20,7 +20,7 @@ def initgpu(gpu):
     import theano.sandbox.cuda
 
     if theano.sandbox.cuda.cuda_available:
-        if gpu.lower() == 'auto':
+        if isinstance(gpu, str) and gpu.lower() == 'auto':
             gpu = int(get_free_gpu())
             print("Automatically assigned free GPU %i" % (gpu,))
 
