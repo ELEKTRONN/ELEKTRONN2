@@ -124,16 +124,16 @@ class NeuralLayer(Node):
                 fail = True
 
             if fail:
-                raise ValueError("If a parameter is passed as a list, the"
-                                 "first entry must contain the parameter"
-                                 "value (np.ndarray) and the second entry"
-                                 "must be either 'const' or 'trainable'"
+                raise ValueError("If a parameter is passed as a list, the "
+                                 "first entry must contain the parameter "
+                                 "value (np.ndarray) and the second entry "
+                                 "must be either 'const' or 'trainable' "
                                  "to indicate whether this param is "
                                  "trainable. Got [%s, %s]" \
                                  %(type(param[0]), param[1]))
         else:
             raise ValueError("Parameter %s must be either <np.ndarray>, "
-                             "<theano.TensorVariable>, a tuple or None"
+                             "<theano.TensorVariable>, a tuple or None "
                              "(to create new param)" %(name,))
 
         setattr(self, name, p) #
@@ -213,7 +213,7 @@ class NeuralLayer(Node):
             self._register_param(gamma, sh, 'gamma', init_kwargs=g_init,
                                 apply_train=True, apply_reg=3.0) ###TODO maybe even stronger reg for this?
             if mean is not None or std is not None:
-                raise ValueError("Cannot pass mean and std for training, they"
+                raise ValueError("Cannot pass mean and std for training, they "
                                  "are computed in the theano graph.")
 
             # create mean and std for training to accumulate running avgs
@@ -330,7 +330,7 @@ class Perceptron(NeuralLayer):
         if self.flatten:
             if self.axis is not 1:
                 raise NotImplementedError("Cannot flatten tensor for "
-                                          "PerceptronLayer when batchsize is "
+                                          "Perceptron layer when batchsize is "
                                           "not on first axis")
             input_tensor = self.parent.output.flatten(2)
             pattern  = ['x', 0]
@@ -362,8 +362,8 @@ class Perceptron(NeuralLayer):
             gamma = self.gamma.dimshuffle(pattern)
 
             if self.batch_normalisation=='fadeout':
-                logger.warning("Batch Normalisation mode 'fadeout' does not "
-                               "work for less than 50%%...")
+                logger.warning("Batch normalisation mode 'fadeout' does not "
+                               "work for less than 50%...")
                 mean = self.gradnet_rate * mean
                 std  = self.gradnet_rate * std + (1-self.gradnet_rate) * 1.0
                 gamma = self.gradnet_rate * gamma
@@ -447,8 +447,8 @@ class Perceptron(NeuralLayer):
             The inverted perceptron layer.
         """
         if self.flatten:
-            raise NotImplementedError("Cannot make dual Layer for flattened"
-                                      "Perceptron Layer.")
+            raise NotImplementedError("Cannot make dual Layer for flattened "
+                                      "Perceptron layer.")
 
         dropout_rate = 0.0 if not self.dropout_rate else self.dropout_rate.get_value()
         defaults = dict(activation_func=self.activation_func,
@@ -469,11 +469,11 @@ class Perceptron(NeuralLayer):
         n_f = self.parent.shape['f'] # This is the output of the dual Layer
 
         if self.n_f is not parent.shape['f']: # input of dual Layer  #q: Shouldn't this be "!=", instead of "is not"?
-            raise ValueError("Cannot make dual Layer of:\n"
-                             "%s \n"
-                             "with input: %s! \n"
-                             "The output shape of the input for the dual Layer"
-                             "must match the the input shape of the primal Layer."\
+            raise ValueError("Cannot make dual layer of:\n"
+                             "%s\n"
+                             "with input: %s!\n"
+                             "The output shape of the input for the dual layer "
+                             "must match the the input shape of the primal layer."\
                              %(self, parent))
 
         return Perceptron(parent, n_f, **kwargs)
@@ -487,7 +487,7 @@ class Perceptron(NeuralLayer):
         if self.flatten:
             s += "input was flattened, "
         if self.dropout_rate:
-            s += "Dropout rate=%.1f, "%(self.dropout_rate.get_value())
+            s += "dropout rate = %.1f, "%(self.dropout_rate.get_value())
         if self.batch_normalisation:
             s += "BN in '%s' mode "%(self.batch_normalisation,)
 
@@ -585,7 +585,7 @@ class Conv(Perceptron):
             raise ValueError("The filter_shape dimensionality (%i), the number "
                              "of spatial dimensions in the input (%i) and "
                              "the dimensionality of pool_shape (%i) differ! "
-                             "Use filtersize 1 on axes which should not be "
+                             "Use filter size 1 on axes which should not be "
                              "convolved."\
                              %(len(filter_shape), conv_dim, len(pool_shape)))
 
@@ -614,9 +614,9 @@ class Conv(Perceptron):
                 fail = True
 
         if fail:
-            raise NotImplementedError("Cannot convolve non-standard shapes / axis orders,"
-                                      "implement reshaping before conv"
-                                      "and re-reshaping afer!")
+            raise NotImplementedError("Cannot convolve non-standard shapes / axis orders. "
+                                      "Implement reshaping before conv "
+                                      "and re-reshaping after!")
 
         self.conv_dim = conv_dim
         self.w_sh = w_sh
@@ -654,7 +654,7 @@ class Conv(Perceptron):
 
         if self.mfp:
             if self.input_nodes[0].shape['b']!=1:
-                raise ValueError("For MFP the batchsize of the raw image input must be 1")
+                raise ValueError("For MFP the batchsize of the raw image input must be 1.")
 
             lin_output, offsets_new, strides_new = computations.fragmentpool(lin_output,
                                                                         self.pool_shape,
@@ -676,7 +676,7 @@ class Conv(Perceptron):
 
             if self.batch_normalisation=='fadeout':
                 logger.warning("Batch Normalisation mode 'fadeout' does not "
-                               "work for less than 50%%...")
+                               "work for less than 50%...")
                 mean = self.gradnet_rate * mean
                 std  = self.gradnet_rate * std + (1-self.gradnet_rate) * 1.0
                 gamma = self.gradnet_rate * gamma
@@ -727,13 +727,13 @@ class Conv(Perceptron):
             if self.mfp:
                 if (sh[i] + k - p + 1)%p!=0:
                     raise ValueError("Cannot pool spatial axis '%s' of length %i "
-                                     "by factor %i, after convolving with"
+                                     "by factor %i after convolving with "
                                      "kernel of size %i and using MFP."\
                                      %(sh.tags[i], sh[i], p, f))
             else:
                 if (sh[i] + k)%p!=0:
                     raise ValueError("Cannot pool spatial axis '%s' of length %i "
-                                     "by factor %i, after convolving with"
+                                     "by factor %i after convolving with "
                                      "kernel of size %i."\
                                      %(sh.tags[i], sh[i], p, f))
             sh = sh.updateshape(i, s)
@@ -821,11 +821,11 @@ class Conv(Perceptron):
         n_f = self.parent.shape['f'] # This is the output of the dual Layer
 
         if self.w_sh[0] is not parent.shape['f']: # input of dual Layer
-            raise ValueError("Cannot make dual Layer of:\n"
-                             "%s \n"
-                             "with input: %s! \n"
-                             "The output shape of the input for the dual Layer"
-                             "must match the the input shape of the primal Layer."\
+            raise ValueError("Cannot make dual layer of:\n"
+                             "%s\n"
+                             "with input: %s!\n"
+                             "The output shape of the input for the dual layer "
+                             "must match the the input shape of the primal layer."\
                              %(self, parent))
 
         return UpConv(parent, n_f, self.pool_shape, **kwargs)
@@ -1023,8 +1023,8 @@ class UpConv(Conv):
             gamma = self.gamma.dimshuffle(pattern)
 
             if self.batch_normalisation=='fadeout':
-                logger.warning("Batch Normalisation mode 'fadeout' does not "
-                               "work for less than 50%%...")
+                logger.warning("Batch normalisation mode 'fadeout' does not "
+                               "work for less than 50%...")
                 mean = self.gradnet_rate * mean
                 std  = self.gradnet_rate * std + (1-self.gradnet_rate) * 1.0
                 gamma = self.gradnet_rate * gamma
@@ -1169,7 +1169,6 @@ class Crop(Node):
         self.computational_cost = 0
 
 
-# TODO: Maybe write a complete expample config that demonstrates its usage. --> axon/mkilling/investigation/MA-TEX/CNN-Timings/DS-3-2-unet2d.py
 def ImageAlign(hi_res, lo_res, hig_res_n_f,
                     activation_func='relu', identity_init=True,
                     batch_normalisation=False, dropout_rate=0,
@@ -1256,7 +1255,7 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
     for i in range(len(sh_hi)):
         diff = sh_hi[i] - sh_lo[i]  # different in orignal space
         if diff % 2!=0:
-            raise ValueError("hi_res and lo_res maps cannot"
+            raise ValueError("hi_res and lo_res maps cannot "
                              "be aligned with shapes:\n%s\n%s" % (sh_hi,sh_lo))
         if diff > 0:
             crop_hi.append(diff // 2 )
@@ -1351,8 +1350,8 @@ class Pool(Node):
                 fail = True
 
         if fail:
-            raise NotImplementedError("Cannot convolve non-standard shapes / axis orders,"
-                                      "implement reshaping before conv"
+            raise NotImplementedError("Cannot convolve non-standard shapes / axis orders. "
+                                      "Implement reshaping before conv "
                                       "and re-reshaping afer!")
 
         self.spatial_axes = spatial_axes
@@ -1370,7 +1369,7 @@ class Pool(Node):
         if self.mfp:
             assert self.pool_stride == self.pool_shape
             if self.input_nodes[0].shape['b']!=1:
-                raise ValueError("For MFP the batchsize of the raw image input must be 1")
+                raise ValueError("For MFP the batchsize of the raw image input must be 1.")
             lin_output, offsets_new, strides_new = computations.fragmentpool(input_tensor,
                                                                         self.pool_shape,
                                                                         self.mfp_offsets,
@@ -1399,12 +1398,12 @@ class Pool(Node):
             if self.mfp:
                 raise NotImplementedError("Check this first before use")
                 if (tmp - p + 1)%st!=0:
-                    raise ValueError("Cannot donwsample spatial axis '%s' of length %i "
+                    raise ValueError("Cannot downsample spatial axis '%s' of length %i "
                                      "by factor %i with pool %i, and using MFP."\
                                      %(sh.tags[i], sh[i], st, p))
             else:
                 if (tmp+1)%st!=0:
-                    raise ValueError("Cannot donwsample spatial axis '%s' of length %i "
+                    raise ValueError("Cannot downsample spatial axis '%s' of length %i "
                                      "by factor %i with pool %i."\
                                      %(sh.tags[i], sh[i], st, p ))
             sh = sh.updateshape(i, s)
@@ -1580,9 +1579,9 @@ class GRU(NeuralLayer):
 
 
         if self.n_f_memory != n_f:
-            raise ValueError("n_f_memory != n_f not possible")
+            raise ValueError("n_f_memory != n_f not possible.")
         if parent.shape.hastag('r'):
-            raise ValueError("Input must not have 'r' axis")
+            raise ValueError("Input must not have 'r' axis.")
 
         n_comb = self.n_f_memory + n_in
         if w != None or b != None:
@@ -1635,7 +1634,7 @@ class GRU(NeuralLayer):
 
             if self.batch_normalisation=='fadeout':
                 logger.warning("Batch Normalisation mode 'fadeout' does not "
-                               "work for less than 50%%...")
+                               "work for less than 50%...")
                 mean = self.gradnet_rate * mean
                 std  = self.gradnet_rate * std + (1-self.gradnet_rate) * 1.0
                 gamma = self.gradnet_rate * gamma
@@ -1775,9 +1774,9 @@ class LSTM(NeuralLayer):
              raise NotImplementedError("Initial weights are not yet supported for LSTM.")
 
         if self.n_f_memory != 2*n_f:
-            raise ValueError("n_f of memory_states must be 2*n_f!")
+            raise ValueError("n_f of memory_states must be 2*n_f.")
         if parent.shape.hastag('r'):
-            raise ValueError("Input must not have 'r' axis")
+            raise ValueError("Input must not have 'r' axis.")
 
         w_sh = (n_comb, 4*n_f) # f, i, o, C
         self._setup_params(w_sh, w, b, gamma, mean, std, dropout_rate)
@@ -1839,7 +1838,7 @@ class LSTM(NeuralLayer):
 
             if self.batch_normalisation=='fadeout':
                 logger.warning("Batch Normalisation mode 'fadeout' does not "
-                               "work for less than 50%%...")
+                               "work for less than 50%...")
                 mean = self.gradnet_rate * mean
                 std  = self.gradnet_rate * std + (1-self.gradnet_rate) * 1.0
                 gamma = self.gradnet_rate * gamma
@@ -1936,9 +1935,9 @@ class LRN(Node):
             conv_dim = len(self.spatial_axes)
             x_dim    = len(self.parent.shape)
             if len(self.spatial_axes)!=len(filter_shape):
-                raise ValueError("The filter_shape dimensionality (%i) and the number"
-                                 "of spatial dimensions in the input (%i)differ!"
-                                 "Use filtersize 1 on axes which should not be"
+                raise ValueError("The filter_shape dimensionality (%i) and the number "
+                                 "of spatial dimensions in the input (%i)differ! "
+                                 "Use filter size 1 on axes which should not be "
                                  "averaged."\
                                  %(len(filter_shape), conv_dim, ))
 
@@ -1967,8 +1966,8 @@ class LRN(Node):
                     fail = True
 
             if fail:
-                raise NotImplementedError("Cannot convolve non-standard shapes / axis orders,"
-                                          "implement reshaping before conv"
+                raise NotImplementedError("Cannot convolve non-standard shapes / axis orders. "
+                                          "Implement reshaping before conv"
                                           "and re-reshaping afer!")
 
             self.conv_dim = conv_dim
