@@ -6,6 +6,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import filter, hex, input, int, map, next, oct, pow, range, \
     super, zip
 
+import datetime
 import os
 import socket
 import logging
@@ -16,12 +17,14 @@ from .utils import gpu
 
 logger = logging.getLogger('elektronn2log')
 
-
-if socket.gethostname() in ['synapse03', 'synapse04', 'synapse05', 'synapse06',
+hostname = socket.gethostname()
+now = datetime.datetime.today().isoformat()
+logger.info('Running on host {}. Start time: {}'.format(hostname, now))
+if hostname in ['synapse03', 'synapse04', 'synapse05', 'synapse06',
                             'synapse07', 'synapse08']:
     cuda_root = "/usr/local/centos-cuda/cuda-6.5"
     logger.info("On Host %s: setting cuda root to %s and disabling DNN!" % (
-        socket.gethostname(), cuda_root))
+        hostname, cuda_root))
 
     import theano
 
