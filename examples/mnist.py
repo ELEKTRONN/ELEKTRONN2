@@ -57,7 +57,7 @@ def create_model():
 if __name__ == "__main__":
     print('Testing and visualising model...\n(If you want to train with this '
           'config file instead, run '
-          '"$ elektronn2-train {}".)\n\n'.format(__file__))
+          '"$ elektronn2-train {}".)\n'.format(__file__))
     import traceback
 
     model = create_model()
@@ -75,9 +75,9 @@ if __name__ == "__main__":
         visualise_model(model, vispath)
         print('Visualisation files are saved at {}'.format(
             vispath + '.{png,html}'))
-        import webbrowser
-        webbrowser.open(vispath + '.png')
-        webbrowser.open(vispath + '.html')
+        # import webbrowser
+        # webbrowser.open(vispath + '.png')
+        # webbrowser.open(vispath + '.html')
     except Exception as e:
         traceback.print_exc()
         print('Could not visualise model graph.\n'
