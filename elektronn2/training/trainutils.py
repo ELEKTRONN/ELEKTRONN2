@@ -24,6 +24,7 @@ from .. import utils
 from ..config import config, change_logging_file
 from ..data import image
 from ..utils import plotting
+from ..utils.locking import FileLock
 
 
 logger = logging.getLogger('elektronn2log')
@@ -170,7 +171,7 @@ class Schedule(object):
     >>> mom_schedule = Schedule(updates=[(500,0.8), (1000,0.7), (1500,0.9), (2000, 0.2)])
     >>> dropout_schedule = Schedule(updates=[(1000,[0.2, 0.2])]) # set rates per Layer
 
-    """
+    """  # TODO Update examples with actual usage of ``schedules`` dict in configs
 
     def __init__(self, **kwargs):
         ###TODO setting of categorical values (True/False) via 'updates'
@@ -369,21 +370,22 @@ class HistoryTracker(object):
         #        self.plotting_proc.start()
 
         save_name = "0-" + save_name
-        plotting.plot_hist(self.timeline, self.history, save_name,
-                           config.loss_smoothing_length, autoscale)
+        with FileLock(save_name + '_HistoryTracker.plot'):
+            plotting.plot_hist(self.timeline, self.history, save_name,
+                               config.loss_smoothing_length, autoscale)
 
-        if self.debug_output_names and self.debug_outputs.length:
-            plotting.plot_debug(self.debug_outputs, self.debug_output_names,
-                                save_name)
+            if self.debug_output_names and self.debug_outputs.length:
+                plotting.plot_debug(self.debug_outputs, self.debug_output_names,
+                                    save_name)
 
-        if self.regression_track:
-            plotting.plot_regression(self.regression_track[0],
-                                     self.regression_track[1], save_name)
-            plotting.plot_kde(self.regression_track[0],
-                              self.regression_track[1], save_name)
+            if self.regression_track:
+                plotting.plot_regression(self.regression_track[0],
+                                         self.regression_track[1], save_name)
+                plotting.plot_kde(self.regression_track[0],
+                                  self.regression_track[1], save_name)
 
-        if close:
-            plt.close('all')
+            if close:
+                plt.close('all')
 
 
 class ExperimentConfig(object):
