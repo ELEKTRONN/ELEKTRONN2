@@ -896,7 +896,7 @@ class UpConv(Conv):
     """
     Upconvolution layer.
 
-    E.g. pooling + upconv with p=3:
+    E.g. pooling + upconv with p=3::
 
           x x x x x x x x x    before pooling (not in this layer)
            \|/   \|/   \|/     pooling (not in this layer)
@@ -945,7 +945,7 @@ class UpConv(Conv):
     std
         (For batch normalisation) Initializes std parameter.
     gradnet_mode
-    """  # TODO: The explanation at the top of the docstring is interpreted by sphinx and looks weird (see http://elektronn2.readthedocs.io/en/latest/source/elektronn2.neuromancer.html#elektronn2.neuromancer.neural.UpConv).
+    """
 
     def __init__(self, parent, n_f, pool_shape, activation_func='relu',
                  identity_init=True, batch_normalisation=False, dropout_rate=0,
