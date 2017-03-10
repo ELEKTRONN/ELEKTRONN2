@@ -1,21 +1,18 @@
 # -*- coding: utf-8 -*-
 
 save_path = '~/elektronn2_examples/'
-# save_name = '3DCNN'  # Overwrite save name (default: derived from filename).
-preview_data_path = '~/neuro_data/preview_cubes.h5'
+preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
-    'export_class': 'all',
+    'export_class': '1',
     'max_z_pred': 3
 }
-initial_prev_h = 0.5  # hours: time after which the first preview is made
-prev_save_h = 0.5  # hours: time interval between planned previews.
-data_class = 'BatchCreatorImage'  # <String>: Name of the data class in
-                                  # ``elektronn2.data.traindata`` (as used here)
-                                  # or <tuple>: (path_to_file, class_name)
+initial_prev_h = 1.0  # hours: time after which the first preview is made
+prev_save_h = 1.0  # hours: time interval between planned previews.
+data_class = 'BatchCreatorImage'
 background_processes = 2
 data_init_kwargs = {
-    'd_path' : '~/neuro_data/',
-    'l_path': '~/neuro_data/',
+    'd_path' : '~/neuro_data_zxy/',
+    'l_path': '~/neuro_data_zxy/',
     'd_files': [('raw_%i.h5' %i, 'raw') for i in range(3)],
     'l_files': [('barrier_int16_%i.h5' %i, 'lab') for i in range(3)],
     'aniso_factor': 2,
@@ -35,13 +32,14 @@ history_freq = 200
 monitor_batch_size = 30
 optimiser = 'Adam'
 optimiser_params = {
-    'lr': 0.005,
+    'lr': 0.0005,
     'mom': 0.9,
     'beta2': 0.999,
     'wd': 0.5e-4
 }
-lr_schedule = {'dec': 0.95}  # Multiply learning rate by 0.95 every 1000 iterations.
-mom_schedule = None
+schedules = {
+    'lr': {'dec': 0.995}, # decay (multiply) lr by this factor every 1000 steps
+}
 batch_size = 1
 
 
