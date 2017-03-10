@@ -370,7 +370,7 @@ class HistoryTracker(object):
         #        self.plotting_proc.start()
 
         save_name = "0-" + save_name
-        with FileLock(save_name + '_HistoryTracker.plot'):
+        with FileLock('plotting'):
             plotting.plot_hist(self.timeline, self.history, save_name,
                                config.loss_smoothing_length, autoscale)
 
@@ -744,7 +744,8 @@ def evaluate(gt, preds, save_name, thresh=None, n_proc=None):
     title = "ROC AUC=%.4f" % (area,)
     plt.title(title)
 
-    plt.savefig(save_name + ".performance.png", bbox_inches='tight')
+    with FileLock('plotting'):
+        plt.savefig(save_name + ".performance.png", bbox_inches='tight')
 
     return acc_max, area, thresh
 
@@ -772,7 +773,8 @@ def error_hist(gt, preds, save_name, thresh=0.42):
     plt.semilogy()
     plt.xlim(0, 1)
     plt.title('Error Histogram')
-    plt.savefig(save_name + ".error_histogram.png", bbox_inches='tight')
+    with FileLock('plotting'):
+        plt.savefig(save_name + ".error_histogram.png", bbox_inches='tight')
 
 
 def rescale_fudge(pred, fudge=0.15):

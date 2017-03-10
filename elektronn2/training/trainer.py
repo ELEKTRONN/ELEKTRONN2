@@ -262,7 +262,7 @@ class Trainer(object):
                                                      lr, mom, gradnetrate])
 
                         ### Plotting / Saving ###
-                        with FileLock(save_name):
+                        with FileLock('plotting'):
                             self.model.save(save_name+'-LAST.mdl')
                             self.tracker.save(os.path.join('Backup', save_name))
                             if config.plot_on and ((i>=exp_config.history_freq*3) or i>60):
@@ -428,7 +428,8 @@ class Trainer(object):
 
             plt.ion()
             plt.show()
-            plt.savefig('Batch_test_image.png', bbox_inches='tight')
+            with FileLock('plotting'):
+                plt.savefig('Batch_test_image.png', bbox_inches='tight')
             plt.pause(0.01)
             plt.pause(2.0)
             plt.close('all')
@@ -707,7 +708,8 @@ class TracingTrainer(Trainer):
 
         plt.ion()
         plt.show()
-        plt.savefig('Batch_test_image.png', bbox_inches='tight')
+        with FileLock('plotting'):
+            plt.savefig('Batch_test_image.png', bbox_inches='tight')
         plt.pause(0.01)
         plt.pause(2.0)
         plt.close('all')

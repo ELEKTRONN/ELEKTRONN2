@@ -17,6 +17,8 @@ from scipy import stats
 import numpy as np
 import seaborn as sns
 
+from .locking import FileLock
+
 import logging
 
 
@@ -485,7 +487,8 @@ def plot_var(var, save_name):
     plt.plot(var[:, 0], sma(var[:, 3] - var[:, 4], 100), 'r:', linewidth=2)
     plt.title("Concentration")
 
-    plt.savefig(save_name + ".Beta1.png", bbox_inches='tight')
+    with FileLock('plotting'):
+        plt.savefig(save_name + ".Beta1.png", bbox_inches='tight')
 
     plt.figure(figsize=(12, 12))
     c = 1.0 - ((var[:, 0]).astype(np.float32) / var[-1, 0])
@@ -510,7 +513,8 @@ def plot_var(var, save_name):
                 edgecolors='face')
     plt.title("NLL vs. NLL.std")
 
-    plt.savefig(save_name + ".Beta2.png", bbox_inches='tight')
+    with FileLock('plotting'):
+        plt.savefig(save_name + ".Beta2.png", bbox_inches='tight')
 
 
 def plot_debug(var, debug_output_names, save_name):
