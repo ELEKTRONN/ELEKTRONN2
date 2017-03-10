@@ -76,17 +76,6 @@ def create_model():
     return model
 
 
-import os
-if not os.path.exists(os.path.expanduser(preview_data_path)):
-    print('\nData path not found. Please download the necessary dataset '
-          'or change the relevant file paths in this config.')
-    print('To install the neuro_data_xzy dataset to the default location, run:\n'
-          '  $ wget http://elektronn.org/downloads/neuro_data_zxy.zip\n'
-          '  $ unzip neuro_data_zxy.zip -d ~/neuro_data_zxy')
-    import sys
-    sys.stdout.flush()
-    sys.exit(1)
-
 if __name__ == '__main__':
     print('Testing and visualising model...\n(If you want to train with this '
           'config file instead, run '

@@ -11,6 +11,7 @@ __all__ = ['AgentData', 'BatchCreatorImage', 'GridData']
 import gc
 import logging
 import os
+import sys
 import time
 
 try:
@@ -440,6 +441,31 @@ class BatchCreatorImage(object):
         self._valid_count = len(self.valid_d)
 
 
+    def check_files(self):
+        """
+        Check if file paths in the network config are available.
+        """
+        notfound = False
+        give_neuro_data_hint = False
+        fullpaths = [os.path.join(self.d_path, f) for f, _ in self.d_files] +\
+                    [os.path.join(self.l_path, f) for f, _ in self.l_files]
+        for p in fullpaths:
+            if not os.path.exists(p):
+                print('{} not found.'.format(p))
+                notfound = True
+                if 'neuro_data_zxy' in p:
+                    give_neuro_data_hint = True
+        if give_neuro_data_hint:
+            print('\nIt looks like you are referencing the neuro_data_zxy dataset.\n'
+                  'To install the neuro_data_xzy dataset to the default location, run:\n'
+                  '  $ wget http://elektronn.org/downloads/neuro_data_zxy.zip\n'
+                  '  $ unzip neuro_data_zxy.zip -d ~/neuro_data_zxy')
+        if notfound:
+            print('\nPlease fetch the necessary dataset and/or '
+                  'change the relevant file paths in the network config.')
+            sys.stdout.flush()
+            sys.exit(1)
+
     def read_files(self):
         """
         Image files on disk are expected to be in order (ch,x,y,z) or (x,y,z)
@@ -447,6 +473,7 @@ class BatchCreatorImage(object):
         irrespective of the order in the file. If the image files have no
         channel this dimension is extended to a singleton dimension.
         """
+        self.check_files()
         data, target, extras = [], [], []
         pbar = tqdm.tqdm(total=len(self.d_files), ncols=120, leave=False)
 
