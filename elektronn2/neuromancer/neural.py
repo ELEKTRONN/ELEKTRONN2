@@ -504,7 +504,7 @@ class Conv(Perceptron):
     Examples
     --------
     Examples for constructing convolutional neural networks can be found
-    in examples/3d_cnn.py and examples/mnist.py.
+    in examples/neuro3d.py and examples/mnist.py.
 
     Parameters
     ----------

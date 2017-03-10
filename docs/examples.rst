@@ -43,7 +43,7 @@ built using ELEKTRONN2.
    to no modification, see the `"examples" directory
    <https://github.com/ELEKTRONN/ELEKTRONN2/tree/master/examples>`_ in the code
    repository, especially
-   `3d_cnn.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/3d_cnn.py>`_.
+   `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_.
 
 .. code-block:: python
 
