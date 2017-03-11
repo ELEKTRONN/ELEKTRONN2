@@ -3,6 +3,8 @@
 # Copyright (c) 2015 Marius F. Killinger
 # All rights reserved
 from __future__ import absolute_import, division, print_function
+from builtins import filter, hex, input, int, map, next, oct, pow, range, \
+    super, zip
 
 import code
 import getpass
@@ -17,9 +19,9 @@ from multiprocessing import Pool
 from os.path import abspath, dirname
 
 import numpy as np
-from builtins import int, map, range, zip
 from matplotlib import pyplot as plt
 from scipy.integrate import cumtrapz as integrate
+import theano
 
 from .. import utils
 from ..config import config, change_logging_file
@@ -488,7 +490,9 @@ class ExperimentConfig(object):
 
         host_name = socket.gethostname()
         now = datetime.datetime.today().isoformat()
-        logger.info('Running on {}@{}. Start time: {}'.format(user_name, host_name, now))
+        device = theano.config.device
+        logger.info('Running on {}@{}, using {}. Start time: {}'.format(
+            user_name, host_name, device, now))
 
     def read_user_config(self):
         logger.info("Reading exp_config-file %s" % (self.exp_file,))
