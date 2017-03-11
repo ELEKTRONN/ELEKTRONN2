@@ -377,7 +377,8 @@ def plot_hist(timeline, history, save_name, loss_smoothing_length=200,
         plt.ylabel('Loss')
 
         plt.tight_layout()
-        plt.savefig(save_name + ".timeline.png", bbox_inches='tight')
+        with FileLock('plotting'):
+            plt.savefig(save_name + ".timeline.png", bbox_inches='tight')
 
         ###################################################################
         ### History Loss ###
@@ -463,7 +464,8 @@ def plot_hist(timeline, history, save_name, loss_smoothing_length=200,
         plt.legend(loc=0)
         plt.xlabel('Update steps %s, total runtime %s' % (N - 1, runtime))
         plt.tight_layout()
-        plt.savefig(save_name + ".history.png", bbox_inches='tight')
+        with FileLock('plotting'):
+            plt.savefig(save_name + ".history.png", bbox_inches='tight')
 
     except ValueError:
         # When arrays are empty
@@ -549,7 +551,8 @@ def plot_debug(var, debug_output_names, save_name):
     plt.hlines(0, var[0, 0], var[-1, 0], linewidth=1)
     plt.grid()
 
-    plt.savefig(save_name + ".Debug.png", bbox_inches='tight')
+    with FileLock('plotting'):
+        plt.savefig(save_name + ".Debug.png", bbox_inches='tight')
 
 
 def plot_regression(pred, target, save_name, loss_smoothing_length=200,
@@ -576,7 +579,8 @@ def plot_regression(pred, target, save_name, loss_smoothing_length=200,
         plt.xlabel('Prediction')
         plt.ylabel('Target')
         plt.tight_layout()
-        plt.savefig(save_name + ".regression.png", bbox_inches='tight')
+        with FileLock('plotting'):
+            plt.savefig(save_name + ".regression.png", bbox_inches='tight')
     except ValueError:
         # When arrays are empty
         logger.warning("An error occurred during regression plotting.")
@@ -622,7 +626,8 @@ def plot_kde(pred, target, save_name, limit=90, scale='same', grid=50,
         plt.contour(pg, tg, f)
         plt.plot([mt, Mt], [mt, Mt], 'r:')
         plt.tight_layout()
-        plt.savefig(save_name + ".regression_kde.png", bbox_inches='tight')
+        with FileLock('plotting'):
+            plt.savefig(save_name + ".regression_kde.png", bbox_inches='tight')
     except ValueError:
         # When arrays are empty
         logger.warning("An error occurred during regression kde plotting.")
@@ -729,4 +734,5 @@ def plot_exectimes(exectimes, save_path='~/exectimes.png', max_items=32):
     plt.ylabel('Node')
     plt.xlabel('Time (in ms)')
     ax = sns.barplot(y=node_names, x=node_exectimes)
-    ax.get_figure().savefig(os.path.expanduser(save_path), bbox_inches='tight')
+    with FileLock('plotting'):
+        ax.get_figure().savefig(os.path.expanduser(save_path), bbox_inches='tight')

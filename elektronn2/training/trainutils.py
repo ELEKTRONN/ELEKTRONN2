@@ -105,12 +105,14 @@ def user_input(local_vars):
                     name = inp.split()[1]
                     w = model[name].w.get_value()
                     m = plotting.embedfilters(w)
-                    plt.imsave('filters_%s.png' % name, m, cmap='gray')
+                    with FileLock('plotting'):
+                        plt.imsave('filters_%s.png' % name, m, cmap='gray')
                 except:  # try to print filter of first Layer with w
                     for name, node in model.nodes.items():
                         if hasattr(node, 'w'):
                             m = plotting.embedfilters(node.w.get_value())
-                            plt.imsave('filters.png', m, cmap='gray')
+                            with FileLock('plotting'):
+                                plt.imsave('filters.png', m, cmap='gray')
                             break
 
             elif inp=='preview':
@@ -370,22 +372,21 @@ class HistoryTracker(object):
         #        self.plotting_proc.start()
 
         save_name = "0-" + save_name
-        with FileLock('plotting'):
-            plotting.plot_hist(self.timeline, self.history, save_name,
-                               config.loss_smoothing_length, autoscale)
+        plotting.plot_hist(self.timeline, self.history, save_name,
+                           config.loss_smoothing_length, autoscale)
 
-            if self.debug_output_names and self.debug_outputs.length:
-                plotting.plot_debug(self.debug_outputs, self.debug_output_names,
-                                    save_name)
+        if self.debug_output_names and self.debug_outputs.length:
+            plotting.plot_debug(self.debug_outputs, self.debug_output_names,
+                                save_name)
 
-            if self.regression_track:
-                plotting.plot_regression(self.regression_track[0],
-                                         self.regression_track[1], save_name)
-                plotting.plot_kde(self.regression_track[0],
-                                  self.regression_track[1], save_name)
+        if self.regression_track:
+            plotting.plot_regression(self.regression_track[0],
+                                     self.regression_track[1], save_name)
+            plotting.plot_kde(self.regression_track[0],
+                              self.regression_track[1], save_name)
 
-            if close:
-                plt.close('all')
+        if close:
+            plt.close('all')
 
 
 class ExperimentConfig(object):

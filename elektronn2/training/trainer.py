@@ -262,11 +262,10 @@ class Trainer(object):
                                                      lr, mom, gradnetrate])
 
                         ### Plotting / Saving ###
-                        with FileLock('plotting'):
-                            self.model.save(save_name+'-LAST.mdl')
-                            self.tracker.save(os.path.join('Backup', save_name))
-                            if config.plot_on and ((i>=exp_config.history_freq*3) or i>60):
-                                self.tracker.plot(save_name)
+                        self.model.save(save_name+'-LAST.mdl')
+                        self.tracker.save(os.path.join('Backup', save_name))
+                        if config.plot_on and ((i>=exp_config.history_freq*3) or i>60):
+                            self.tracker.plot(save_name)
 
                         if config.print_status:
                             t = utils.pretty_string_time(t_passed)
@@ -464,34 +463,35 @@ class Trainer(object):
         z_sh = pred.shape[1]
         pred = pred[:,(z_sh-z_thick)//2:(z_sh-z_thick)//2+z_thick,:,:,]
         save_name = self.exp_config.save_name
-        for z in range(pred.shape[1]):
-            if export_class=='all':
-                for c in range(pred.shape[0]):
-                    plt.imsave('%s-pred-%s-z%i-c%i-%shrs.png' \
-                               %(save_name, block_name, z, c, number), pred[c,z,:,:], cmap='gray')
-            elif export_class in ['malis', 'affinity']:
-                plt.imsave('%s-pred-%s-aff-z%i-%shrs.png' \
-                           %(save_name, block_name, z, number),
-                           np.transpose(pred[0:6:2,z,:,:],(1,2,0)), cmap='gray')
-            else:
-                if isinstance(export_class, (list, tuple)):
-                    for c in export_class:
+        with FileLock('plotting'):  # One lock is enough because everything below calls mpl directly
+            for z in range(pred.shape[1]):
+                if export_class=='all':
+                    for c in range(pred.shape[0]):
+                        plt.imsave('%s-pred-%s-z%i-c%i-%shrs.png' \
+                                   %(save_name, block_name, z, c, number), pred[c,z,:,:], cmap='gray')
+                elif export_class in ['malis', 'affinity']:
+                    plt.imsave('%s-pred-%s-aff-z%i-%shrs.png' \
+                               %(save_name, block_name, z, number),
+                               np.transpose(pred[0:6:2,z,:,:],(1,2,0)), cmap='gray')
+                else:
+                    if isinstance(export_class, (list, tuple)):
+                        for c in export_class:
+                            plt.imsave('%s-pred-%s-z%i-c%i-%shrs.png' \
+                                       %(save_name, block_name, z, c, number), pred[c,z,:,:], cmap='gray')
+
+                    else:
+                        c = int(export_class)
                         plt.imsave('%s-pred-%s-z%i-c%i-%shrs.png' \
                                    %(save_name, block_name, z, c, number), pred[c,z,:,:], cmap='gray')
 
+            if not self.saved_raw_preview: # only do once
+                if len(pred_node.shape.offsets)==2:
+                    z_off = 0
                 else:
-                    c = int(export_class)
-                    plt.imsave('%s-pred-%s-z%i-c%i-%shrs.png' \
-                               %(save_name, block_name, z, c, number), pred[c,z,:,:], cmap='gray')
+                    z_off = int(pred_node.shape.offsets[0])
 
-        if not self.saved_raw_preview: # only do once
-            if len(pred_node.shape.offsets)==2:
-                z_off = 0
-            else:
-                z_off = int(pred_node.shape.offsets[0])
-
-            for z in range(pred.shape[1]):
-                plt.imsave('%s-raw-%s-z%i.png'%(save_name, block_name, z), raw_img[0,z+z_off,:,:], cmap='gray')
+                for z in range(pred.shape[1]):
+                    plt.imsave('%s-raw-%s-z%i.png'%(save_name, block_name, z), raw_img[0,z+z_off,:,:], cmap='gray')
 
 
     def preview_slice_from_traindata(self, cube_i=0, off=(0,0,0), sh=(10,400,400), number=0, export_class='all'):
@@ -611,8 +611,9 @@ class TracingTrainer(Trainer):
 
         # assert off % 2==0
         # off //= 2
-        for i in range(img.shape[1]):
-            plt.imsave('batch-%i-z%i.png' % (k, i), img[0, i], cmap='gray')
+        with FileLock('plotting'):
+            for i in range(img.shape[1]):
+                plt.imsave('batch-%i-z%i.png' % (k, i), img[0, i], cmap='gray')
             # if 0 <= (i - off) < lab.shape[1]:
             #     lab_small = lab[4, i - off]
             #     lab_up = misc.imresize(lab_small,
@@ -688,23 +689,24 @@ class TracingTrainer(Trainer):
             data, target = batch[0], batch[1]
             target[np.isclose(target, -666)] = 0
             i = self.data.offsets[0]  # z offset
-            for j in range(data.shape[2]):
-                plt.imsave('/tmp/img-%i.png' % j, data[0, 0, j], cmap='gray')
-                if j - i >= 0 and j - i < target.shape[2]:
-                    plt.imsave(dest+'img-%i-br.png'%j, target[0, 4, j - i],cmap='gray')
-                    plt.imsave(dest+'img-%i-z.png'%j, target[0,0,j-i], cmap='gray')
-                    plt.imsave(dest+'img-%i-y.png'%j, target[0,1,j-i], cmap='gray')
-                    plt.imsave(dest+'img-%i-x.png'%j, target[0,2,j-i], cmap='gray')
-                    plt.imsave(dest+'img-%i-barr.png'%j, target[0,3,j-i], cmap='gray')
+            with FileLock('plotting'):
+                for j in range(data.shape[2]):
+                    plt.imsave('/tmp/img-%i.png' % j, data[0, 0, j], cmap='gray')
+                    if j - i >= 0 and j - i < target.shape[2]:
+                        plt.imsave(dest+'img-%i-br.png'%j, target[0, 4, j - i],cmap='gray')
+                        plt.imsave(dest+'img-%i-z.png'%j, target[0,0,j-i], cmap='gray')
+                        plt.imsave(dest+'img-%i-y.png'%j, target[0,1,j-i], cmap='gray')
+                        plt.imsave(dest+'img-%i-x.png'%j, target[0,2,j-i], cmap='gray')
+                        plt.imsave(dest+'img-%i-barr.png'%j, target[0,3,j-i], cmap='gray')
 
-                    plt.imsave(dest+'img-%i-syn.png'%j, target[0,6,j-i], cmap='gray')
-                    plt.imsave(dest+'img-%i-ves.png'%j, target[0,7,j-i], cmap='gray')
-                    plt.imsave(dest+'img-%i-mito.png'%j, target[0,8,j-i], cmap='gray')
+                        plt.imsave(dest+'img-%i-syn.png'%j, target[0,6,j-i], cmap='gray')
+                        plt.imsave(dest+'img-%i-ves.png'%j, target[0,7,j-i], cmap='gray')
+                        plt.imsave(dest+'img-%i-mito.png'%j, target[0,8,j-i], cmap='gray')
 
-                    quiver = my_quiver(target[0,2,j-i], target[0,1,j-i],
-                              img=target[0, 4, j - i], c=target[0,0,j-i])
+                        quiver = my_quiver(target[0,2,j-i], target[0,1,j-i],
+                                  img=target[0, 4, j - i], c=target[0,0,j-i])
 
-                    quiver.savefig(dest+'vec-%i.png'%j, bbox_inches='tight')
+                        quiver.savefig(dest+'vec-%i.png'%j, bbox_inches='tight')
 
         plt.ion()
         plt.show()
