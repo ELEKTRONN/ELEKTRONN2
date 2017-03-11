@@ -17,14 +17,12 @@ from .utils import gpu
 
 logger = logging.getLogger('elektronn2log')
 
-hostname = socket.gethostname()
-now = datetime.datetime.today().isoformat()
-logger.info('Running on host {}. Start time: {}'.format(hostname, now))
-if hostname in ['synapse03', 'synapse04', 'synapse05', 'synapse06',
-                            'synapse07', 'synapse08']:
+host_name = socket.gethostname()
+if host_name in ['synapse03', 'synapse04', 'synapse05', 'synapse06',
+                 'synapse07', 'synapse08']:
     cuda_root = "/usr/local/centos-cuda/cuda-6.5"
     logger.info("On Host %s: setting cuda root to %s and disabling DNN!" % (
-        hostname, cuda_root))
+        host_name, cuda_root))
 
     import theano
 

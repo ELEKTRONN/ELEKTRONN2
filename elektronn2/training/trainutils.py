@@ -9,6 +9,7 @@ import getpass
 import logging
 import os
 import shutil
+import socket
 import traceback
 import datetime
 from itertools import repeat
@@ -465,6 +466,7 @@ class ExperimentConfig(object):
                 0]
 
         logger.removeHandler(old_lfile_handler)
+        # TODO: Transfer log entries from old log file to new one?
 
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path, mode=0o755)
@@ -483,6 +485,10 @@ class ExperimentConfig(object):
         change_logging_file(inspection_logger, self.save_path,
                             file_name='%s.inspection-log' % (
                                 '0-' + self.save_name,))
+
+        host_name = socket.gethostname()
+        now = datetime.datetime.today().isoformat()
+        logger.info('Running on {}@{}. Start time: {}'.format(user_name, host_name, now))
 
     def read_user_config(self):
         logger.info("Reading exp_config-file %s" % (self.exp_file,))
