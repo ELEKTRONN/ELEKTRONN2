@@ -22,6 +22,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy.integrate import cumtrapz as integrate
 import theano
+import theano.sandbox.cuda
 
 from .. import utils
 from ..config import config, change_logging_file
@@ -87,6 +88,7 @@ def user_input(local_vars):
             # Catch all exceptions in order to prevent catastrophes in case ptk suddenly breaks
             except Exception:
                 inp = console.raw_input("%s@neuromancer: " % user_name)
+            logger.debug('(Shell received command "{}")'.format(inp))
             if inp=='q':
                 break
             elif inp=='kill':
@@ -490,7 +492,13 @@ class ExperimentConfig(object):
 
         host_name = socket.gethostname()
         now = datetime.datetime.today().isoformat()
-        device = theano.config.device
+        device = 'CPU'
+        try:
+            if theano.sandbox.cuda.cuda_enabled:
+                device = 'GPU {}'.format(
+                    theano.sandbox.cuda.active_device_number())
+        except:
+            pass
         logger.info('Running on {}@{}, using {}. Start time: {}'.format(
             user_name, host_name, device, now))
 
