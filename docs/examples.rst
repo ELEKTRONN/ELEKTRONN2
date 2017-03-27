@@ -22,12 +22,12 @@ examples, basic knowledge of neural networks is recommended.
    :local:
    :depth: 2
 
-A simple 3D CNN
-===============
+Overview: Simple 3D CNNs
+========================
 
-This example demonstrates how a 3-dimensional CNN and its loss function are
-specified. The model batch size is 10 and the CNN takes an [23, 183, 183] image
-volume with 3 channels [#f1]_ (e.g. RGB colours) as input.
+Here we explain how a simple 3-dimensional CNN and its loss function can be
+specified in ELEKTRONN2. The model batch size is 10 and the CNN takes an
+[23, 183, 183] image volume with 3 channels [#f1]_ (e.g. RGB colours) as input.
 
 .. [#f1] For consistency reasons the axis containing image channels and the axis
    containing classification targets are also denoted by ``'f'`` like the
@@ -40,7 +40,7 @@ The following code snippet [#f2]_ exemplifies how a 3-dimensional CNN model can 
 built using ELEKTRONN2.
 
 .. [#f2] For complete network config files that you can directly run with little
-   to no modification, see the `"examples" directory
+   to no modification, see the `3d Neuro Data`_ section below and the `"examples" directory
    <https://github.com/ELEKTRONN/ELEKTRONN2/tree/master/examples>`_ in the code
    repository, especially
    `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_.
@@ -49,6 +49,7 @@ built using ELEKTRONN2.
 
    from elektronn2 import neuromancer
 
+   # Input shape: (batch size, number of features/channels, z, x, y)
    image = neuromancer.Input((10, 3, 23, 183, 183), 'b,f,z,x,y', name='image')
 
    # If no node name is given, default names and enumeration are used.
@@ -189,3 +190,101 @@ The whole model can also be plotted as a graph by using the
 
    Model graph of the example CNN. Inputs are yellow and outputs are blue. |br|
    Some node classes are represented by special shapes, the default shape is oval.
+
+3D Neuro Data
+=============
+.. note::
+   This section is under construction and is currently incomplete.
+
+.. TODO: Link to data format description
+
+In the following concrete example, ELEKTRONN2 is used for detecting neuron
+cell boundaries in 3D electron microscopy image volumes.
+The more general goal is to find a volume segmentation by
+assigning a cell ID to each voxel. Predicting boundaries is a surrogate target
+for which a CNN can be trained. The actual segmentation would be made by e.g.
+running a `watershed transformation <https://en.wikipedia.org/wiki/Watershed_(image_processing)>`_
+on the predicted boundary map. This is a typical *img-img* task.
+
+For demonstration purposes, a relatively small CNN with only 3M parameters and 7
+layers is used. It trains fast but is obviously limited in accuracy. To
+solve this task well, more training data would be required in addition.
+
+The full configuration file on which this section is based can be found in
+ELEKTRONN2's `examples <https://github.com/ELEKTRONN/ELEKTRONN2/tree/master/examples>`_
+folder as `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_.
+If your GPU is slow or you want to try ELEKTRONN2 on your CPU, we recommend
+you use the `neuro3d_lite.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d_lite.py>`_
+config instead. It uses the same data and has the same output format, but it
+runs significantly faster (at the cost of accuracy).
+
+Getting Started
+---------------
+
+.. TODO: Link to installation instructions. From here on ELEKTRONN2 is expected to be installed.
+
+1. Download and unpack the `neuro_data_zxy test data <http://elektronn.org/downloads/neuro_data_zxy.zip>`_  (98 MiB)::
+
+      wget http://elektronn.org/downloads/neuro_data_zxy.zip
+      unzip neuro_data_zxy.zip -d ~/neuro_data_zxy
+
+2. ``cd`` to the ``examples`` directory or download the example file to your working directory::
+
+   wget https://raw.githubusercontent.com/ELEKTRONN/ELEKTRONN2/master/examples/neuro3d.py
+
+4. Run::
+
+      elektronn2-train neuro3d.py --gpu=auto
+
+4. Inspect the printed output and the plots in the save directory
+
+5. You can start experimenting with changes in the config file (for example by
+   inserting a new ``Conv`` layer) and validate your model by directly running
+   the config file through your Python interpreter before trying to train it::
+
+      python neuro3d.py
+
+
+Data Set
+--------
+
+This data set is a subset of the zebra finch area X dataset j0126 by
+`Jörgen Kornfeld <http://www.neuro.mpg.de/mitarbeiter/43611/3242756>`_.
+There are 3 volumes which contain "barrier" labels (union of cell boundaries
+and extra cellular space) of shape ``(150,150,150)`` in ``(x,y,z)`` axis
+order. Correspondingly, there are 3 volumes which contain raw electron
+microscopy images. Because a CNN can only make predictions within some offset
+from the input image extent, the size of the image cubes is larger
+``(250,350,350)`` in order to be able to make predictions and to train
+for every labelled voxel. The margin in this examples allows to make
+predictions for the labelled region with a maximal field of view of
+``201`` in  ``x, y`` and ``101`` in ``z``.
+
+There is a difference in the lateral dimensions and in ``z`` - direction
+because this data set is anisotropic: lateral voxels have a spacing of
+:math:`10 \mu m` in contrast to :math:`20 \mu m` vertically. Snapshots
+of images and labels are depicted below.
+
+.. TODO: Link to images
+
+During training, the pipeline cuts image and target patches from the loaded
+data cubes at randomly sampled locations and feeds them to the CNN. Therefore
+the CNN input size should be smaller than the size of the data cubes, to leave
+enough space to cut from many different positions. Otherwise it will always
+use the same patch (more or less) and soon over-fit to that one.
+
+.. note::
+   **Implementation details:** When the cubes are read into the pipeline, it
+   is implicitly assumed that the smaller label cube is spatially centered
+   w.r.t the larger image cube (hence the size surplus of the image cube must
+   be even). Furthermore, for performance reasons the cubes are internally
+   zero-padded to the same size and
+   cropped such that only the area in which labels and images are both
+   available after considering the CNN offset is used. If labels cannot be effectively
+   used for training (because either the image surplus is too small or your FOV
+   is too large) a note will be printed.
+
+Additionally to the 3 pairs of images and labels, 2 small image cubes for live
+previews are included. Note that preview data must be a **list** of one or
+several cubes stored in a ``h5``-file.
+
