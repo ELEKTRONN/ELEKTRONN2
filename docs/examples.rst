@@ -288,3 +288,81 @@ Additionally to the 3 pairs of images and labels, 2 small image cubes for live
 previews are included. Note that preview data must be a **list** of one or
 several cubes stored in a ``h5``-file.
 
+
+CNN design
+----------
+
+.. TODO: Link to mfp section at the end of the 4th and 6th bullet point.
+
+The architecture of the CNN is determined by the body of the ``create_model``
+function inside the `network config file <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py#L46>`_:
+
+.. code-block:: python
+
+   from elektronn2 import neuromancer
+   in_sh = (None,1,23,185,185)
+   inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
+
+   out   = neuromancer.Conv(inp, 20,  (1,6,6), (1,2,2))
+   out   = neuromancer.Conv(out, 30,  (1,5,5), (1,2,2))
+   out   = neuromancer.Conv(out, 40,  (1,5,5), (1,1,1))
+   out   = neuromancer.Conv(out, 80,  (4,4,4), (2,1,1))
+
+   out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
+   out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
+   out   = neuromancer.Conv(out, 150, (2,4,4), (1,1,1))
+   out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
+   out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
+
+   out   = neuromancer.Conv(out, 200, (1,1,1), (1,1,1))
+   out   = neuromancer.Conv(out,   2, (1,1,1), (1,1,1), activation_func='lin')
+   probs = neuromancer.Softmax(out)
+
+   target = neuromancer.Input_like(probs, override_f=1, name='target')
+   loss_pix  = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True)
+
+   loss = neuromancer.AggregateLoss(loss_pix , name='loss')
+   errors = neuromancer.Errors(probs, target, target_is_sparse=True)
+
+   model = neuromancer.model_manager.getmodel()
+   model.designate_nodes(
+       input_node=inp,
+       target_node=target,
+       loss_node=loss,
+       prediction_node=probs,
+       prediction_ext=[loss, errors, probs]
+   )
+   return model
+
+* Because the data is anisotropic the lateral (``x, y``) FOV is chosen to be larger. This
+  reduces the computational complexity compared to a naive isotropic CNN. Even
+  for genuinely isotropic data this might be a useful strategy if it is
+  plausible that seeing a large lateral context is sufficient to solve the task.
+* As an extreme, the presented CNN is partially actually 2D: Only
+  the middle layers (4. - 7.) perform a true 3D aggregation of the features along the
+  z axis. In all other layers the filter kernels have the extent ``1`` in ``z``.
+* The resulting FOV is ``[15, 105, 105]`` (to solve this task well, more than
+  ``105`` lateral FOV is beneficial, but this would be too much for this simple example...)
+* Using this input size gives an output shape of ``[5, 21, 21]`` i.e. ``2205``
+  prediction neurons. For training, this is a good compromise between
+  computational cost and sufficiently many prediction neurons to average the
+  gradient over. Too few output pixel result in so noisy gradients that
+  convergence might be impossible. For making predictions, it is more
+  efficient to re-create the CNN with a larger input size.
+* If there are several ``100-1000`` output neurons, a batch size of ``1`` is
+  commonly sufficient and it is not necessary to compute an average gradient over
+  several images.
+* The output shape has strides of ``[2, 4, 4]`` due to one pooling by 2 in ``z``
+  direction and 2 lateral poolings by 2. This means that the predicted
+  ``[5, 21, 21]`` voxels do not lie
+  laterally adjacent if projected back to the space of the input image: for
+  every lateral output voxel there are ``3`` voxels separating it from the next
+  output voxel (``1`` separating voxel in ``z`` direction, accordingly) - for
+  those no prediction is available. To obtain dense
+  predictions (e.g. when making the live previews) the method
+  :py:meth:`elektronn2.neuromancer.node_basic.predict_dense` is used, which
+  moves along the missing locations and stitches the results. For making large
+  scale predictions after training, this can be done more efficiently using
+  MFP.
+* To solve this task well, a larger architecture and more training data
+  are needed.
