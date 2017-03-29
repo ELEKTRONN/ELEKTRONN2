@@ -1,6 +1,6 @@
 .. |br| raw:: html
 
-   <br />
+  <br />
 
 .. _examples:
 
@@ -9,8 +9,8 @@ Examples
 ********
 
 .. note::
-   This page is currently under construction.
-   Many content updates are in the works.
+  This page is currently under construction.
+  Many content updates are in the works.
 
 
 This page gives examples for different use cases of ELEKTRONN2. Besides, the
@@ -19,8 +19,8 @@ could be created and trained without the built-in pipeline. To understand the
 examples, basic knowledge of neural networks is recommended.
 
 .. contents::
-   :local:
-   :depth: 2
+  :local:
+  :depth: 2
 
 
 Overview: Simple 3D CNNs
@@ -31,8 +31,8 @@ specified in ELEKTRONN2. The model batch size is 10 and the CNN takes an
 [23, 183, 183] image volume with 3 channels [#f1]_ (e.g. RGB colours) as input.
 
 .. [#f1] For consistency reasons the axis containing image channels and the axis
-   containing classification targets are also denoted by ``'f'`` like the
-   feature maps or features of a MLP.
+  containing classification targets are also denoted by ``'f'`` like the
+  feature maps or features of a MLP.
 
 
 Defining the neural network model
@@ -42,45 +42,45 @@ The following code snippet [#f2]_ exemplifies how a 3-dimensional CNN model can 
 built using ELEKTRONN2.
 
 .. [#f2] For complete network config files that you can directly run with little
-   to no modification, see the `3d Neuro Data`_ section below and the `"examples" directory
-   <https://github.com/ELEKTRONN/ELEKTRONN2/tree/master/examples>`_ in the code
-   repository, especially
-   `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_.
+  to no modification, see the `3d Neuro Data`_ section below and the `"examples" directory
+  <https://github.com/ELEKTRONN/ELEKTRONN2/tree/master/examples>`_ in the code
+  repository, especially
+  `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_.
 
 .. code-block:: python
 
-   from elektronn2 import neuromancer
+  from elektronn2 import neuromancer
 
-   # Input shape: (batch size, number of features/channels, z, x, y)
-   image = neuromancer.Input((10, 3, 23, 183, 183), 'b,f,z,x,y', name='image')
+  # Input shape: (batch size, number of features/channels, z, x, y)
+  image = neuromancer.Input((10, 3, 23, 183, 183), 'b,f,z,x,y', name='image')
 
-   # If no node name is given, default names and enumeration are used.
-   # 3d convolution with 32 filters of size (1,6,6) and max-pool sizes (1,2,2).
-   conv0 = neuromancer.Conv(image, 32, (1,6,6), (1,2,2))
-   conv1 = neuromancer.Conv(conv0, 64, (4,6,6), (2,2,2))
-   conv2 = neuromancer.Conv(conv1, 5, (3,3,3), (1,1,1), activation_func='lin')
+  # If no node name is given, default names and enumeration are used.
+  # 3d convolution with 32 filters of size (1,6,6) and max-pool sizes (1,2,2).
+  conv0 = neuromancer.Conv(image, 32, (1,6,6), (1,2,2))
+  conv1 = neuromancer.Conv(conv0, 64, (4,6,6), (2,2,2))
+  conv2 = neuromancer.Conv(conv1, 5, (3,3,3), (1,1,1), activation_func='lin')
 
-   # Softmax automatically infers from the input's 'f' axis
-   # that the number of classes is 5 and the axis index is 1.
-   class_probs = neuromancer.Softmax(conv2)
+  # Softmax automatically infers from the input's 'f' axis
+  # that the number of classes is 5 and the axis index is 1.
+  class_probs = neuromancer.Softmax(conv2)
 
-   # This copies shape and strides from class_probs but the feature axis
-   # is overridden to 1, the target array has only one feature on this axis,
-   # the class IDs i.e. 'sparse' labels. It is also possible to use 5
-   # features where each contains the probability for the corresponding class.
-   target = neuromancer.Input_like(class_probs, override_f=1, name='target', dtype='int16')
+  # This copies shape and strides from class_probs but the feature axis
+  # is overridden to 1, the target array has only one feature on this axis,
+  # the class IDs i.e. 'sparse' labels. It is also possible to use 5
+  # features where each contains the probability for the corresponding class.
+  target = neuromancer.Input_like(class_probs, override_f=1, name='target', dtype='int16')
 
-   # Voxel-wise loss calculation
-   voxel_loss = neuromancer.MultinoulliNLL(class_probs, target, target_is_sparse=True)
-   scalar_loss = neuromancer.AggregateLoss(voxel_loss , name='loss')
+  # Voxel-wise loss calculation
+  voxel_loss = neuromancer.MultinoulliNLL(class_probs, target, target_is_sparse=True)
+  scalar_loss = neuromancer.AggregateLoss(voxel_loss , name='loss')
 
-   # Takes class with largest predicted probability and calculates classification accuracy.
-   errors = neuromancer.Errors(class_probs, target, target_is_sparse=True)
+  # Takes class with largest predicted probability and calculates classification accuracy.
+  errors = neuromancer.Errors(class_probs, target, target_is_sparse=True)
 
-   # Creation of nodes has been tracked and they were associated to a model object.
-   model = neuromancer.model_manager.getmodel()
-   model.designate_nodes(input_node=image, target_node=target, loss_node=scalar_loss,
-   prediction_node=class_probs, prediction_ext=[scalar_loss, errors, class_probs])
+  # Creation of nodes has been tracked and they were associated to a model object.
+  model = neuromancer.model_manager.getmodel()
+  model.designate_nodes(input_node=image, target_node=target, loss_node=scalar_loss,
+  prediction_node=class_probs, prediction_ext=[scalar_loss, errors, class_probs])
 
 ``model.designate_nodes()`` triggers printing of aggregated model stats and
 extended shape properties of the ``prediction_node``. |br|
@@ -88,45 +88,45 @@ Executing the above model creation code prints basic information for each node
 and its output shape and saves it to the log file. |br|
 Example output::
 
-   <Input-Node> 'image'
-   Out:[(10,b), (3,f), (23,z), (183,x), (183,y)]
-   ---------------------------------------------------------------------------------------
-   <Conv-Node> 'conv'
-   #Params=3,488 Comp.Cost=25.2 Giga Ops, Out:[(10,b), (32,f), (23,z), (89,x), (89,y)]
-   n_f=32, 3d conv, kernel=(1, 6, 6), pool=(1, 2, 2), act='relu',
-   ---------------------------------------------------------------------------------------
-   <Conv-Node> 'conv1'
-   #Params=294,976 Comp.Cost=416.2 Giga Ops, Out:[(10,b), (64,f), (10,z), (42,x), (42,y)]
-   n_f=64, 3d conv, kernel=(4, 6, 6), pool=(2, 2, 2), act='relu',
-   ---------------------------------------------------------------------------------------
-   <Conv-Node> 'conv2'
-   #Params=8,645 Comp.Cost=1.1 Giga Ops, Out:[(10,b), (5,f), (8,z), (40,x), (40,y)]
-   n_f=5, 3d conv, kernel=(3, 3, 3), pool=(1, 1, 1), act='lin',
-   ---------------------------------------------------------------------------------------
-   <Softmax-Node> 'softmax'
-   Comp.Cost=640.0 kilo Ops, Out:[(10,b), (5,f), (8,z), (40,x), (40,y)]
-   ---------------------------------------------------------------------------------------
-   <Input-Node> 'target'
-   Out:[(10,b), (1,f), (8,z), (40,x), (40,y)]
-   85
-   ---------------------------------------------------------------------------------------
-   <MultinoulliNLL-Node> 'nll'
-   Comp.Cost=640.0 kilo Ops, Out:[(10,b), (1,f), (8,z), (40,x), (40,y)]
-   Order of sources=['image', 'target'],
-   ---------------------------------------------------------------------------------------
-   <AggregateLoss-Node> 'loss'
-   Comp.Cost=128.0 kilo Ops, Out:[(1,f)]
-   Order of sources=['image', 'target'],
-   ---------------------------------------------------------------------------------------
-   <_Errors-Node> 'errors'
-   Comp.Cost=128.0 kilo Ops, Out:[(1,f)]
-   Order of sources=['image', 'target'],
-   Prediction properties:
-   [(10,b), (5,f), (8,z), (40,x), (40,y)]
-   fov=[9, 27, 27], offsets=[4, 13, 13], strides=[2 4 4], spatial shape=[8, 40, 40]
-   Total Computational Cost of Model: 442.5 Giga Ops
-   Total number of trainable parameters: 307,109.
-   Computational Cost per pixel: 34.6 Mega Ops
+  <Input-Node> 'image'
+  Out:[(10,b), (3,f), (23,z), (183,x), (183,y)]
+  ---------------------------------------------------------------------------------------
+  <Conv-Node> 'conv'
+  #Params=3,488 Comp.Cost=25.2 Giga Ops, Out:[(10,b), (32,f), (23,z), (89,x), (89,y)]
+  n_f=32, 3d conv, kernel=(1, 6, 6), pool=(1, 2, 2), act='relu',
+  ---------------------------------------------------------------------------------------
+  <Conv-Node> 'conv1'
+  #Params=294,976 Comp.Cost=416.2 Giga Ops, Out:[(10,b), (64,f), (10,z), (42,x), (42,y)]
+  n_f=64, 3d conv, kernel=(4, 6, 6), pool=(2, 2, 2), act='relu',
+  ---------------------------------------------------------------------------------------
+  <Conv-Node> 'conv2'
+  #Params=8,645 Comp.Cost=1.1 Giga Ops, Out:[(10,b), (5,f), (8,z), (40,x), (40,y)]
+  n_f=5, 3d conv, kernel=(3, 3, 3), pool=(1, 1, 1), act='lin',
+  ---------------------------------------------------------------------------------------
+  <Softmax-Node> 'softmax'
+  Comp.Cost=640.0 kilo Ops, Out:[(10,b), (5,f), (8,z), (40,x), (40,y)]
+  ---------------------------------------------------------------------------------------
+  <Input-Node> 'target'
+  Out:[(10,b), (1,f), (8,z), (40,x), (40,y)]
+  85
+  ---------------------------------------------------------------------------------------
+  <MultinoulliNLL-Node> 'nll'
+  Comp.Cost=640.0 kilo Ops, Out:[(10,b), (1,f), (8,z), (40,x), (40,y)]
+  Order of sources=['image', 'target'],
+  ---------------------------------------------------------------------------------------
+  <AggregateLoss-Node> 'loss'
+  Comp.Cost=128.0 kilo Ops, Out:[(1,f)]
+  Order of sources=['image', 'target'],
+  ---------------------------------------------------------------------------------------
+  <_Errors-Node> 'errors'
+  Comp.Cost=128.0 kilo Ops, Out:[(1,f)]
+  Order of sources=['image', 'target'],
+  Prediction properties:
+  [(10,b), (5,f), (8,z), (40,x), (40,y)]
+  fov=[9, 27, 27], offsets=[4, 13, 13], strides=[2 4 4], spatial shape=[8, 40, 40]
+  Total Computational Cost of Model: 442.5 Giga Ops
+  Total number of trainable parameters: 307,109.
+  Computational Cost per pixel: 34.6 Mega Ops
 
 
 Interactive usage of the ``Model`` and ``Node`` objects
@@ -135,69 +135,69 @@ Interactive usage of the ``Model`` and ``Node`` objects
 ``Node`` objects can be used like functions to calculate their output. |br|
 The first call triggers compilation and caches the compiled function::
 
-   >>> test_output = class_probs(test_image)
-   Compiling softmax, inputs=[image]
-   Compiling done - in 21.32 s
-   >>> import numpy as np
-   >>> np.allclose(test_output, reference_output)
-   True
+  >>> test_output = class_probs(test_image)
+  Compiling softmax, inputs=[image]
+  Compiling done - in 21.32 s
+  >>> import numpy as np
+  >>> np.allclose(test_output, reference_output)
+  True
 
 The ``model`` object has a ``dict`` interface to its ``Node``\s::
 
-   >>> model
-   ['image', 'conv', 'conv1', 'conv2', 'softmax', 'target', 'nll', 'loss', 'cls for errors', 'errors']
-   >>> model['nll'] == voxel_loss
-   True
-   >>> conv2.shape.ext_repr
-   '[(10,b), (5,f), (8,z), (40,x), (40,y)]\nfov=[9, 27, 27], offsets=[4, 13, 13],
-   strides=[2 4 4], spatial shape=[8, 40, 40]'
-   >>> target.measure_exectime(n_samples=5, n_warmup=4)
-   Compiling target, inputs=[target]
-   Compiling done - in 0.65 s
-   86
-   target samples in ms:
-   [ 0.019 0.019 0.019 0.019 0.019]
-   target: median execution time: 0.01903 ms
+  >>> model
+  ['image', 'conv', 'conv1', 'conv2', 'softmax', 'target', 'nll', 'loss', 'cls for errors', 'errors']
+  >>> model['nll'] == voxel_loss
+  True
+  >>> conv2.shape.ext_repr
+  '[(10,b), (5,f), (8,z), (40,x), (40,y)]\nfov=[9, 27, 27], offsets=[4, 13, 13],
+  strides=[2 4 4], spatial shape=[8, 40, 40]'
+  >>> target.measure_exectime(n_samples=5, n_warmup=4)
+  Compiling target, inputs=[target]
+  Compiling done - in 0.65 s
+  86
+  target samples in ms:
+  [ 0.019 0.019 0.019 0.019 0.019]
+  target: median execution time: 0.01903 ms
 
 For efficient dense prediction, batch size is changed to 1 and MFP  is inserted. |br|
 To do that, the ``model`` must be rebuilt/reloaded. |br|
 MFP needs a different patch size. The closest possible one is selected::
 
-   >>> model_prediction = neuromancer.model.rebuild_model(model, imposed_batch_size=1,
-                                                          override_mfp_to_active=True)
-   patch_size (23) changed to (22) (size not possible)
-   patch_size (183) changed to (182) (size not possible)
-   patch_size (183) changed to (182) (size not possible)
-   ---------------------------------------------------------------------------------------
-   <Input-Node> 'image'
-   Out:[(1,b), (3,f), (22,z), (182,x), (182,y)]
-   ...
+  >>> model_prediction = neuromancer.model.rebuild_model(model, imposed_batch_size=1,
+                                                         override_mfp_to_active=True)
+  patch_size (23) changed to (22) (size not possible)
+  patch_size (183) changed to (182) (size not possible)
+  patch_size (183) changed to (182) (size not possible)
+  ---------------------------------------------------------------------------------------
+  <Input-Node> 'image'
+  Out:[(1,b), (3,f), (22,z), (182,x), (182,y)]
+  ...
 
 Dense prediction: ``test_image`` can have any spatial shape as long as it
 is larger than the ``model`` patch size::
 
-   >>> model_prediction.predict_dense(test_image, pad_raw=True)
-   Compiling softmax, inputs=[image]
-   Compiling done - in 27.63 s
-   Predicting img (3, 58, 326, 326) in 16 Blocks: (4, 2, 2)
-   ...
+  >>> model_prediction.predict_dense(test_image, pad_raw=True)
+  Compiling softmax, inputs=[image]
+  Compiling done - in 27.63 s
+  Predicting img (3, 58, 326, 326) in 16 Blocks: (4, 2, 2)
+  ...
 
 The whole model can also be plotted as a graph by using the
 ``elektronn2.utils.d3viz.visualize_model()`` method::
 
-   >>> from elektronn2.utils.d3viz import visualise_model
-   >>> visualise_model(model, '/tmp/modelgraph')
+  >>> from elektronn2.utils.d3viz import visualise_model
+  >>> visualise_model(model, '/tmp/modelgraph')
 
 .. figure::  _images/example_model_graph.png
 
-   Model graph of the example CNN. Inputs are yellow and outputs are blue. |br|
-   Some node classes are represented by special shapes, the default shape is oval.
+  Model graph of the example CNN. Inputs are yellow and outputs are blue. |br|
+  Some node classes are represented by special shapes, the default shape is oval.
 
 
 3D Neuro Data
 =============
 .. note::
-   This section is under construction and is currently incomplete.
+  This section is under construction and is currently incomplete.
 
 .. TODO: Link to data format description
 
@@ -229,16 +229,16 @@ Getting Started
 
 1. Download and unpack the `neuro_data_zxy test data <http://elektronn.org/downloads/neuro_data_zxy.zip>`_  (98 MiB)::
 
-      wget http://elektronn.org/downloads/neuro_data_zxy.zip
-      unzip neuro_data_zxy.zip -d ~/neuro_data_zxy
+    wget http://elektronn.org/downloads/neuro_data_zxy.zip
+    unzip neuro_data_zxy.zip -d ~/neuro_data_zxy
 
 2. ``cd`` to the ``examples`` directory or download the example file to your working directory::
 
-   wget https://raw.githubusercontent.com/ELEKTRONN/ELEKTRONN2/master/examples/neuro3d.py
+    wget https://raw.githubusercontent.com/ELEKTRONN/ELEKTRONN2/master/examples/neuro3d.py
 
 4. Run::
 
-      elektronn2-train neuro3d.py --gpu=auto
+    elektronn2-train neuro3d.py --gpu=auto
 
 4. Inspect the printed output and the plots in the save directory
 
@@ -246,7 +246,7 @@ Getting Started
    inserting a new ``Conv`` layer) and validate your model by directly running
    the config file through your Python interpreter before trying to train it::
 
-      python neuro3d.py
+    python neuro3d.py
 
 
 Data Set
@@ -278,15 +278,15 @@ enough space to cut from many different positions. Otherwise it will always
 use the same patch (more or less) and soon over-fit to that one.
 
 .. note::
-   **Implementation details:** When the cubes are read into the pipeline, it
-   is implicitly assumed that the smaller label cube is spatially centered
-   w.r.t the larger image cube (hence the size surplus of the image cube must
-   be even). Furthermore, for performance reasons the cubes are internally
-   zero-padded to the same size and
-   cropped such that only the area in which labels and images are both
-   available after considering the CNN offset is used. If labels cannot be effectively
-   used for training (because either the image surplus is too small or your FOV
-   is too large) a note will be printed.
+  **Implementation details:** When the cubes are read into the pipeline, it
+  is implicitly assumed that the smaller label cube is spatially centered
+  w.r.t the larger image cube (hence the size surplus of the image cube must
+  be even). Furthermore, for performance reasons the cubes are internally
+  zero-padded to the same size and
+  cropped such that only the area in which labels and images are both
+  available after considering the CNN offset is used. If labels cannot be effectively
+  used for training (because either the image surplus is too small or your FOV
+  is too large) a note will be printed.
 
 Additionally to the 3 pairs of images and labels, 2 small image cubes for live
 previews are included. Note that preview data must be a **list** of one or
@@ -303,40 +303,40 @@ function inside the `network config file <https://github.com/ELEKTRONN/ELEKTRONN
 
 .. code-block:: python
 
-   from elektronn2 import neuromancer
-   in_sh = (None,1,23,185,185)
-   inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
+  from elektronn2 import neuromancer
+  in_sh = (None,1,23,185,185)
+  inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-   out   = neuromancer.Conv(inp, 20,  (1,6,6), (1,2,2))
-   out   = neuromancer.Conv(out, 30,  (1,5,5), (1,2,2))
-   out   = neuromancer.Conv(out, 40,  (1,5,5), (1,1,1))
-   out   = neuromancer.Conv(out, 80,  (4,4,4), (2,1,1))
+  out   = neuromancer.Conv(inp, 20,  (1,6,6), (1,2,2))
+  out   = neuromancer.Conv(out, 30,  (1,5,5), (1,2,2))
+  out   = neuromancer.Conv(out, 40,  (1,5,5), (1,1,1))
+  out   = neuromancer.Conv(out, 80,  (4,4,4), (2,1,1))
 
-   out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-   out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-   out   = neuromancer.Conv(out, 150, (2,4,4), (1,1,1))
-   out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
-   out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
+  out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
+  out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
+  out   = neuromancer.Conv(out, 150, (2,4,4), (1,1,1))
+  out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
+  out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
 
-   out   = neuromancer.Conv(out, 200, (1,1,1), (1,1,1))
-   out   = neuromancer.Conv(out,   2, (1,1,1), (1,1,1), activation_func='lin')
-   probs = neuromancer.Softmax(out)
+  out   = neuromancer.Conv(out, 200, (1,1,1), (1,1,1))
+  out   = neuromancer.Conv(out,   2, (1,1,1), (1,1,1), activation_func='lin')
+  probs = neuromancer.Softmax(out)
 
-   target = neuromancer.Input_like(probs, override_f=1, name='target')
-   loss_pix  = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True)
+  target = neuromancer.Input_like(probs, override_f=1, name='target')
+  loss_pix  = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True)
 
-   loss = neuromancer.AggregateLoss(loss_pix , name='loss')
-   errors = neuromancer.Errors(probs, target, target_is_sparse=True)
+  loss = neuromancer.AggregateLoss(loss_pix , name='loss')
+  errors = neuromancer.Errors(probs, target, target_is_sparse=True)
 
-   model = neuromancer.model_manager.getmodel()
-   model.designate_nodes(
-       input_node=inp,
-       target_node=target,
-       loss_node=loss,
-       prediction_node=probs,
-       prediction_ext=[loss, errors, probs]
-   )
-   return model
+  model = neuromancer.model_manager.getmodel()
+  model.designate_nodes(
+      input_node=inp,
+      target_node=target,
+      loss_node=loss,
+      prediction_node=probs,
+      prediction_ext=[loss, errors, probs]
+  )
+  return model
 
 * Because the data is anisotropic the lateral (``x, y``) FOV is chosen to be larger. This
   reduces the computational complexity compared to a naive isotropic CNN. Even

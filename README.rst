@@ -3,7 +3,7 @@ About ELEKTRONN2
 ****************
 
 .. contents::
-   :local:
+  :local:
 
 
 Introduction
@@ -43,9 +43,9 @@ simple "chain"-like models.
 Currently, the only supported platform is Linux (x86_64).
 
 .. [#f1] You can find out if your graphics card is compatible
-         `here <https://developer.nvidia.com/cuda-gpus>`_.
-         Usage on systems without CUDA is possible but generally not recommended
-         because it is very slow.
+  `here <https://developer.nvidia.com/cuda-gpus>`_.
+  Usage on systems without CUDA is possible but generally not recommended
+  because it is very slow.
 
 
 Use cases
@@ -66,21 +66,21 @@ API design_ (for example, new operations can be implemented as subclasses of the
 class and seamlessly integrated into neural network models).
 
 .. [#f2] `Serial Block-Face Scanning Electron Microscopy <http://journals.plos.org/plosbiology/article?id=10.1371/journal.pbio.0020329>`_,
-         a method to generate high resolution 3D images from
-         small samples, such as brain tissue.
+  a method to generate high resolution 3D images from small samples, such as
+  brain tissue.
 
 .. figure:: http://elektronn.org/downloads/combined_title.jpg
 
-    Example visualisation of ELEKTRONN2's usage on a 3D SBEM data set
-    (blending input to output from left to right).
+  Example visualisation of ELEKTRONN2's usage on a 3D SBEM data set
+  (blending input to output from left to right).
 
-    +--------------------------------------------------+------------------------------------------------------------+
-    | Left (input: raw data)                           | Right (output: predictions by ELEKTRONN2, color-coded)     |
-    +==================================================+============================================================+
-    | 3D electron microscopy images of a zebra finch   | Probability of barriers (union of cell boundaries and      |
-    | brain (area X dataset j0126 by Jörgen Kornfeld). | extracellular space, marked in **white**) and mitochondria |
-    |                                                  | (marked in **blue**) predicted by ELEKTRONN2.              |
-    +--------------------------------------------------+------------------------------------------------------------+
+  +--------------------------------------------------+------------------------------------------------------------+
+  | Left (input: raw data)                           | Right (output: predictions by ELEKTRONN2, color-coded)     |
+  +==================================================+============================================================+
+  | 3D electron microscopy images of a zebra finch   | Probability of barriers (union of cell boundaries and      |
+  | brain (area X dataset j0126 by Jörgen Kornfeld). | extracellular space, marked in **white**) and mitochondria |
+  |                                                  | (marked in **blue**) predicted by ELEKTRONN2.              |
+  +--------------------------------------------------+------------------------------------------------------------+
 
 
 Technology
