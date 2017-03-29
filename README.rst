@@ -67,13 +67,17 @@ class and seamlessly integrated into neural network models).
          small samples, such as brain tissue.
 
 .. figure:: http://elektronn.org/downloads/combined_title.jpg
-    :alt: Logo+Example
 
-    Example visualisation of ELEKTRONN2's usage:
-    **Left**: 3D electron microscopy images of a zebra finch brain
-    (area X dataset j0126 by Jörgen Kornfeld).
-    **Right**: Probability of barriers (white) and mitochondria (blue) predicted
-    by ELEKTRONN2.
+    Example visualisation of ELEKTRONN2's usage on a 3D SBEM data set
+    (blending input to output from left to right).
+
+    +--------------------------------------------------+------------------------------------------------------------+
+    | Left (input: raw data)                           | Right (output: predictions by ELEKTRONN2, color-coded)     |
+    +==================================================+============================================================+
+    | 3D electron microscopy images of a zebra finch   | Probability of barriers (union of cell boundaries and      |
+    | brain (area X dataset j0126 by Jörgen Kornfeld). | extracellular space, marked in **white**) and mitochondria |
+    |                                                  | (marked in **blue**) predicted by ELEKTRONN2.              |
+    +--------------------------------------------------+------------------------------------------------------------+
 
 Technology
 ----------
