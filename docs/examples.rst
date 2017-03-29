@@ -349,7 +349,8 @@ function inside the `network config file <https://github.com/ELEKTRONN/ELEKTRONN
   gradient over. Too few output pixel result in so noisy gradients that
   convergence might be impossible. For making predictions, it is more
   efficient to re-create the CNN with a larger input size.
-* If there are several ``100-1000`` output neurons, a batch size of ``1`` is
+* If there are several ``100-1000`` output neurons, a ``batch_size`` of ``1``
+  (specified directly above the ``create_model`` method in the config) is
   commonly sufficient and it is not necessary to compute an average gradient over
   several images.
 * The output shape has strides of ``[2, 4, 4]`` due to one pooling by 2 in ``z``
