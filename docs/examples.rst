@@ -22,6 +22,7 @@ examples, basic knowledge of neural networks is recommended.
    :local:
    :depth: 2
 
+
 Overview: Simple 3D CNNs
 ========================
 
@@ -32,6 +33,7 @@ specified in ELEKTRONN2. The model batch size is 10 and the CNN takes an
 .. [#f1] For consistency reasons the axis containing image channels and the axis
    containing classification targets are also denoted by ``'f'`` like the
    feature maps or features of a MLP.
+
 
 Defining the neural network model
 ---------------------------------
@@ -191,6 +193,7 @@ The whole model can also be plotted as a graph by using the
    Model graph of the example CNN. Inputs are yellow and outputs are blue. |br|
    Some node classes are represented by special shapes, the default shape is oval.
 
+
 3D Neuro Data
 =============
 .. note::
@@ -217,6 +220,7 @@ If your GPU is slow or you want to try ELEKTRONN2 on your CPU, we recommend
 you use the `neuro3d_lite.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d_lite.py>`_
 config instead. It uses the same data and has the same output format, but it
 runs significantly faster (at the cost of accuracy).
+
 
 Getting Started
 ---------------

@@ -5,8 +5,10 @@ About ELEKTRONN2
 .. contents::
    :local:
 
+
 Introduction
 ============
+
 
 What is ELEKTRONN2?
 -------------------
@@ -45,6 +47,7 @@ Currently, the only supported platform is Linux (x86_64).
          Usage on systems without CUDA is possible but generally not recommended
          because it is very slow.
 
+
 Use cases
 ---------
 
@@ -78,6 +81,7 @@ class and seamlessly integrated into neural network models).
     | brain (area X dataset j0126 by Jörgen Kornfeld). | extracellular space, marked in **white**) and mitochondria |
     |                                                  | (marked in **blue**) predicted by ELEKTRONN2.              |
     +--------------------------------------------------+------------------------------------------------------------+
+
 
 Technology
 ----------
@@ -114,6 +118,7 @@ Other dependencies:
 * **pydotplus** (visualizing computation graphs)
 * **psutil** (parallelisation)
 
+
 Installation
 ------------
 
@@ -137,6 +142,7 @@ and optional operations such as dropout or batch normalisation. Involved
 parameters might be trainable (e.g. convolution weights) or non-trainable but
 changeable during training (e.g. dropout rates).
 
+
 Nodes and layers
 ----------------
 
@@ -157,6 +163,7 @@ the input shape tags, it does also make replacements of the convolution operatio
 makes computation faster: for a 3-dimensional convolution where the filter size is 1 on
 the z-axis using a 2-dimensional convolution back-end is faster for gradient computation;
 convolutions where all filter shapes are 1 can be calculated faster using the dot product.
+
 
 Network models
 --------------
@@ -184,6 +191,7 @@ This is used for:
 Features
 ========
 
+
 Operations
 ----------
 
@@ -205,6 +213,7 @@ Operations
 * Basic operations such as concatenation, slicing, cropping, or element-wise
   functions
 
+
 Loss functions
 --------------
 
@@ -214,6 +223,7 @@ Loss functions
 * Absolute Deviation Loss, (margin optional)
 * Weighted sum of losses for multi-task training
 
+
 Optimisers
 ----------
 
@@ -221,6 +231,7 @@ Optimisers
 * AdaGrad
 * AdaDelta
 * Adam
+
 
 Trainer
 -------
@@ -239,6 +250,7 @@ Trainer
   debugging/inspection (e.g. of inputs, gradient statistics) or for changing
   meta-parameters
 
+
 Training Examples for CNNs
 --------------------------
 
@@ -246,6 +258,7 @@ Training Examples for CNNs
 * Data augmentation trough histogram distortions, rotation, shear, stretch,
   reflection and perspective distortion
 * Real-time data augmentation through a queue with background threads.
+
 
 Utilities
 ---------
@@ -283,6 +296,7 @@ at the Max Planck Institute of Neurobiology.
 
 `Jörgen Kornfeld <http://www.neuro.mpg.de/person/43611/3242677>`_
 was academic advisor to this project.
+
 
 License
 =======
