@@ -3,7 +3,7 @@
 save_path = '~/elektronn2_examples/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
-    'export_class': '1',
+    'export_class': [1],
     'max_z_pred': 3
 }
 initial_prev_h = 1.0  # hours: time after which the first preview is made

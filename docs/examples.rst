@@ -269,7 +269,15 @@ because this data set is anisotropic: lateral voxels have a spacing of
 :math:`10 \mu m` in contrast to :math:`20 \mu m` vertically. Snapshots
 of images and labels are depicted below.
 
-.. TODO: Link to images
+.. figure::  _images/raw_label_overlay.png
+
+    An example slice of the neuro_data_zxy data set
+
+    ============== ============== ======================================
+    Left           Center         Right
+    ============== ============== ======================================
+    Raw input data Barrier labels Labels overlayed on top of input data.
+    ============== ============== ======================================
 
 During training, the pipeline cuts image and target patches from the loaded
 data cubes at randomly sampled locations and feeds them to the CNN. Therefore
@@ -291,6 +299,71 @@ use the same patch (more or less) and soon over-fit to that one.
 Additionally to the 3 pairs of images and labels, 2 small image cubes for live
 previews are included. Note that preview data must be a **list** of one or
 several cubes stored in a ``h5``-file.
+
+
+Training Data Options
+---------------------
+
+In this section we explain selected training options in the
+`neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_
+config. Training options are usually specified at the top of the config file,
+before the network model definition. They are parsed by the ``elektronn2-train``
+application and processed and stored in the global ``ExperimentConfig``
+`object <http://elektronn2.readthedocs.io/en/latest/_modules/elektronn2/training/trainutils.html#ExperimentConfig>`_.
+
+
+``preview_kwargs`` specifies how preview predictions are generated:
+
+.. code-block:: python
+
+  preview_kwargs = {
+      'export_class': '1',
+      'max_z_pred': 3
+  }
+
+* ``export_class`` is the list of class indices (channels) of
+  predictions that are exported in the preview images. In the case of the
+  *neuro_data_zxy* data set that we use here, ``1`` is the index of the "barrier"
+  class, so the exported preview images should show a probability map of cell
+  barriers. If you set it to ``'all'``, all predicted classes are exported in
+  each preview process.
+* ``max_z_pred`` defines how many subsequent z slices (i.e. images of the
+  ``x, y`` plane) should be written to disk per preview prediction step).
+Limiting the values of these options can be useful to reduce clutter in your
+``save_path`` directory.
+
+``data_init_kwargs`` sets up where the training data is located and how it is
+interpreted:
+
+.. code-block:: python
+
+  data_init_kwargs = {
+      'd_path' : '~/neuro_data_zxy/',
+      'l_path': '~/neuro_data_zxy/',
+      'd_files': [('raw_%i.h5' %i, 'raw') for i in range(3)],
+      'l_files': [('barrier_int16_%i.h5' %i, 'lab') for i in range(3)],
+      'aniso_factor': 2,
+      'valid_cubes': [2],
+  }
+
+
+* ``d_path``/``l_path``: Directory paths from which the input images/labels
+  are read.
+* ``d_files``: A list of tuples each consisting of a file name inside ``d_path``
+  and the name of the hdf5 data set that should be read from it. (here
+  the data sets are all named 'raw' and contain grayscale images of
+  brain tissue).
+* ``l_files``: A list of tuples each consisting of a file name inside ``l_path``
+  and the hdf5 data set name. (here: label arrays named 'lab' that
+  contain ground truth for cell barriers in the respective ``d_files``).
+* ``aniso_factor``: Describes anisotropy in the first (``z``) axis of the given
+  data. The data set used here demands an ``aniso_factor`` of 2 because
+  lateral voxels biologically correspond to a spacing of :math:`10 \mu m`,
+  whereas in ``z`` direction the spacing is :math:`20 \mu m`.
+* ``valid_cubes``: Indices of training data sets that are reserved for
+  validation and never used for training. Here, of the three training data cubes
+  the last one (index ``2``) is used as validation data.
+All training data is stored inside the hdf5 files as 3-dimensional numpy arrays.
 
 
 CNN design
