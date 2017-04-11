@@ -36,7 +36,7 @@ inspection_logger = logging.getLogger('elektronn2log-inspection')
 
 def greyAugment(d, channels, rng):
     """
-    Performs grey value (historgram) augmentations on ``d``. This is only
+    Performs grey value (histogram) augmentations on ``d``. This is only
     applied to ``channels`` (list of channels indices), ``rng`` is a random
     number generator
     """

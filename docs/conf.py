@@ -35,7 +35,12 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
+    'sphinx.ext.extlinks',
 ]
+
+extlinks = {
+    'esrc': ('http://elektronn2.readthedocs.io/en/latest/_modules/elektronn2/%s', 'esrc '),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

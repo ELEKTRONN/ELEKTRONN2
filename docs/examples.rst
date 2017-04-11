@@ -301,6 +301,7 @@ previews are included. Note that preview data must be a **list** of one or
 several cubes stored in a ``h5``-file.
 
 
+
 Training Data Options
 ---------------------
 
@@ -309,8 +310,11 @@ In this section we explain selected training options in the
 config. Training options are usually specified at the top of the config file,
 before the network model definition. They are parsed by the ``elektronn2-train``
 application and processed and stored in the global ``ExperimentConfig``
-`object <http://elektronn2.readthedocs.io/en/latest/_modules/elektronn2/training/trainutils.html#ExperimentConfig>`_.
+:esrc:`object <training/trainutils.html#ExperimentConfig>`
 
+
+preview_kwargs
+^^^^^^^^^^^^^^
 
 ``preview_kwargs`` specifies how preview predictions are generated:
 
@@ -331,6 +335,13 @@ application and processed and stored in the global ``ExperimentConfig``
   ``x, y`` plane) should be written to disk per preview prediction step).
 Limiting the values of these options can be useful to reduce clutter in your
 ``save_path`` directory.
+
+.. note:: Internally, ``preview_kwargs`` specifies non-default arguments for
+  :py:meth:`elektronn2.training.trainer.Trainer.preview_slice()`
+
+
+data_init_kwargs
+^^^^^^^^^^^^^^^^
 
 ``data_init_kwargs`` sets up where the training data is located and how it is
 interpreted:
@@ -364,6 +375,47 @@ interpreted:
   validation and never used for training. Here, of the three training data cubes
   the last one (index ``2``) is used as validation data.
 All training data is stored inside the hdf5 files as 3-dimensional numpy arrays.
+
+.. note:: Internally, ``data_init_kwargs`` specifies non-default arguments for
+  the constructor of :py:class:`elektronn2.data.cnndata.BatchCreatorImage`
+
+
+data_batch_args
+^^^^^^^^^^^^^^^
+
+``data_batch_args`` determines how batches are prepared:
+
+.. code-block:: python
+
+  data_batch_args = {
+      'grey_augment_channels': [0],
+      'warp': 0.5,
+      'warp_args': {
+          'sample_aniso': True,
+          'perspective': True
+      }
+  }
+
+* ``grey_augment_channels``: List of channels for which grey-value augmentation
+  should be applied. Our input images are grey-valued, i.e. they have
+  only 1 channel (with index ``0``). For this channel grey value augmentations
+  (randomised histogram distortions) are applied when sampling batches during
+  training. This helps to achieve invariance against varying contrast and
+  brightness gradients.
+* ``warp``: Fraction of image samples to which warping transformations are
+  applied (see :py:meth:`elektronn2.data.transformations.get_warped_slice()`)
+* ``warp_args``: Non-default arguments passed to
+  :py:meth:`elektronn2.data.cnndata.BatchCreatorImage.warp_cut()`
+
+  - ``sample_aniso``: Scale ``z`` coordinates by the ``aniso_factor``-warp-arg
+    (which defaults to 2, as needed for the neuro_data_xzy data set)
+  - ``perspective``: Apply random
+    `perspective <https://en.wikipedia.org/wiki/Transformation_matrix#Other_kinds_of_transformations>`_
+    transformations while warping (in extension to affine transformations,
+    which are used default).
+
+.. note:: Internally, ``data_batch_args`` specifies non-default arguments for
+  :py:meth:`elektronn2.data.cnndata.BatchCreatorImage.getbatch()`
 
 
 CNN design
