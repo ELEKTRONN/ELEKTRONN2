@@ -201,7 +201,7 @@ class BatchCreatorImage(object):
 
 
     def getbatch(self, batch_size=1, source='train',
-                 grey_augment_channels=[], warp=False, warp_args=None,
+                 grey_augment_channels=None, warp=False, warp_args=None,
                  ignore_thresh=False, force_dense=False,
                  affinities=False, nhood_targets=False, ret_ll_mask=False):
         """
@@ -252,6 +252,8 @@ class BatchCreatorImage(object):
                 (optional) [bs, n_target]
         """
         # This is especially required for multiprocessing
+        if grey_augment_channels is None:
+            grey_augment_channels = []
         self._reseed()
         images, target = self._allocbatch(batch_size)
         ll_masks = []
@@ -675,12 +677,14 @@ class AgentData(BatchCreatorImage):
 
     def getbatch(self, batch_size=1, source='train', aniso=True,
                   z_shift=0, gamma=0,
-                  grey_augment_channels=[],
+                  grey_augment_channels=None,
                   r_max_scale=0.9,
                   tracing_dir_prior_c=0.5,
                   force_dense=False, flatfield_p=1e-3):
 
         # This is especially required for multiprocessing
+        if grey_augment_channels is None:
+            grey_augment_channels = []
         self._reseed()
         images, target, skel_i, slicing_params = self._allocbatch(batch_size)
         patch_count = 0
@@ -775,10 +779,12 @@ class AgentData(BatchCreatorImage):
 
 
     def get_newslice(self, position_l, direction_il, batch_size=1, source='train',
-                     aniso=True, z_shift=0, gamma=0, grey_augment_channels=[],
+                     aniso=True, z_shift=0, gamma=0, grey_augment_channels=None,
                      r_max_scale=0.9, tracing_dir_prior_c=0.5, force_dense=False,
                      flatfield_p=1e-3, scale=1.0, last_ch_max_interp=False):
         assert batch_size==1
+        if grey_augment_channels is None:
+            grey_augment_channels = []
         if source!='train':
             raise ValueError
 
