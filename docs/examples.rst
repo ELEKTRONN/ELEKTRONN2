@@ -418,6 +418,33 @@ data_batch_args
   :py:meth:`elektronn2.data.cnndata.BatchCreatorImage.getbatch()`
 
 
+optimiser, optimiser_params
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+  optimiser = 'Adam'
+  optimiser_params = {
+      'lr': 0.0005,
+      'mom': 0.9,
+      'beta2': 0.999,
+      'wd': 0.5e-4
+  }
+
+* ``optimiser``: We choose the `Adam <https://arxiv.org/abs/1412.6980>`_
+  optimiser because it is known to work well with our data set.
+  Alternative optimisers are ``'AdaDelta'``, ``'AdaGrad'`` and ``'SGD'``
+  (see implementations in :py:mod:`elektronn2.neuromancer.optimiser`).
+
+* ``optimiser_params``:
+
+  - ``lr``: Learning rate (:math:`\alpha`).
+  - ``mom``: `Momentum <http://distill.pub/2017/momentum/>`_.
+  - ``beta2``: :math:`\beta_{2}`, i.e. exponential decay rate for *Adam*'s moment
+    estimates. (only applicable to the *Adam* optimiser!)
+  - ``wd``: `Weight decay <https://papers.nips.cc/paper/563-a-simple-weight-decay-can-improve-generalization.pdf>`_.
+
+
 CNN design
 ----------
 

@@ -192,6 +192,7 @@ class Model(graphmanager.GraphManager):
                         self.trainable_params, extra_updates, debug_outputs)
 
 
+            # TODO: self.optimisers should automatically register all subclasses of Optimiser
             self.optimisers = dict(SGD=optimiser.SGD(*opt_init),
                                    AdaGrad=optimiser.AdaGrad(*opt_init),
                                    AdaDelta=optimiser.AdaDelta(*opt_init),
