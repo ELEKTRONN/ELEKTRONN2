@@ -211,43 +211,46 @@ class BatchCreatorImage(object):
         Parameters
         ----------
         batch_size: int
-          Number of examples in batch (for CNNs often just 1)
-        source: string
-          Data set to draw data from: 'train'/'valid'
-        flip: Bool
-          If True examples are mirrored and rotated by 90 deg randomly
+            Number of examples in batch (for CNNs often just 1)
+        source: str
+            Data set to draw data from: 'train'/'valid'
         grey_augment_channels: list
-          List of channel indices to apply grey-value augmentation to
-        ret_ll_mask: Bool
-          If True additional information for reach batch example is returned.
-          Currently implemented are two ll_mask arrays to indicate the targetling mode.
-          The first dimension of those arrays is the batch_size!
-        warp_on: Bool/Float(0,1)
-          Whether warping/distortion augmentations are applied to examples
-          (slow --> use multiprocessing). If this is a float number,
-          warping is applied to this fraction of examples e.g. 0.5 --> every
-          other example
+            List of channel indices to apply grey-value augmentation to
+        warp: bool or float
+            Whether warping/distortion augmentations are applied to examples
+            (slow --> use multiprocessing). If this is a float number,
+            warping is applied to this fraction of examples e.g. 0.5 --> every
+            other example.
+        warp_args: dict
+            Additional keyword arguments that get passed through to
+            elektronn2.data.transformations.get_warped_slice()
         ignore_thresh: float
-          If the fraction of negative targets in an example patch exceeds this
-          threshold, this example is discarded (Negative targets are ignored
-          for training [but could be used for unsupervised target propagation]).
-        force_dense: Bool
-          If True the targets are *not* sub-sampled according to the CNN output\
-          strides. Dense targets requires MFP in the CNN!
+            If the fraction of negative targets in an example patch exceeds this
+            threshold, this example is discarded (Negative targets are ignored
+            for training [but could be used for unsupervised target propagation]).
+        force_dense: bool
+            If True the targets are *not* sub-sampled according to the CNN output\
+            strides. Dense targets requires MFP in the CNN!
+        affinities
+        nhood_targets
+        ret_ll_mask: bool
+            If True additional information for reach batch example is returned.
+            Currently implemented are two ll_mask arrays to indicate the targetling mode.
+            The first dimension of those arrays is the batch_size!
 
         Returns
         -------
 
-        data:
-          [bs, ch, x, y] or [bs, ch, z, y, x] for 2d and 3d CNNS
-
-        target:
-          [bs, ch, x, y] or [bs, ch, z, y, x]
-        ll_mask1:
-          (optional) [bs, n_target]
-        ll_mask2:
-          (optional) [bs, n_target]
-        """  # TODO: Clean this up. Docstring and implementation have diverged.
+        tuple
+            data: np.array
+                [bs, ch, x, y] or [bs, ch, z, y, x] for 2D and 3D CNNS
+            target: np.array
+                [bs, ch, x, y] or [bs, ch, z, y, x]
+            ll_mask1: np.array
+                (optional) [bs, n_target]
+            ll_mask2: np.array
+                (optional) [bs, n_target]
+        """
         # This is especially required for multiprocessing
         self._reseed()
         images, target = self._allocbatch(batch_size)
