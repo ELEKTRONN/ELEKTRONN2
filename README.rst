@@ -1,3 +1,7 @@
+.. image:: https://readthedocs.org/projects/elektronn2/badge/?version=latest
+  :target: http://elektronn2.readthedocs.io/en/latest/?badge=latest
+  :alt: Documentation Status
+
 ****************
 About ELEKTRONN2
 ****************
