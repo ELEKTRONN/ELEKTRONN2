@@ -240,16 +240,14 @@ class BatchCreatorImage(object):
 
         Returns
         -------
-
-        tuple
-            data: np.array
-                [bs, ch, x, y] or [bs, ch, z, y, x] for 2D and 3D CNNS
-            target: np.array
-                [bs, ch, x, y] or [bs, ch, z, y, x]
-            ll_mask1: np.array
-                (optional) [bs, n_target]
-            ll_mask2: np.array
-                (optional) [bs, n_target]
+        data: np.ndarray
+            [bs, ch, x, y] or [bs, ch, z, y, x] for 2D and 3D CNNS
+        target: np.ndarray
+            [bs, ch, x, y] or [bs, ch, z, y, x]
+        ll_mask1: np.ndarray
+            (optional) [bs, n_target]
+        ll_mask2: np.ndarray
+            (optional) [bs, n_target]
         """
         # This is especially required for multiprocessing
         if grey_augment_channels is None:
@@ -339,8 +337,38 @@ class BatchCreatorImage(object):
 
     def warp_cut(self, img, target, warp, warp_params):
         """
-        sample_warp_params = dict(sample_aniso = True, lock_z = False,
-                          no_x_flip = False, warp_amount=1.0, perspective=True)
+        (Wraps :py:meth:`elektronn2.data.transformations.get_warped_slice()`)
+        
+        Cuts a warped slice out of the input and target arrays.
+        The same random warping transformation is each applied to both input
+        and target.
+        
+        Warping is randomly applied with the probability defined by the ``warp``
+        parameter (see below).
+        
+        Parameters
+        ----------
+        img: np.ndarray
+            Input image
+        target: np.ndarray
+            Target image
+        warp: float or bool
+            False/True disable/enable warping completely.
+            If ``warp`` is a float, it is used as the ratio of inputs that
+            should be warped.
+            E.g. 0.5 means approx. every second call to this function actually
+            applies warping to the image-target pair.
+        warp_params: dict
+            kwargs that are passed through to
+            :py:meth:`elektronn2.data.transformations.get_warped_slice()`.
+            Can be empty.
+        
+        Returns
+        -------
+        d: np.ndarray
+            (Warped) input image slice
+        t: np.ndarray
+            (Warped) target slice
         """
         if (warp is True) or (warp==1): # always warp
             do_warp=True

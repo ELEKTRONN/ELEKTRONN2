@@ -339,16 +339,52 @@ def warp_slice(img, ps, M, target=None, target_ps=None,
                target_vec_ix=None, target_discrete_ix=None,
                last_ch_max_interp=False, ksize=0.5):
     """
-    :param img: (f, z, x, y)
-    :param ps: (spatial only) patch_size (z,x,y)
-    :param M: forward tansform, must contain translations in source and target array!
-    :param target: optional target array to be extracted in the same way
-    :param target_ps:
-    :param target_vec_ix: list of triples that denote vector value parts in the
-     target array e.g. [(0,1,2),(4,5,6)] denotes two vectorfields separated
-     by a scalar field in channel 3
-    :return:
+    Cuts a warped slice out of the input image and out of the target image.
+    Warping is applied by multiplying the original source coordinates with
+    the inverse of the homogenous (forward) transformation matrix ``M``.
+    
+    "Source coordinates" (``src_coords``) signify the coordinates of voxels in
+    ``img`` and ``target`` that are used to compose their respective warped
+    versions. The idea here is that not the images themselves, but the
+    coordinates from where they are read are warped. his allows for much higher
+    efficiency for large image volumes because we don't have to calculate the
+    expensive warping transform for the whole image, but only for the voxels
+    that we eventually want to use for the new warped image.
+    The transformed coordinates usually don't align to the discrete
+    voxel grids of the original images (meaning they are not integers), so the
+    new voxel values are obtained by linear interpolation.
+    
+    Parameters
+    ----------
+    img: np.ndarray
+        Image array in shape ``(f, z, x, y)``
+    ps: tuple
+        (spatial only) Patch size ``(z, x, y)``
+        (spatial shape of the neural network's input node)
+    M: np.ndarray
+        Forward warping tansformation matrix (4x4).
+        Must contain translations in source and target array.
+    target: np.ndarray or None
+        Optional target array to be extracted in the same way.
+    target_ps: tuple
+        Patch size for the ``target`` array.
+    target_vec_ix: list
+        List of triples that denote vector value parts in the target array.
+        E.g. [(0,1,2), (4,5,6)] denotes two vector fields, separated by a
+        scalar field in channel 3.
+    last_ch_max_interp: bool
+    ksize: float
+
+    Returns
+    -------
+
+    img_new: np.ndarray
+        Warped input image slice
+    target_new: np.ndarray or None
+        Warped target image slice
+        or ``None``, if ``target`` is ``None``.
     """
+
     #T = utils.Timer(silent_all=True)
     ps = tuple(ps)
     if len(img.shape)==3: # For single knossos_array
@@ -397,8 +433,7 @@ def warp_slice(img, ps, M, target=None, target_ps=None,
     #T.check("map img")
 
     if np.isnan(img_new).sum():
-        print(np.isnan(img_new).sum())
-        print("shit")
+        logger.warning("img_new has {} NaN values".format(np.isnan(img_new).sum()))
 
     if target is not None:
         target_ps = tuple(target_ps)
@@ -406,12 +441,12 @@ def warp_slice(img, ps, M, target=None, target_ps=None,
 
         off = np.subtract(sh, target.shape[1:])
         if np.any(np.mod(off, 2)):
-            raise ValueError("targets must be centered w.r.t to images")
+            raise ValueError("targets must be centered w.r.t. images")
         off //= 2
 
         off_ps = np.subtract(ps, target_ps)
         if np.any(np.mod(off_ps, 2)):
-            raise ValueError("targets must be centered w.r.t to images")
+            raise ValueError("targets must be centered w.r.t. images")
         off_ps //= 2
 
         src_coords_target = src_coords[off_ps[0]:off_ps[0]+target_ps[0],
@@ -496,6 +531,54 @@ def get_warped_slice(img, ps, aniso_factor=2, sample_aniso=True,
                     warp_amount=1.0, lock_z=True, no_x_flip=False, perspective=False,
                     target=None, target_ps=None, target_vec_ix=None,
                     target_discrete_ix=None, rng=None):
+    """
+    (Wraps :py:meth:`elektronn2.data.transformations.warp_slice()`)
+    
+    Generates the warping transformation parameters and composes them into a
+    single 4D homogenous transformation matrix ``M``.
+    Then this transformation is applied to ``img`` and ``target`` in the
+    ``warp_slice()`` function and the transformed input and target image are
+    returned.
+    
+    Parameters
+    ----------
+    img: np.array
+        Input image
+    ps: np.array
+        Patch size (spatial shape of the neural network's input node)
+    aniso_factor: float
+        Anisotropy factor that determines an additional scaling in ``z``
+        direction.
+    sample_aniso: bool
+        Scale coordinates by ``1 / aniso_factor`` while warping.
+    warp_amount: float
+        Strength of the random warping transformation. A lower ``warp_amount``
+        will lead to less distorted images.
+    lock_z: bool
+        Exclude ``z`` coordinates from the random warping transformations.
+    no_x_flip: bool
+        Don't flip ``x`` axis during random warping.
+    perspective: bool
+        Apply perspective transformations (in addition to affine ones).
+    target: np.array
+        Target image
+    target_ps: np.array
+        Target patch size
+    target_vec_ix
+    target_discrete_ix
+    rng: np.random.mtrand.RandomState
+        Random number generator state (obtainable by
+        ``np.random.RandomState()``). Passing a known state makes the random
+        transformations reproducible.
+
+    Returns
+    -------
+    img_new: np.ndarray
+        (Warped) input image slice
+    target_new: np.ndarray
+        (Warped) target slice
+    """
+
     rng = np.random.RandomState() if rng is None else rng
 
 
