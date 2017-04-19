@@ -8,7 +8,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 
 
 __all__ = ['warp_slice', 'get_tracing_slice', 'WarpingOOBError',
-           'Transform', 'trafo_from_array']
+           'Transform', 'trafo_from_array', 'get_warped_slice']
 
 
 import itertools
@@ -334,7 +334,6 @@ def trafo_from_array(a):
     return Transform(M, offset_l, aniso_factor)
 
 
-
 def warp_slice(img, ps, M, target=None, target_ps=None,
                target_vec_ix=None, target_discrete_ix=None,
                last_ch_max_interp=False, ksize=0.5):
@@ -377,12 +376,11 @@ def warp_slice(img, ps, M, target=None, target_ps=None,
 
     Returns
     -------
-
     img_new: np.ndarray
         Warped input image slice
     target_new: np.ndarray or None
         Warped target image slice
-        or ``None``, if ``target`` is ``None``.
+        or ``None``, if ``target is None``.
     """
 
     #T = utils.Timer(silent_all=True)
@@ -630,9 +628,6 @@ def get_warped_slice(img, ps, aniso_factor=2, sample_aniso=True,
     T_dest = translate(dest_center[0], dest_center[1], dest_center[2])
 
     M = chain_matrices([T_dest, S_dest, R, W, F, S, S_src, T_src])
-
-#    if target_ps is not None and np.allclose(target_ps, 1):
-#        new_target =
 
     img_new, target_new = warp_slice(img, ps, M,
                                      target=target,
