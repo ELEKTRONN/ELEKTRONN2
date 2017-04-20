@@ -47,6 +47,8 @@ built using ELEKTRONN2.
   repository, especially
   `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_.
 
+.. _cnn_code:
+
 .. code-block:: python
 
   from elektronn2 import neuromancer
@@ -56,6 +58,8 @@ built using ELEKTRONN2.
 
   # If no node name is given, default names and enumeration are used.
   # 3d convolution with 32 filters of size (1,6,6) and max-pool sizes (1,2,2).
+  # Node constructors always receive their parent node as the first argument
+  # (except for the root nodes like the 'image' node here).
   conv0 = neuromancer.Conv(image, 32, (1,6,6), (1,2,2))
   conv1 = neuromancer.Conv(conv0, 64, (4,6,6), (2,2,2))
   conv2 = neuromancer.Conv(conv1, 5, (3,3,3), (1,1,1), activation_func='lin')
@@ -79,8 +83,17 @@ built using ELEKTRONN2.
 
   # Creation of nodes has been tracked and they were associated to a model object.
   model = neuromancer.model_manager.getmodel()
-  model.designate_nodes(input_node=image, target_node=target, loss_node=scalar_loss,
-  prediction_node=class_probs, prediction_ext=[scalar_loss, errors, class_probs])
+
+  # Tell the model which nodes fulfill which roles.
+  # Intermediates nodes like conv1 do not need to be explicitly registered
+  # because they only have to be known by their children.
+  model.designate_nodes(
+      input_node=image,
+      target_node=target,
+      loss_node=scalar_loss,
+      prediction_node=class_probs,
+      prediction_ext=[scalar_loss, errors, class_probs]
+  )
 
 ``model.designate_nodes()`` triggers printing of aggregated model stats and
 extended shape properties of the ``prediction_node``. |br|
@@ -129,17 +142,41 @@ Example output::
   Computational Cost per pixel: 34.6 Mega Ops
 
 
-Interactive usage of the ``Model`` and ``Node`` objects
--------------------------------------------------------
+Exploring ``Model`` and ``Node`` objects
+----------------------------------------
+
+The central concept in ELEKTRONN2 is that a neural network is represented as a
+Graph of executable ``Node`` objects that are registered and organised in a
+``Model``.
+
+In general, we have one ``Model`` instance that is called ``model`` by
+convention (see :py:class:`elektronn2.neuromancer.model.Model`.
+
+All other variables here are instances of different subclasses of
+:py:class:`Node <elektronn2.neuromancer.node_basic.Node>`, which are implemented
+in the
+:py:mod:`neuromancer.node_basic <elektronn2.neuromancer.node_basic>`,
+:py:mod:`neuromancer.neural <elektronn2.neuromancer.neural>`,
+:py:mod:`neuromancer.loss <elektronn2.neuromancer.loss>` and
+:py:mod:`neuromancer.various <elektronn2.neuromancer.various>` submodules.
+
+For more detailed information about ``Node`` and how its subclasses are derived,
+see the ``Node`` :py:class:`API docs <elektronn2.neuromancer.node_basic.Node>`.
+
+After executing the :ref:`above <cnn_code>` code (e.g. by ``%paste``-ing into
+an ``ipython`` session or by running the whole file via ``elektronn2-train`` and
+hitting ``Ctrl+C`` during training), you can play around with the
+variables defined there to better understand how they work.
 
 ``Node`` objects can be used like functions to calculate their output. |br|
 The first call triggers compilation and caches the compiled function::
 
-  >>> test_output = class_probs(test_image)
+  >>> import numpy as np
+  >>> test_input = np.ones(shape=image.shape.shape, dtype=np.float32)
+  >>> test_output = class_probs(test_input)
   Compiling softmax, inputs=[image]
   Compiling done - in 21.32 s
-  >>> import numpy as np
-  >>> np.allclose(test_output, reference_output)
+  >>> np.all(test_output > 0) and np.all(test_output < 1)
   True
 
 The ``model`` object has a ``dict`` interface to its ``Node``\s::
@@ -240,6 +277,12 @@ Getting Started
 
     elektronn2-train neuro3d.py --gpu=auto
 
+  During training, you can pause the neural network and enter the interactive
+  shell interface by pressing ``Ctrl+C``. There you can directly inspect and
+  modify all (hyper-)parameters and options of the training session.
+
+.. TODO: Write a small introduction to the shell interface and link it here.
+
 4. Inspect the printed output and the plots in the save directory
 
 5. You can start experimenting with changes in the config file (for example by
@@ -284,6 +327,14 @@ data cubes at randomly sampled locations and feeds them to the CNN. Therefore
 the CNN input size should be smaller than the size of the data cubes, to leave
 enough space to cut from many different positions. Otherwise it will always
 use the same patch (more or less) and soon over-fit to that one.
+
+During training initialisation a debug plot of a randomly sampled batch is made
+to check whether the training data is presented to the CNN in the intended way
+and to find errors (e.g. image and label cubes are not matching or labels are
+shifted w.r.t. images). Once the training loop has started, more such plots
+can be made from the ELEKTRONN2 command line (``Ctrl+C``) ::
+
+   >>> mfk@ELEKTRONN2: self.debug_getcnnbatch()
 
 .. note::
   **Implementation details:** When the cubes are read into the pipeline, it

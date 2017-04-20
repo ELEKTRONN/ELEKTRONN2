@@ -94,7 +94,7 @@ try:
     visualise_model(T.model, '1-model-graph')
 except Exception as e:
     traceback.print_exc()
-    print("Could not print model model graph")
+    print("Could not plot model graph")
 
 T.run()
 os.mknod("0-EVAL-needed")
