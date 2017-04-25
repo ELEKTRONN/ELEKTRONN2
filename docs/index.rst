@@ -9,6 +9,7 @@ User guide
 
    elektronn2
    examples
+   intro_nn
 
 
 API documentation
