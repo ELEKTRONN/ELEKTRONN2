@@ -258,7 +258,7 @@ def cnncalculator(filters, poolings, desired_patch_size=None, mfp=False,
           Select labels from within img[offset-x:offset+x]
           (non-int means, output neurons lie centered on patch_size neurons,
           i.e. they have an odd field of view)
-    """
+    """  # TODO: The example is still ELEKTRONN1-specific. Check the whole function for incompatibilities.
 
     assert len(poolings)==len(filters)
 

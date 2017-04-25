@@ -23,8 +23,8 @@ examples, basic knowledge of neural networks is recommended.
   :depth: 2
 
 
-Overview: Simple 3D CNNs
-========================
+3D CNN architecture and concepts
+================================
 
 Here we explain how a simple 3-dimensional CNN and its loss function can be
 specified in ELEKTRONN2. The model batch size is 10 and the CNN takes an
@@ -42,7 +42,7 @@ The following code snippet [#f2]_ exemplifies how a 3-dimensional CNN model can 
 built using ELEKTRONN2.
 
 .. [#f2] For complete network config files that you can directly run with little
-  to no modification, see the `3d Neuro Data`_ section below and the `"examples" directory
+  to no modification, see the `3d Neuro Data <neuro3d>`_ section below and the `"examples" directory
   <https://github.com/ELEKTRONN/ELEKTRONN2/tree/master/examples>`_ in the code
   repository, especially
   `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_.
@@ -231,8 +231,10 @@ The whole model can also be plotted as a graph by using the
   Some node classes are represented by special shapes, the default shape is oval.
 
 
-3D Neuro Data
-=============
+.. _neuro3d:
+
+3D Neuro Data (``examples/neuro3d.py``)
+=======================================
 .. note::
   This section is under construction and is currently incomplete.
 
@@ -353,8 +355,8 @@ several cubes stored in a ``h5``-file.
 
 
 
-Training Data Options
----------------------
+Data and training options
+-------------------------
 
 In this section we explain selected training options in the
 `neuro3d.py <https://github.com/ELEKTRONN/ELEKTRONN2/blob/master/examples/neuro3d.py>`_
@@ -495,6 +497,8 @@ optimiser, optimiser_params
     estimates. (only applicable to the *Adam* optimiser!)
   - ``wd``: `Weight decay <https://papers.nips.cc/paper/563-a-simple-weight-decay-can-improve-generalization.pdf>`_.
 
+
+.. _neuro3d_model:
 
 CNN design
 ----------
