@@ -252,37 +252,38 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
          border_mode='valid', stride=None):
     """
     Apply appropriate convolution depending on input and filter dimensionality.
-    If input W_shape is known, conv might be replaced by tensordot
+    If input ``w_shape`` is known, conv might be replaced by tensordot
 
     There are static assumptions which axes are spatial.
 
     Parameters
     ----------
     x: T.Tensor
-        Input data (mini-batch).
-        Tensor of shape (b, f, x), (b, f, x, y), (b, z, f, x, y) or (b,f,x,y,z).
+        | Input data (mini-batch).
+        | Tensor of shape ``(b, f, x)``, ``(b, f, x, y)``, ``(b, z, f, x, y)``
+          or ``(b,f,x,y,z)``.
     w: T.Tensor
-        Set of convolution filter weights.
-        Tensor of shape (f_out, f_in, x), (f_out, f_in, x, y),
-        (f_out, z, f_in, x, y) or (f_out, f_in, x, y, z).
+        | Set of convolution filter weights.
+        | Tensor of shape ``(f_out, f_in, x)``, ``(f_out, f_in, x, y)``,
+          ``(f_out, z, f_in, x, y)`` or ``(f_out, f_in, x, y, z)``.
     axis_order: str
-        (only relevant for 3d) 'dnn' (b,f,x,y(,z)) or 'theano' (b, z, f, x, y).
+        | (only relevant for 3d)
+        | ``'dnn'`` ``(b,f,x,y(,z))`` or ``'theano'`` ``(b, z, f, x, y)``.
     conv_dim: int
         Dimensionality of the applied convolution (not the absolute dim of
         the inputs).
     x_shape: tuple
-        shape tuple (TaggedShape supported).
+        shape tuple (``TaggedShape`` supported).
     w_shape: tuple
         shape tuple, see ``w``.
     border_mode: str
-        Possible values:
-        * "valid": only apply filter to complete patches of the image.
+        * ``'valid'``: only apply filter to complete patches of the image.
           Generates output of shape: image_shape -filter_shape + 1.
-        * "full" zero-pads image to multiple of filter shape to generate
+        * ``'full'`` zero-pads image to multiple of filter shape to generate
           output of shape: image_shape + filter_shape - 1.
     stride: tuple
-        (tuple of len 2)
-        Factor by which to subsample the output.
+        | (tuple of len 2)
+        | Factor by which to subsample the output.
 
     Returns
     -------

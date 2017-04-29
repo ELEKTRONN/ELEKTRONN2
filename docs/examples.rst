@@ -2,7 +2,7 @@
 
   <br />
 
-.. _examples:
+.. .. _examples:
 
 ********
 Examples
