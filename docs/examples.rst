@@ -386,8 +386,8 @@ preview_kwargs
   each preview process.
 * ``max_z_pred`` defines how many subsequent z slices (i.e. images of the
   ``x, y`` plane) should be written to disk per preview prediction step).
-Limiting the values of these options can be useful to reduce clutter in your
-``save_path`` directory.
+  Limiting the values of these options can be useful to reduce clutter in your
+  ``save_path`` directory.
 
 .. note:: Internally, ``preview_kwargs`` specifies non-default arguments for
   :py:meth:`elektronn2.training.trainer.Trainer.preview_slice()`
@@ -427,7 +427,8 @@ interpreted:
 * ``valid_cubes``: Indices of training data sets that are reserved for
   validation and never used for training. Here, of the three training data cubes
   the last one (index ``2``) is used as validation data.
-All training data is stored inside the hdf5 files as 3-dimensional numpy arrays.
+  All training data is stored inside the hdf5 files as 3-dimensional numpy
+  arrays.
 
 .. note:: Internally, ``data_init_kwargs`` specifies non-default arguments for
   the constructor of :py:class:`elektronn2.data.cnndata.BatchCreatorImage`
