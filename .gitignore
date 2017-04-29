@@ -16,3 +16,4 @@ cache
 
 docs/_build/*
 docs/source/*
+.staging
