@@ -19,7 +19,6 @@ from scipy import interpolate
 from scipy import sparse
 from scipy.sparse import csgraph
 import numpy as np
-from knossos_utils import skeleton as knossos_skeleton  # TODO: Mark as dependency when knossos_utils is published.
 
 from .. import utils
 
@@ -29,8 +28,19 @@ from . import transformations
 logger = logging.getLogger('elektronn2log')
 inspection_logger = logging.getLogger('elektronn2log-inspection')
 
+if sys.version_info[:2] != (2, 7):
+    raise ImportError(
+        '\nSorry, this module only supports Python 2.7.'
+        '\nYour current Python version is {}\n'.format(sys.version)
+    )
 
-
+try:
+    from knossos_utils import skeleton as knossos_skeleton
+except ImportError as e:
+    logger.error('\nFor using the tracing_utils module, you will need to'
+                 ' install the knossos_utils module'
+                 ' (https://github.com/knossos-project/knossos_utils)\n')
+    raise e
 
 with open(os.devnull, 'w') as devnull:
     # mayavi is to dumb to raise an exception and instead crashes whole script....

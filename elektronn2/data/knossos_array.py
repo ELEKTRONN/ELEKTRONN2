@@ -12,6 +12,7 @@ import glob
 import itertools
 import re
 import os
+import sys
 import traceback
 import ctypes
 import multiprocessing as mp
@@ -20,6 +21,12 @@ from collections import deque
 import numpy as np
 
 from .. import utils
+
+if sys.version_info[:2] != (2, 7):
+    raise ImportError(
+        '\nSorry, this module only supports Python 2.7.'
+        '\nYour current Python version is {}\n'.format(sys.version)
+    )
 
 
 def our_glob(s):

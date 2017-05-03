@@ -63,6 +63,9 @@ setup(
         'scikit-image>=0.12.3',
         'numba>=0.25'
     ],
+    extras_require={
+            'knossos': ['knossos_utils'],
+    },
     include_package_data=True,
     author="Marius Killinger",
     author_email="Marius.Killinger@mailbox.org",

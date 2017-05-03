@@ -7,7 +7,9 @@ from __future__ import absolute_import, division, print_function
 
 __all__ = ['Tracer', 'CubeShape', 'ShotgunRegistry', 'make_shotgun_data_z']
 
-import os, time
+import os
+import time
+import sys
 from subprocess import check_call
 import numpy as np
 import tqdm
@@ -19,10 +21,22 @@ from elektronn2.utils.utils_basic import unique_rows
 from elektronn2.data import knossos_array, transformations
 from elektronn2.data.skeleton import Trace
 
-from knossos_utils import skeleton as knossos_skeleton
-from knossos_utils.knossosdataset import KnossosDataset
-
 logger = logging.getLogger('elektronn2log')
+
+if sys.version_info[:2] != (2, 7):
+    raise ImportError(
+        '\nSorry, this module only supports Python 2.7.'
+        '\nYour current Python version is {}\n'.format(sys.version)
+    )
+
+try:
+    from knossos_utils import skeleton as knossos_skeleton
+    from knossos_utils.knossosdataset import KnossosDataset
+except ImportError as e:
+    logger.error('\nFor using the tracing_utils module, you will need to'
+                 ' install the knossos_utils module'
+                 ' (https://github.com/knossos-project/knossos_utils)\n')
+    raise e
 
 
 with open(os.devnull, 'w') as devnull:
