@@ -269,6 +269,112 @@ of (output) neurons.
   constant-padded/cropped to change their size or the architecture must be
   changed.
 
-.. TODO: valid_inputs? Check cnncalculator for inconsistencies. Maybe don't recommend manually running cnncalculator.
+.. TODO: valid_inputs? Check cnncalculator for inconsistencies.
 
-.. TODO: "Tweaks" section and others below here
+
+Tweaks
+======
+
+A number of helpful CNN/NN tweaks is supported by ELEKETRONN2 and presented
+in this section.
+
+Class weights
+-------------
+
+Often data sets are unbalanced (e.g. there are more background pixels than
+object pixels, or much more people earning less than 50 000 $). In such cases
+the classifier might get stuck predicting the most frequent class with high
+probability and assigning little probability to the remaining classes - but not
+actually learning the discrimination. Using class weights, the training errors
+(i.e. incentives)  can be changed to give the less frequent classes greater
+importance. This prevents the mentioned problem.
+
+.. TODO: How to use it
+
+
+.. _warping:
+
+Data Augmentation, Warping
+--------------------------
+
+CNNs are well-performing classifiers, but require a lot of data examples to
+generalise well. A method to supply this demand is data *augmentation*: from
+the limited given data set (potentially infinitely) many examples are created
+by applying transforms under which the labels are expected to be constant. This
+is especially well suited for images.  In almost all cases small translations
+and changes in brightness and contrast leave the overall content intact.
+In many cases rotations, mirroring, little scaling and minor warping
+deformations are possible, too.
+
+For *img-img* training the labels are subjected to the geometric
+transformations jointly with the images (preserving the spatial
+correspondence). By applying the transformations with randomly drawn parameters
+the training set becomes arbitrarily large. But it should be noted that the
+augmented training inputs are *highly correlated* compared to genuinely new
+data. It should furthermore be noted, that the warping deformations require
+on average greater patch sizes (see black regions in image below) and thus the
+border regions are exposed to the classifier less frequently. This can be
+mitigated by applying the warps only to a fraction of the examples.
+
+.. figure::  _images/warp.jpg
+
+    Two exemplary results of random rotation, flipping, deformation and
+    historgram augmentation. The black regions are only shown for illustration
+    here, internally the data pipeline calculates the required input patch
+    (larger than the CNN input size) such that if cropped to the CNN input
+    size, after the transformation, no missing pixels remain. The labels would
+    be transformed in the same way but are not shown here.
+
+Warping and general augmentations can be enabled and configured in the
+:ref:`data_batch_args <data_batch_args_neuro3d>` section of a config file.
+
+
+Dropout
+-------
+
+Dropout is a major regularisation technique for Neural Networks that improves
+generalisation. When using dropout for training, a fraction of neurons are
+turned off - but randomly, changing at every training iteration step.
+
+This can be interpreted as training an *ensemble* of networks (in which the
+members share common weights) and sampling members randomly every training
+step. To make a prediction the ensemble average is used, which can be
+*approximated* by turning all neurons on i.e. setting the dropout rate to 0
+(because then the sum of incoming activations at a neuron is larger, the
+weights are rescaled automatically when changing the rate).
+
+Training with dropout requires more neurons per layer (i.e. more filters for
+CNNs), larger training times and larger learning rates. We recommend to first
+narrow down a useful architecture without dropout and from that point start
+experimenting with dropout.
+
+.. TODO: How to use it
+
+
+Weight Decay
+------------
+
+Weight decay is synonymous with a L2 penalty on the weights. This means
+additional to the loss that comes from the deviation between current output and
+desired output, large weight values are regarded as loss - the weights are
+driven to have smaller magnitudes while at the same time being able to produce
+good output. This acts as a regulariser (see
+`Tikhonov Regularisation <https://en.wikipedia.org/wiki/Tikhonov_regularization>`_).
+
+You can specify weight decay in the ``wd`` entry of the
+:ref:`optimiser_params <optimiser_neuro3d>` inside a config.
+
+Input Noise
+-----------
+
+This source of randomisation adds Gaussian noise to the input of a layer (e.g.
+in the central layer of an auto encoder). Thereby the NN is forced to be
+invariant and robust against small differences in the input and to generalise
+better. Input noise is somewhat similar to drop out, but contrast drop out sets
+certain inputs to 0 randomly.
+
+This feature is provided by the
+:py:class:`GaussianRV <elektronn2.neuromancer.various.GaussianRV>` layer.
+
+
+.. TODO: Training / Optimisation section

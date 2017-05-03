@@ -434,10 +434,13 @@ interpreted:
   the constructor of :py:class:`elektronn2.data.cnndata.BatchCreatorImage`
 
 
+.. _data_batch_args_neuro3d:
+
 data_batch_args
 ^^^^^^^^^^^^^^^
 
-``data_batch_args`` determines how batches are prepared:
+``data_batch_args`` determines how batches are prepared and how augmentation is
+applied:
 
 .. code-block:: python
 
@@ -471,6 +474,8 @@ data_batch_args
 .. note:: Internally, ``data_batch_args`` specifies non-default arguments for
   :py:meth:`elektronn2.data.cnndata.BatchCreatorImage.getbatch()`
 
+
+.. _optimiser_neuro3d:
 
 optimiser, optimiser_params
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
