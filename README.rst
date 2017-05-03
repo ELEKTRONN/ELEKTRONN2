@@ -126,7 +126,48 @@ Other dependencies:
 Installation
 ------------
 
-*Coming soon*
+.. note:: ELEKTRONN2 is supported on Linux (x86_64), with Python versions
+  2.7, 3.4, 3.5 and 3.6.
+  Everything else is untested, but some other platforms might work as well.
+  Please create an `issue <https://github.com/ELEKTRONN/ELEKTRONN2/issues>`_ if
+  you are interested in support for other platforms.
+
+
+Installing with ``pip``
+^^^^^^^^^^^^^^^^^^^^^^^
+
+You can install the current git version of ELEKTRONN2 and all of its
+dependencies with the ``pip`` package manager. For Python 3, run::
+
+  python3 -m pip install numpy # numpy has to be installed manually first!
+  python3 -m pip install git+https://github.com/ELEKTRONN/ELEKTRONN2
+
+Or if you want to install ELEKTRONN2 for Python 2::
+
+  python2 -m pip install numpy # numpy has to be installed manually first!
+  python2 -m pip install git+https://github.com/ELEKTRONN/ELEKTRONN2
+
+We suggest that you do this inside a `virtualenv <https://virtualenv.pypa.io>`_
+or a `conda env <https://conda.io/docs/using/envs.html>`_ to prevent conflicts
+with system packages.
+
+.. TODO: Maybe describe and example setup of a virtualenv.
+
+Arch Linux (AUR)
+^^^^^^^^^^^^^^^^
+
+If you use Arch Linux, you can install the
+`ELEKTRONN2 AUR package <https://aur.archlinux.org/packages/python-elektronn2-git/>`_
+by running::
+
+  pacaur -S python-elektronn2-git # for Python 3
+  pacaur -S python2-elektronn2-git # for Python 2
+
+.. note:: In the Python 2 AUR package, the ``elektronn2-train`` command is
+  named ``elektronn2-train2`` to prevent file name conflicts.
+
+
+.. TODO: conda/conda-forge install once we have a tagged release
 
 
 .. _design:
