@@ -289,7 +289,13 @@ actually learning the discrimination. Using class weights, the training errors
 (i.e. incentives)  can be changed to give the less frequent classes greater
 importance. This prevents the mentioned problem.
 
-.. TODO: How to use it
+``class_weights`` can be specified when initializing loss nodes, e.g.:
+
+.. code-block:: python
+
+  loss  = neuromancer.MultinoulliNLL(probs, target, class_weights=[0.5, 2.0])
+
+will weigh class ``0`` much less than class ``1`` (given there are two classes).
 
 
 .. _warping:
@@ -348,7 +354,20 @@ CNNs), larger training times and larger learning rates. We recommend to first
 narrow down a useful architecture without dropout and from that point start
 experimenting with dropout.
 
-.. TODO: How to use it
+Dropout rates can be specified by the ``dropout_rate`` argument when
+initializing :py:class:`Perceptrons <elektronn2.neuromancer.neural.Perceptron>`
+and any nodes that inherit from it (e.g.
+:py:class:`Conv <elektronn2.neuromancer.neural.Conv>`). For example, to make a
+``Conv`` node use a 30% dropout rate, you initialize it with:
+
+.. code-block:: python
+
+  out = neuromancer.Conv(out, 200, (1,4,4), (1,1,1), dropout_rate=0.3)
+
+(Compare this line with the :ref:`3D CNN example <cnn_code>`, which doesn't
+use dropout.)
+
+.. TODO: Add note about prediction
 
 
 Weight Decay
