@@ -41,7 +41,7 @@ class Data(object):
     pass
 
 
-def demo_legacy():
+def demo_legacy():  # Needs ELEKTRONN v1
     from elektronn.training.config import Config  # the global user-set config
 
     config = Config(config_file, None, None, use_existing_dir=True)

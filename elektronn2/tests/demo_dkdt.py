@@ -33,26 +33,26 @@ from .. import utils
 # kdt.append(x[7])
 
 
+def demo_dkdt():
+    for n in range(20, 100, 10):
+        x = np.random.rand(500, 2)
+        kdt = utils.DynamicKDT(k=4, rebuild_thresh=n)
+        for i in range(5):
+            kdt.append(x[i])
 
-for n in range(20, 100, 10):
-    x = np.random.rand(500, 2)
-    kdt = utils.DynamicKDT(k=4, rebuild_thresh=n)
-    for i in range(5):
-        kdt.append(x[i])
-
-    for i in range(5, 500):
-        dist, ind, co = kdt.get_knn(x[i])
-
-        kdt_ref = utils.KDT(n_neighbors=4)
-        kdt_ref.fit(x[:i])
-        distances, indices = kdt_ref.kneighbors(x[i])
-
-        err = abs(dist - distances).max()
-        if err > 1e-7:
-            print(n, i, err)
+        for i in range(5, 500):
             dist, ind, co = kdt.get_knn(x[i])
 
-        kdt.append(x[i])
+            kdt_ref = utils.KDT(n_neighbors=4)
+            kdt_ref.fit(x[:i])
+            distances, indices = kdt_ref.kneighbors(x[i])
+
+            err = abs(dist - distances).max()
+            if err > 1e-7:
+                print(n, i, err)
+                dist, ind, co = kdt.get_knn(x[i])
+
+            kdt.append(x[i])
 
 
 

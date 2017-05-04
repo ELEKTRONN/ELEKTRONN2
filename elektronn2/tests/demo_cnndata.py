@@ -11,7 +11,7 @@ from ..neuromancer import Input, Input_like, Conv
 from ..training.parallelisation import BackgroundProc
 
 
-def test_cnndata():
+def demo_cnndata():
     print("Testing CNNData")
 
     x = Input((1, 1, 5, 40, 40), 'b,f,z,x,y')
