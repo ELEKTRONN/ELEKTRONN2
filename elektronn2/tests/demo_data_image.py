@@ -2,9 +2,9 @@ from __future__ import absolute_import, division, print_function
 from builtins import filter, hex, input, int, map, next, oct, pow, range, \
     super, zip
 
-from ..data import image
-from ..utils import h5load, h5save, timeit
-from ..utils.plotting import scroll_plot, _scroll_plot2, _scroll_plot4
+from elektronn2.data import image
+from elektronn2.utils import h5load, h5save, timeit
+from elektronn2.utils.plotting import scroll_plot, _scroll_plot2, _scroll_plot4
 
 import numpy as np
 import matplotlib.pyplot as plt

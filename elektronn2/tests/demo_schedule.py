@@ -12,7 +12,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import theano
 
-from ..training.trainutils import Schedule
+from elektronn2.training.trainutils import Schedule
 
 
 def demo_schedule():

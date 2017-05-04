@@ -9,10 +9,10 @@ from __future__ import absolute_import, division, print_function
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .. import neuromancer as gr
-from .. import utils as ut
+from elektronn2 import neuromancer as gr
+from elektronn2 import utils as ut
 import elektronn2.utils.cnncalculator
-from ..neuromancer.neural import Conv, FragmentsToDense, Perceptron, UpConv
+from elektronn2.neuromancer.neural import Conv, FragmentsToDense, Perceptron, UpConv
 
 # gm = gr.node_basic.graph_manager
 # from ..neuromancer.node_basic import model_manager as graph_manager

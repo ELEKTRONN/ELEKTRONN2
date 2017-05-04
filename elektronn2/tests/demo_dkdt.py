@@ -10,7 +10,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
 
 import numpy as np
 
-from .. import utils
+from elektronn2 import utils
 
 
 # x = np.random.rand(21,2)

@@ -12,8 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 
-from ..data import transformations
-from ..utils.plotting import scroll_plot
+from elektronn2.data import transformations
+from elektronn2.utils.plotting import scroll_plot
 
 
 # from mayavi import mlab  # TODO: Dependency?

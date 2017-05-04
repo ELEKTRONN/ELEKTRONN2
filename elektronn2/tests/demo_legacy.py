@@ -13,8 +13,8 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
-from ..utils import legacy
-from ..utils import pickleload, picklesave, h5load
+from elektronn2.utils import legacy
+from elektronn2.utils import pickleload, picklesave, h5load
 
 
 config_file = os.path.expanduser(

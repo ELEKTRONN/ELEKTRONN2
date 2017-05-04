@@ -6,9 +6,9 @@ import time
 import numpy as np
 from matplotlib import pyplot as plt
 
-from ..utils.plotting import scroll_plot
-from ..neuromancer import Input, Input_like, Conv
-from ..training.parallelisation import BackgroundProc
+from elektronn2.utils.plotting import scroll_plot
+from elektronn2.neuromancer import Input, Input_like, Conv
+from elektronn2.training.parallelisation import BackgroundProc
 
 
 def demo_cnndata():

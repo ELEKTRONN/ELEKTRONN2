@@ -8,16 +8,16 @@ import theano.tensor as T
 from theano.tensor.nnet.conv import conv2d
 from theano.tensor.nnet.conv3d2d import conv3d
 from theano.sandbox.cuda import dnn
-from theano.tensor.signal.downsample import max_pool_2d
+from theano.tensor.signal import pool
 
 import theano.sandbox.cuda
 
 
 theano.sandbox.cuda.use("gpu0")
-from ..neuromancer import graphutils as utils
+from elektronn2.neuromancer import graphutils as utils
 import elektronn2.neuromancer.variables
 
-from ..neuromancer.computations import *
+from elektronn2.neuromancer.computations import *
 
 
 def test_conv():

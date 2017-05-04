@@ -10,7 +10,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
 
 import numpy as np
 
-from .. import neuromancer
+from elektronn2 import neuromancer
 
 def demo_new_split():
     act = 'tanh'

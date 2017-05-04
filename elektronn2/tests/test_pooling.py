@@ -14,8 +14,8 @@ import numpy as np
 import theano
 from theano import tensor as T
 
-from .. import neuromancer
-from ..neuromancer.computations import pooling, fragmentpool, fragments2dense, \
+from elektronn2 import neuromancer
+from elektronn2.neuromancer.computations import pooling, fragmentpool, fragments2dense, \
     upsampling, unpooling
 
 
@@ -25,7 +25,7 @@ import theano.sandbox.cuda
 import matplotlib.pyplot as plt
 theano.sandbox.cuda.use("gpu0")
 
-from ..neuromancer import graphutils as utils
+from elektronn2.neuromancer import graphutils as utils
 
 
 def demo_pooling_3d():

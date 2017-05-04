@@ -10,8 +10,8 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
 
 import theano.tensor as T
 
-from .. import neuromancer
-from ..neuromancer.model import modelload
+from elektronn2 import neuromancer
+from elektronn2.neuromancer.model import modelload
 
 
 def demo_new_gm():
