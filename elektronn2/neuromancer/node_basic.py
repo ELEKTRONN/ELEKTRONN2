@@ -384,8 +384,7 @@ class Node(with_metaclass(MetaNode, object)):
     eliminated by the theano graph optimiser.
 
 
-    Instructions for subclassing
-    ----------------------------
+    **Instructions for subclassing:**
 
     Overriding ``__init__``:
         At the very first the base class' initialiser must be called, which just
