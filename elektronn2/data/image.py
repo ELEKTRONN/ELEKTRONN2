@@ -251,7 +251,7 @@ def _smearbarriers(barriers, kernel):
              [ 0.,  0.1,  0.2,  0.1,  0.],
              [ 0.,  0.,  0.1,  0.,  0.],
              [ 0.,  0.,  0.,  0.,  0.]],
-        ]).T # this kernel is shit?
+        ]).T
     else:
         sizes = kernel
         kernel = blob(sizes)

@@ -112,7 +112,7 @@ class Optimiser(object):
         return updates
 
 
-    def repair_fuckup(self):
+    def repair(self):
         self.clear_last_dir()
         for p, p_old in zip(self.params, self.params_cycler[-1]):
             p.set_value(p_old.get_value())
@@ -207,8 +207,8 @@ class AdaGrad(Optimiser):
         return super(AdaGrad, self).__call__(*args)
 
 
-    def repair_fuckup(self):
-        super(AdaGrad, self).repair_fuckup()
+    def repair(self):
+        super(AdaGrad, self).repair()
         self.clear_last_dir(self.hs)
         self._init_done = False
 
@@ -253,8 +253,8 @@ class AdaDelta(Optimiser):
                                  updates=updates, name='AdaDelta step')
 
 
-    def repair_fuckup(self):
-        super(AdaDelta, self).repair_fuckup()
+    def repair(self):
+        super(AdaDelta, self).repair()
         self.clear_last_dir(self.squared_accum)
         self.clear_last_dir(self.delta_accum)
 
@@ -311,8 +311,8 @@ class Adam(Optimiser):
         self.step = graphutils.make_func(self.input, self.output,
                                  updates=updates, name='Adam step')
 
-    def repair_fuckup(self):
-        super(Adam, self).repair_fuckup()
+    def repair(self):
+        super(Adam, self).repair()
         self.clear_last_dir(self.squared_accum)
         self.clear_last_dir(self.momentum)
 

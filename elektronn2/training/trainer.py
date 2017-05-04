@@ -72,7 +72,7 @@ class Trainer(object):
 
 
 
-        #self.debug_shit = []
+        #self.debug_store = []
 
 
     def _create_model(self):
@@ -180,7 +180,7 @@ class Trainer(object):
                     if exp_config.class_weights is not None:
                         batch = batch + (exp_config.class_weights,)
 
-                    #self.debug_shit.append(batch[1])
+                    #self.debug_store.append(batch[1])
                     #-----------------------------------------------------------------------------------------------------
                     loss, t_per_train, debug_outputs = self.model.trainingstep(*batch, optimiser=exp_config.optimiser) # Update step
                     i += 1
@@ -195,7 +195,7 @@ class Trainer(object):
                     if np.any(np.isnan(loss)) or np.any(np.isinf(loss)):
                         logger.warning(NLL_TEXT)
                         raise KeyboardInterrupt
-                        #self.self.model.optimisers[exp_config.optimiser].repair_fuckup()
+                        #self.self.model.optimisers[exp_config.optimiser].repair()
 
                     if len(batch) == 1:
                         batch_char = 0
@@ -837,7 +837,7 @@ class TracingTrainer(Trainer):
                     if np.any(np.isnan(loss)) or np.any(np.isinf(loss)):
                         logger.warning(NLL_TEXT)
                         raise KeyboardInterrupt
-                        # self.model.optimisers[exp_config.optimiser].repair_fuckup()
+                        # self.model.optimisers[exp_config.optimiser].repair()
 
                     self.tracker.update_timeline([t_passed, loss, debug_outputs[0]/10])
                     if debug_outputs:
@@ -1130,7 +1130,7 @@ class TracingTrainerRNN(TracingTrainer):
                     if np.any(np.isnan(loss)) or np.any(np.isinf(loss)):
                         logger.warning(NLL_TEXT)
                         raise KeyboardInterrupt
-                        # self.model.optimisers[exp_config.optimiser].repair_fuckup()
+                        # self.model.optimisers[exp_config.optimiser].repair()
 
                     self.tracker.update_timeline([t_passed, loss, 0])
                     if debug_outputs:

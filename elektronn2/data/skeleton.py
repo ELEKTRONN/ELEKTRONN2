@@ -542,7 +542,7 @@ class SkeletonMFK(object):
         there is a prior so that the normalised (0,1) angle of deviation a
         has this distribution:
         p(a) = 1/N * (1-c*a), where N= 1 - c/2,
-        tmp is the inverse cdf of this shit
+        tmp is the inverse cdf of this.
         """
         if rng.rand() > 0.5: # the sign is undefined, choose randomly
             local_direction_iso *= -1
@@ -837,8 +837,8 @@ class SkeletonMFK(object):
                 if np.allclose(target_grid, 0.0):
                     logger.warning("WTF")
 
-                self.debug_shit = [img, target_grid]
-                self.debug_shit2 = [nearest_s, radii]
+                self.debug_store = [img, target_grid]
+                self.debug_store2 = [nearest_s, radii]
             else:
                 target_grid = np.ones((1,1,1,1), dtype=np.float32)
 
@@ -931,8 +931,8 @@ class SkeletonMFK(object):
                 new_position_c, np.array_str(new_position_l, precision=1,
                                              suppress_small=True)))
         if config.inspection>1:
-            img, grid_t = self.debug_shit
-            utils.picklesave([img[0,0], grid_t[0], grid[0,0]], '/tmp/debug_shit_skel_%i' %self.skel_num)
+            img, grid_t = self.debug_store
+            utils.picklesave([img[0,0], grid_t[0], grid[0,0]], '/tmp/debug_skel_%i' %self.skel_num)
 
         self.current_trace.append(new_position_s, coord_cnn=new_position_c,
                                   features=pred_features)

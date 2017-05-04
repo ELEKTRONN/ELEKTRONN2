@@ -19,8 +19,6 @@ import matplotlib
 
 sys.setrecursionlimit(10000)
 
-with open('/tmp/fucker.txt', 'a') as f:
-    f.write("I managed to start. Fuck this.")
 
 def parseargs():
     def convert(s):
