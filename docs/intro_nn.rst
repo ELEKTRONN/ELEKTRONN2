@@ -420,9 +420,7 @@ In every iteration:
     - The whole procedure is repeated with a new batch until convergence
 
 The learning rate is usually decreased by schedule over the time of the
-training (see :ref:`schedules`).
-
-.. TODO: schedules section, in neuro3d docs maybe?
+training (see :ref:`schedules <schedules_neuro3d>`).
 
 .. figure::  _images/gradient-descent.jpg
 
@@ -439,6 +437,25 @@ training (see :ref:`schedules`).
   [`image source <http://blog.datumbox.com/tuning-the-learning-rate-in-gradient-descent/>`_]
 
 .. TODO: Should we recommend Adam instead now?
+
+
+AdaDelta
+^^^^^^^^
+
+(TODO) :py:class:`elektronn2.neuromancer.optimiser.AdaDelta`
+
+
+AdaGrad
+^^^^^^^
+
+(TODO) :py:class:`elektronn2.neuromancer.optimiser.AdaGrad`
+
+
+Adam
+^^^^
+
+(TODO) :py:class:`elektronn2.neuromancer.optimiser.Adam`
+
 
 
 Optimiser hyperparameters

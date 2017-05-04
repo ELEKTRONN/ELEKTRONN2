@@ -510,6 +510,33 @@ optimiser, optimiser_params
   - ``wd``: :ref:`Weight decay <weightdecay>`
 
 
+.. _schedules_neuro3d:
+
+schedules
+^^^^^^^^^
+
+You can specify ``schedules`` for hyperparameters (i.e. non-trainable
+parameters) like learning rates, momentum etc.
+
+``schedules`` is a dict whose keys are hyperparameter names and whose values
+describe the their respective update schedules:
+
+.. code-block:: python
+
+  schedules = {
+    'lr': {'dec': 0.995},
+  }
+
+
+In this case, we have specified that the ``lr`` (learning rate) variable should
+decay by factor 0.995 (meaning a decrease by 0.5%) every 1000 training steps
+(the step size of 1000 for ``'dec'`` schedules is currently a global constant).
+
+For other schedule types (linear decay, explicit step-value mappings), see
+the :py:class:`Schedule <elektronn2.training.trainutils.Schedule>` class
+documentation for reference.
+
+
 .. _neuro3d_model:
 
 CNN design
