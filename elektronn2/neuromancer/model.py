@@ -548,47 +548,35 @@ class Model(graphmanager.GraphManager):
     def trainingstep(self, *args, **kwargs):
         """
         Perform one optimiser iteration.
-        Optimizers can be chosen by the kwarg ``mode``. They are complied on
-        demand (which may take a while) and cached
+        Optimizers can be chosen by the kwarg ``optimiser``.
 
-        **Signature**: cnn.trainingStep(data, target(, *aux)(,**kwargs))
+        **Signature**: ``trainingstep(data, target(, *aux)(, **kwargs**))``
 
         Parameters
         ----------
+        *args
+            * data: floatX array
+                  input [bs, ch (, z, y, x)]
+            * targets: int16 array
+                  [bs,((z,)y,x)] (optional)
+            * (optional) other inputs: np.ndarray
+                  depending in model
 
-        data: floatX array
-          input [bs, ch (, z, y, x)]
-        targets: int16 array
-          [bs,((z,)y,x)] (optional)
-        (optional) other inputs: np.ndarray
-          depending in model
-
-        kwargs:
-          * mode: string
-              ['SGD']: (default) Good if data set is big and redundant
-
-              'RPROP': which does neither uses a fix learning rate nor the
-              momentum-value. It is faster than SGD if you do full-batch
-              Training and use NO dropout. Any source of noise leads to
-              failure of convergence (at all).
-
-              'CG': Good generalisation but requires large batches.
-              Returns current loss always
-
-              'LBFGS': http://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html
-
-
-           * update_loss: Bool
-               determine current loss *after* update step
-               (e.g. needed for queue, but ``get_loss`` can also be
-               called explicitly)
+        **kwargs
+            * optimiser: str
+                  Name of the chosen optimiser class in
+                  :py:mod:`elektronn2.neuromancer.optimiser`
+            * update_loss: Bool
+                 determine current loss *after* update step
+                 (e.g. needed for queue, but ``get_loss`` can also be
+                 called explicitly)
 
         Returns
         -------
         loss: floatX
-          loss (nll, squared error etc...)
-        time_per_step: float
-          Time spent on the GPU per step
+            Loss (nll, squared error etc...)
+        t: float
+            Time spent on the GPU per step
         """
 
         opt_name = kwargs.get('optimiser', 'SGD')
