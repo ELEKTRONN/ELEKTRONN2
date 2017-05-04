@@ -388,8 +388,6 @@ This feature is provided by the
 Training / Optimisation
 =======================
 
-.. TODO: Remove docs on removed optimisers
-
 Because of the non-linear activation functions, the loss function of a NN
 is a highly non-convex function of its weights. Analytic solutions do not
 exist, so we optimize using gradient descent techniques with various
@@ -424,6 +422,8 @@ In every iteration:
 The learning rate is usually decreased by schedule over the time of the
 training (see :ref:`schedules`).
 
+.. TODO: schedules section, in neuro3d docs maybe?
+
 .. figure::  _images/gradient-descent.jpg
 
   Illustration of gradient descent on a 2D error surface. This corresponds to
@@ -439,57 +439,6 @@ training (see :ref:`schedules`).
   [`image source <http://blog.datumbox.com/tuning-the-learning-rate-in-gradient-descent/>`_]
 
 .. TODO: Should we recommend Adam instead now?
-
-
-Resilient Backpropagation (RPROP)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-RPROP is a heuristic that determines the learning rate for every parameter
-individually based on the criterion how often the sign of the gradient changes
-over the iterations. If the sign stays the same for a long time the learning
-rate grows (similar to momentum) and if the sign fluctuates a lot, very small
-steps are made for this parameter.
-
-RPROP can be very fast and good but can also to be too aggressive for some data
-sets or small batch sizes leaving a larger spread between training loss and
-validation loss.
-
-
-Conjugate Gradient (CG)
-^^^^^^^^^^^^^^^^^^^^^^^
-
-Conjugate gradient uses a heuristic to estimate the value of the momentum
-meta-parameter in every iteration step. In addition, the learning rate is not
-fixed but the optimal step size is found by a bounded line search along the
-gradient direction. CG requires multiple steps on the same batch for the
-heuristic to work.
-
-CG needs fewer iteration steps but is slower per step. Larger batch sizes are
-needed because several steps are done per same batch.
-Generalisation properties can be superior to SGD and it can even be faster but
-hat depends on the particular data set and careful tuning of meta-parameters.
-Further details on
-`the wikipedia article <https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method>`_
-(we use the Polak–Ribière heuristic).
-
-
-.. TODO: Adam optimizer and others in elektronn2.neuromancer.optimiser
-
-
-l-BFGS
-^^^^^^
-
-Limited-memory Broyden–Fletcher–Goldfarb–Shanno (l-BFGS) aims at estimating the
-inverse Hessian from the history of gradients. Similar to CG this history must
-be acquired on the same batch and the number of steps on the same batch is even
-higher.
-Using the approximate inverse Hessian, parameter updates can be made with a
-second order correction (in contrast plain gradient descent is a linear
-approximation).
-Again batch sizes must be larger because of the high number of steps per batch.
-Further reading is advisable:
-`used implementation <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html>`_
-and `wikipedia entry <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`_.
 
 
 Optimiser hyperparameters
