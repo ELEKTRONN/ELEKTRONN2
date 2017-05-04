@@ -396,4 +396,139 @@ This feature is provided by the
 :py:class:`GaussianRV <elektronn2.neuromancer.various.GaussianRV>` layer.
 
 
-.. TODO: Training / Optimisation section
+Training / Optimisation
+=======================
+
+Because of the non-linear activation functions, the loss function of a NN
+is a highly non-convex function of its weights. Analytic solutions do not
+exist, so we optimize using gradient descent techniques with various
+heuristics. Convergence is a user-defined state, either determined by good
+enough results (no progress possible any more) or by the point where the loss
+on a held out *validation set* begins to increase, while the loss on the
+training set still decreases - continuing training in this situation inevitably
+leads to over-fitting and bad generalisation.
+
+
+Stochastic Gradient Descent (SGD)
+---------------------------------
+
+This is the basic principle behind all other optimisers. SGD is the most
+common optimisation scheme and works in most cases. One advantage of SGD is
+that it works well with only one example per batch.
+
+In every iteration:
+    - From the training data one or several examples are drawn. The number
+      of drawn examples is called *batch size*.
+    - The output of the NN, given the current weights, is calculated
+    - The **gradient** of the loss (deviation between output and desired
+      output) is calculated w.r.t to the weights
+    - The weights are *updated* by following down the gradient for a fixed
+      step size - the *learning rate*
+    - The whole procedure is repeated with a new batch until convergence
+
+The learning rate is usually decreased by schedule over the time of the
+training (see :ref:`schedules`).
+
+.. figure::  _images/gradient-descent.jpg
+
+  Illustration of gradient descent on a 2D error surface. This corresponds to
+  a model with just two parameters. As can be seen, the outcome depends on the
+  starting point (a.k.a. *weight initialisation*) and may lead to different
+  *local* optima. For more dimensions the problem of multiple local optima is
+  even more severe. If you train a network twice under same conditions except
+  for the random weight initialisation and the random batch shuffling, you will
+  almost definitely end up in completely different local optima.
+  But empirically the performance is pretty close. In practice, another
+  difficulty is more relevant: saddle-points which may ill-condition the
+  training.
+  [`image source <http://blog.datumbox.com/tuning-the-learning-rate-in-gradient-descent/>`_]
+
+.. TODO: Should we recommend Adam instead now?
+
+
+Momentum
+^^^^^^^^
+
+Momentum replaces the true gradient by an exponential moving average over the
+previous gradients. This can speed up progress by accumulation of gradients and
+prevent over-fitting to only the current example by averaging over other
+examples. Momentum is parametrised by a meta-parameter that determines the
+mixing rate of the previous gradients and the current gradient.
+In the pictureof the error surface it can be visualised by a massive ball
+rolling down the hill which, through its mass, can accumulate speed/momentum
+and also go upwards shortly - across a small ridge for example.
+
+
+Resilient Backpropagation (RPROP)
+---------------------------------
+
+RPROP is a heuristic that determines the learning rate for every parameter
+individually based on the criterion how often the sign of the gradient changes
+over the iterations. If the sign stays the same for a long time the learning
+rate grows (similar to momentum) and if the sign fluctuates a lot, very small
+steps are made for this parameter.
+
+RPROP can be very fast and good but can also to be too aggressive for some data
+sets or small batch sizes leaving a larger spread between training loss and
+validation loss.
+
+
+Conjugate Gradient (CG)
+-----------------------
+
+Conjugate gradient uses a heuristic to estimate the value of the momentum
+meta-parameter in every iteration step. In addition, the learning rate is not
+fixed but the optimal step size is found by a bounded line search along the
+gradient direction. CG requires multiple steps on the same batch for the
+heuristic to work.
+
+CG needs fewer iteration steps but is slower per step. Larger batch sizes are
+needed because several steps are done per same batch.
+Generalisation properties can be superior to SGD and it can even be faster but
+hat depends on the particular data set and careful tuning of meta-parameters.
+Further details on
+`the wikipedia article <https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method>`_
+(we use the Polak–Ribière heuristic).
+
+
+.. TODO: Adam optimizer
+
+
+l-BFGS
+------
+
+Limited-memory Broyden–Fletcher–Goldfarb–Shanno (l-BFGS) aims at estimating the
+inverse Hessian from the history of gradients. Similar to CG this history must
+be acquired on the same batch and the number of steps on the same batch is even
+higher.
+Using the approximate inverse Hessian, parameter updates can be made with a
+second order correction (in contrast plain gradient descent is a linear
+approximation).
+Again batch sizes must be larger because of the high number of steps per batch.
+Further reading is advisable:
+`used implementation <https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.fmin_l_bfgs_b.html>`_
+and `wikipedia entry <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`_.
+
+
+Tips for Tuning
+===============
+
+* The learning rate should be as large as possible at the beginning of the
+  training and decrease gradually or in steps (optimally always after the loss
+  has plateaued for some time).
+* A "learning rate as large as possible" means the following: since the gradient
+  is only a linear approximation, the loss decreases only along a small step
+  size on the gradient and goes up again for larger steps (very quickly).
+  Thus by setting a fixed learning rate, some update steps may in fact lead to an
+  increase of the loss if they are too large. The learning rate should be so
+  large that **most** of the updates decrease the loss but large enough that a
+  few steps lead to increases - because then you know that a greater learning
+  rate would not be possible. The training pipeline creates a plot with the
+  per-step changes of the loss.
+* The momentum should be raised towards the end of the training but
+  it can also be kept constant.
+* The learning rate depends on the NN architecture and the batch size:
+
+  - Deeper nets commonly require smaller learning rates.
+  - Larger batches can go with larger learning rates (there is less noise in the
+    gradients).
