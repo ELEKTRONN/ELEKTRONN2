@@ -15,7 +15,7 @@ import theano
 from ..training.trainutils import Schedule
 
 
-def test_schedule():
+def demo_schedule():
     lr = theano.shared(0.1)
     sch = Schedule(dec=0.99,
                    updates=[(1000, 0.01), (10000, 0.01), (50000, 0.01)])

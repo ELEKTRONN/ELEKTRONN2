@@ -20,7 +20,7 @@ from .. import neuromancer
 logger = logging.getLogger('elektronn2log')
 
 
-def test_neural():
+def demo_neural():
     from elektronn2.neuromancer.graphutils import make_func, as_floatX
     from elektronn2.neuromancer.node_basic import Input
     from elektronn2.neuromancer.loss import AggregateLoss

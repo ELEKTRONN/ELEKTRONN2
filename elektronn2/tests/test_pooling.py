@@ -23,14 +23,12 @@ logger = logging.getLogger('elektronn2log')
 
 import theano.sandbox.cuda
 import matplotlib.pyplot as plt
-
-
 theano.sandbox.cuda.use("gpu0")
 
 from ..neuromancer import graphutils as utils
 
 
-def test_pooling_3d():
+def demo_pooling_3d():
     sig_shape = (1, 4, 30, 200, 200)
     spatial_axes = (2, 3, 4)
     x_val = np.random.rand(*sig_shape).astype(np.float32)
@@ -62,7 +60,7 @@ def test_pooling_3d():
     r8 = f8(x_val)
 
 
-def test_pooling_2d():
+def demo_pooling_2d():
     img = plt.imread(os.path.expanduser('~/devel/Lichtenstein.png')).transpose(
         (2, 0, 1))[None,]
     sig_shape = img.shape
@@ -96,7 +94,3 @@ def test_pooling_2d():
 #    dense = fragments2dense(mfp, offsets_new, strides_new, spatial_axes)
 #    f = utils.make_func([x], dense, profile_execution=20, name='dense')
 #    rx = f(img)
-
-
-
-test_pooling_2d()

@@ -10,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def test_data_image():
+def demo_data_image():
     ids = h5load(
         '/home/mfk/axon/mkilling/devel/data/BirdGT/j0126_bird_new/j0126 cubeSegmentor category-volume_gt__016-kkiesl-20150913-205217-final.h5')
     ids, raw = ids[1], ids[0]

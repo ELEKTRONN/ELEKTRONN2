@@ -14,7 +14,7 @@ from .. import neuromancer
 from ..neuromancer.model import modelload
 
 
-def test_new_gm():
+def demo_new_gm():
     mfp = False
     in_sh = (1, 1, 15, 198, 198) if mfp else (1, 1, 25, 171, 171)
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')

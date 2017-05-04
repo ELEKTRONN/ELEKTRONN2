@@ -19,7 +19,7 @@ from ..neuromancer.neural import Conv, FragmentsToDense, Perceptron, UpConv
 from ..neuromancer.node_basic import model_manager
 
 
-def test_restore():
+def demo_restore():
     # records = ut.pickleload('/tmp/model.pkl')
     # graph_manager.restore(records)
     # print "="*50

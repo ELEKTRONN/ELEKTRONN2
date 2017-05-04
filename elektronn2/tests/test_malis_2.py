@@ -9,7 +9,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
     super, zip
 
 
-def test_malis_fuck():
+def test_malis_2():
     import numpy as np
     # import theano.sandbox.cuda
     # theano.sandbox.cuda.use("gpu0")
@@ -18,7 +18,7 @@ def test_malis_fuck():
     from elektronn2.malis import malis_utils
     from elektronn2.malis.malisop import malis_weights
 
-    print("TESTING/DEMO:")
+    print("Malis TESTING/DEMO 2:")
 
     aff_pred_t = T.TensorType('float32', [False, ] * 4, name='aff_pred')()
     aff_gt_t = T.TensorType('int16', [False, ] * 4, name='aff_gt')()

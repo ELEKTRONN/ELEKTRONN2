@@ -5,7 +5,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
     super, zip
 
 
-def test_schedule_config():
+def demo_schedule_config():
     prev_save_h = 2.0
 
     save_name = 'Test'

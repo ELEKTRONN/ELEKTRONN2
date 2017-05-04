@@ -18,7 +18,7 @@ def test_malis():
     from elektronn2.malis import malis_utils
     from elektronn2.malis.malisop import malis_weights
 
-    print("TESTING/DEMO:")
+    print("Malis TESTING/DEMO:")
 
     aff_pred_t = T.TensorType('float32', [False, ] * 4, name='aff_pred')()
     aff_gt_t = T.TensorType('int16', [False, ] * 4, name='aff_gt')()
