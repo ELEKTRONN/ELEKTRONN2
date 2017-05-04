@@ -449,23 +449,24 @@ Optimiser hyperparameters
 Learning rate
 ^^^^^^^^^^^^^
 
-* The learning rate should be as large as possible at the beginning of the
-  training and decrease gradually or in steps (optimally always after the loss
-  has plateaued for some time).
-* A "learning rate as large as possible" means the following: since the gradient
-  is only a linear approximation, the loss decreases only along a small step
-  size on the gradient and goes up again for larger steps (very quickly).
-  Thus by setting a fixed learning rate, some update steps may in fact lead to an
-  increase of the loss if they are too large. The learning rate should be so
-  large that **most** of the updates decrease the loss but large enough that a
-  few steps lead to increases - because then you know that a greater learning
-  rate would not be possible. The training pipeline creates a plot with the
-  per-step changes of the loss.
-* The learning rate depends on the NN architecture and the batch size:
+The learning rate should be as large as possible at the beginning of the
+training and decrease gradually or in steps (optimally always after the loss
+has plateaued for some time).
+"As large as possible" here means the following: since the gradient
+is only a linear approximation, the loss decreases only along a small step
+size on the gradient and goes up again for larger steps (very quickly).
+Thus by setting a fixed learning rate, some update steps may in fact lead to an
+increase of the loss if they are too large. The learning rate should be so
+large that **most** of the updates decrease the loss but large enough that a
+few steps lead to increases - because then you know that a greater learning
+rate would not be possible. The training pipeline creates a plot with the
+per-step changes of the loss.
 
-  - Deeper nets commonly require smaller learning rates.
-  - Larger batches can go with larger learning rates (there is less noise in the
-    gradients).
+The learning rate depends on the NN architecture and the batch size:
+
+* Deeper nets commonly require smaller learning rates.
+* Larger batches can go with larger learning rates (there is less noise in the
+  gradients).
 
 
 .. _momentum:
