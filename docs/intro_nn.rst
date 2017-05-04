@@ -370,19 +370,6 @@ use dropout.)
 .. TODO: Add note about prediction
 
 
-Weight Decay
-------------
-
-Weight decay is synonymous with a L2 penalty on the weights. This means
-additional to the loss that comes from the deviation between current output and
-desired output, large weight values are regarded as loss - the weights are
-driven to have smaller magnitudes while at the same time being able to produce
-good output. This acts as a regulariser (see
-`Tikhonov Regularisation <https://en.wikipedia.org/wiki/Tikhonov_regularization>`_).
-
-You can specify weight decay in the ``wd`` entry of the
-:ref:`optimiser_params <optimiser_neuro3d>` inside a config.
-
 Input Noise
 -----------
 
@@ -396,8 +383,12 @@ This feature is provided by the
 :py:class:`GaussianRV <elektronn2.neuromancer.various.GaussianRV>` layer.
 
 
+.. _optimisers:
+
 Training / Optimisation
 =======================
+
+.. TODO: Remove docs on removed optimisers
 
 Because of the non-linear activation functions, the loss function of a NN
 is a highly non-convex function of its weights. Analytic solutions do not
@@ -409,8 +400,12 @@ training set still decreases - continuing training in this situation inevitably
 leads to over-fitting and bad generalisation.
 
 
+Optimisers
+----------
+
+
 Stochastic Gradient Descent (SGD)
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This is the basic principle behind all other optimisers. SGD is the most
 common optimisation scheme and works in most cases. One advantage of SGD is
@@ -446,21 +441,8 @@ training (see :ref:`schedules`).
 .. TODO: Should we recommend Adam instead now?
 
 
-Momentum
-^^^^^^^^
-
-Momentum replaces the true gradient by an exponential moving average over the
-previous gradients. This can speed up progress by accumulation of gradients and
-prevent over-fitting to only the current example by averaging over other
-examples. Momentum is parametrised by a meta-parameter that determines the
-mixing rate of the previous gradients and the current gradient.
-In the pictureof the error surface it can be visualised by a massive ball
-rolling down the hill which, through its mass, can accumulate speed/momentum
-and also go upwards shortly - across a small ridge for example.
-
-
 Resilient Backpropagation (RPROP)
----------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 RPROP is a heuristic that determines the learning rate for every parameter
 individually based on the criterion how often the sign of the gradient changes
@@ -474,7 +456,7 @@ validation loss.
 
 
 Conjugate Gradient (CG)
------------------------
+^^^^^^^^^^^^^^^^^^^^^^^
 
 Conjugate gradient uses a heuristic to estimate the value of the momentum
 meta-parameter in every iteration step. In addition, the learning rate is not
@@ -491,11 +473,11 @@ Further details on
 (we use the Polak–Ribière heuristic).
 
 
-.. TODO: Adam optimizer
+.. TODO: Adam optimizer and others in elektronn2.neuromancer.optimiser
 
 
 l-BFGS
-------
+^^^^^^
 
 Limited-memory Broyden–Fletcher–Goldfarb–Shanno (l-BFGS) aims at estimating the
 inverse Hessian from the history of gradients. Similar to CG this history must
@@ -510,8 +492,13 @@ Further reading is advisable:
 and `wikipedia entry <https://en.wikipedia.org/wiki/Limited-memory_BFGS>`_.
 
 
-Tips for Tuning
-===============
+Optimiser hyperparameters
+-------------------------
+
+.. _learningrate:
+
+Learning rate
+^^^^^^^^^^^^^
 
 * The learning rate should be as large as possible at the beginning of the
   training and decrease gradually or in steps (optimally always after the loss
@@ -525,10 +512,48 @@ Tips for Tuning
   few steps lead to increases - because then you know that a greater learning
   rate would not be possible. The training pipeline creates a plot with the
   per-step changes of the loss.
-* The momentum should be raised towards the end of the training but
-  it can also be kept constant.
 * The learning rate depends on the NN architecture and the batch size:
 
   - Deeper nets commonly require smaller learning rates.
   - Larger batches can go with larger learning rates (there is less noise in the
     gradients).
+
+
+.. _momentum:
+
+Momentum
+^^^^^^^^
+
+Momentum replaces the true gradient by an exponential moving average over the
+previous gradients. This can speed up progress by accumulation of gradients and
+prevent over-fitting to only the current example by averaging over other
+examples. Momentum is parametrised by a meta-parameter that determines the
+mixing rate of the previous gradients and the current gradient.
+In the picture of the error surface it can be visualised by a massive ball
+rolling down the hill which, through its mass, can accumulate speed/momentum
+and also go upwards shortly - across a small ridge for example.
+
+Momentum should be raised towards the end of the training but it can also be
+kept constant.
+
+A very well written in-depth explanation of momentum can be found in the
+article `Why Momentum Really Works <http://distill.pub/2017/momentum/>`_.
+
+
+.. _weightdecay:
+
+Weight Decay
+------------
+
+Weight decay is synonymous with a L2 penalty on the weights. This means
+additional to the loss that comes from the deviation between current output and
+desired output, large weight values are regarded as loss - the weights are
+driven to have smaller magnitudes while at the same time being able to produce
+good output. This acts as a regulariser (see
+`Tikhonov Regularisation <https://en.wikipedia.org/wiki/Tikhonov_regularization>`_).
+
+More about weight decay can be found in this
+`paper <https://papers.nips.cc/paper/563-a-simple-weight-decay-can-improve-generalization.pdf>`_.
+
+You can specify weight decay in the ``wd`` entry of the
+:ref:`optimiser_params <optimiser_neuro3d>` inside a config.

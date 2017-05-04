@@ -453,14 +453,16 @@ applied:
       }
   }
 
-* ``grey_augment_channels``: List of channels for which grey-value augmentation
+* ``grey_augment_channels``: List of channels for which grey-value
+  :ref:`augmentation <warping>`
   should be applied. Our input images are grey-valued, i.e. they have
   only 1 channel (with index ``0``). For this channel grey value augmentations
   (randomised histogram distortions) are applied when sampling batches during
   training. This helps to achieve invariance against varying contrast and
   brightness gradients.
-* ``warp``: Fraction of image samples to which warping transformations are
-  applied (see :py:meth:`elektronn2.data.transformations.get_warped_slice()`)
+* ``warp``: Fraction of image samples to which
+  :ref:`warping transformations <warping>` are applied (see also
+  :py:meth:`elektronn2.data.transformations.get_warped_slice()`)
 * ``warp_args``: Non-default arguments passed to
   :py:meth:`elektronn2.data.cnndata.BatchCreatorImage.warp_cut()`
 
@@ -493,15 +495,19 @@ optimiser, optimiser_params
 * ``optimiser``: We choose the `Adam <https://arxiv.org/abs/1412.6980>`_
   optimiser because it is known to work well with our data set.
   Alternative optimisers are ``'AdaDelta'``, ``'AdaGrad'`` and ``'SGD'``
-  (see implementations in :py:mod:`elektronn2.neuromancer.optimiser`).
+  (see implementations in :py:mod:`elektronn2.neuromancer.optimiser` and
+  the documentation section about :ref:`optimisers`).
+
+.. TODO: Link to Adam docs once they are in intro_nn
 
 * ``optimiser_params``:
 
-  - ``lr``: Learning rate (:math:`\alpha`).
-  - ``mom``: `Momentum <http://distill.pub/2017/momentum/>`_.
+  - ``lr``: :ref:`Learning rate <learningrate>`
+    (:math:`\alpha`).
+  - ``mom``: :ref:`Momentum <momentum>`.
   - ``beta2``: :math:`\beta_{2}`, i.e. exponential decay rate for *Adam*'s moment
     estimates. (only applicable to the *Adam* optimiser!)
-  - ``wd``: `Weight decay <https://papers.nips.cc/paper/563-a-simple-weight-decay-can-improve-generalization.pdf>`_.
+  - ``wd``: :ref:`Weight decay <weightdecay>`
 
 
 .. _neuro3d_model:
