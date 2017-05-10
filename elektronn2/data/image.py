@@ -14,6 +14,7 @@ import logging
 import multiprocessing
 from functools import reduce
 
+import numba
 from scipy import ndimage
 import scipy.ndimage.filters as filters
 from skimage.morphology import watershed
@@ -133,7 +134,7 @@ def downsample_xy(d, l, factor):
     return d, l
 
 @utils.timeit
-@utils.my_jit(nopython=True)
+@numba.jit(nopython=True)
 def _ids2barriers(ids, barriers, dilute, connectivity):
     """
     Draw a 2 or 4 pix barrier where label IDs are different
@@ -275,7 +276,7 @@ def smearbarriers(barriers, kernel=None):
     return barriers
 
 
-@utils.my_jit(nopython=True)
+@numba.jit(nopython=True)
 def _grow_seg(seg, grow, mask):
     nx = seg.shape[0]
     ny = seg.shape[1]

@@ -15,6 +15,7 @@ from subprocess import check_call
 import logging
 from collections import OrderedDict
 
+import numba
 from scipy import interpolate
 from scipy import sparse
 from scipy.sparse import csgraph
@@ -68,14 +69,14 @@ BASE_IH = BASE ** -HYST
 
 
 @utils.timeit
-@utils.my_jit(nopython=True)
+@numba.jit(nopython=True)
 def insert(cube, coords, i, off):
     for k in np.arange(coords.shape[0]):
         cube[coords[k,0]-off[0], coords[k,1]-off[1], coords[k,2]-off[2]] = i
 
 
 @utils.timeit
-@utils.my_jit(nopython=True)
+@numba.jit(nopython=True)
 def insert_vec(cube, coords, vec, off):
     n = len(coords)
     m = len(vec[0])
@@ -94,7 +95,7 @@ def insert_vec(cube, coords, vec, off):
 
 
 @utils.timeit
-@utils.my_jit(nopython=True)
+@numba.jit(nopython=True)
 def ray_cast(max_dists, hull_points, hull_dist, ray_steps, hull_cube, off):
     s = np.float32(0.9) # step length
     sh = hull_cube.shape
@@ -133,7 +134,7 @@ def ray_cast(max_dists, hull_points, hull_dist, ray_steps, hull_cube, off):
 
         max_dists[i] = dist
 
-@utils.my_jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True)
 def find_peaks_helper(padded_cube, peak_cube):
     sh = padded_cube.shape
     for z in np.arange(1,sh[0]-1):

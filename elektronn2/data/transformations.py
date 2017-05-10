@@ -24,7 +24,7 @@ logger = logging.getLogger('elektronn2log')
 inspection_logger = logging.getLogger('elektronn2log-inspection')
 
 
-# @utils.my_jit(nopython=True, cache=True)
+# @numba.jit(nopython=True, cache=True)
 # def map_coordinates_nearest(src, coords, lo, dest):
 #     sh = coords.shape
 #     for z in np.arange(sh[0]):
@@ -72,7 +72,7 @@ def map_coordinates_linear(src, coords, lo, dest):
           src[u1, v1, w1] * du * dv * dw
     dest[0] = val
 
-@utils.my_jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True)
 def map_coordinates_max_kernel(src, coords, lo, k, dest):
     k = np.float32(k)
     kz = min(0.5, k/2)

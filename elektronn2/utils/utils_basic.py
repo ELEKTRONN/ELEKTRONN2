@@ -10,7 +10,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
 __all__ = ['CircularBuffer', 'AccumulationArray', 'DynamicKDT', 'KDT',
            'pickleload', 'picklesave', 'h5load', 'h5save', 'pretty_string_ops',
            'import_variable_from_file', 'timeit', 'Timer',
-           'cache', 'my_jit', 'pretty_string_time', 'unique_rows',
+           'cache', 'pretty_string_time', 'unique_rows',
            'get_free_cpu_count', 'parallel_accum', 'makeversiondir', 'as_list']
 
 from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
@@ -27,6 +27,7 @@ except:
     import pickle as pkl
 
 
+import numba
 import psutil
 from multiprocessing import Pool
 import gzip
@@ -40,7 +41,8 @@ import sklearn
 from sklearn.neighbors import NearestNeighbors as NearestNeighbors_
 
 
-__all__ = ['get_free_cpu_count', 'parallel_accum', 'my_jit',
+# TODO: Why are there two __all__ assignments? Delete the first one?
+__all__ = ['get_free_cpu_count', 'parallel_accum',
            'timeit', 'cache', 'CircularBuffer', 'AccumulationArray', 'KDT',
            'DynamicKDT', 'import_variable_from_file', 'pickleload', 'picklesave',
            'h5save', 'h5load', 'pretty_string_ops', 'pretty_string_time',
@@ -164,23 +166,6 @@ class DecoratorBase(object):
             return decorated
         else:
             raise ValueError()
-
-
-class my_jit(DecoratorBase):
-    """
-    This mock decorator is used as a pure-Python fallback for
-    ``numba.jit`` if numba is not availabe.
-
-    If numba is available, the decorator is later replaced by the real numba code.
-    """
-    pass
-
-try:
-    import numba
-
-    my_jit = numba.jit
-except:
-    logger.warning("numba could not be imported, falling back to slow Python.")
 
 
 class timeit(DecoratorBase):
@@ -449,7 +434,7 @@ class KDT(NearestNeighbors_):
     __init__.__doc__ = NearestNeighbors_.__init__.__doc__
 
 
-@my_jit(nopython=True, looplift=True, cache=True)
+@numba.jit(nopython=True, looplift=True, cache=True)
 def _merge(distances, indices, coordinates, pairwise_dist, sort_ix, new_points,
            k, query_points):
     q = len(query_points)
