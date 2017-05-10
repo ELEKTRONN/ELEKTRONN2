@@ -436,26 +436,31 @@ training (see :ref:`schedules <schedules_neuro3d>`).
   training.
   [`image source <http://blog.datumbox.com/tuning-the-learning-rate-in-gradient-descent/>`_]
 
-.. TODO: Should we recommend Adam instead now?
-
-
-AdaDelta
-^^^^^^^^
-
-(TODO) :py:class:`elektronn2.neuromancer.optimiser.AdaDelta`
-
-
-AdaGrad
-^^^^^^^
-
-(TODO) :py:class:`elektronn2.neuromancer.optimiser.AdaGrad`
+:py:class:`elektronn2.neuromancer.optimiser.SGD`
 
 
 Adam
 ^^^^
 
-(TODO) :py:class:`elektronn2.neuromancer.optimiser.Adam`
+The Adam optimiser is explained in detail here:
+https://arxiv.org/abs/1412.6980v9.
 
+We recommend starting training with Adam (especially if you are not sure about
+your hyperparameter choices, because it is relatively robust).
+
+:py:class:`elektronn2.neuromancer.optimiser.Adam`
+
+
+AdaGrad
+^^^^^^^
+
+:py:class:`elektronn2.neuromancer.optimiser.AdaGrad`
+
+
+AdaDelta
+^^^^^^^^
+
+:py:class:`elektronn2.neuromancer.optimiser.AdaDelta`
 
 
 Optimiser hyperparameters

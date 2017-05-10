@@ -133,6 +133,9 @@ class Optimiser(object):
 ###############################################################################
 
 class SGD(Optimiser):
+    """
+    SGD optimiser (See https://en.wikipedia.org/wiki/Stochastic_gradient_descent).
+    """
     def __init__(self,  inputs, loss, grads, params, extra_updates,
                  additional_outputs=None):
         super(SGD, self).__init__(inputs, loss, grads, params,
@@ -163,10 +166,14 @@ class SGD(Optimiser):
 
 
 class AdaGrad(Optimiser):
-    # Tries to favor making faster progress on parameters with usually small
-    # gradients (but dos somehow ignore their actual direction, i.e. a parameter
-    # which has a lot of small gradients in the same direction and one that has
-    # many small gradients in opposite directions have both a high LR !
+    """
+    AdaGrad optimiser (See http://jmlr.org/papers/v12/duchi11a.html).
+
+    Tries to favor making faster progress on parameters with usually small
+    gradients (but does somehow ignore their actual direction, i.e. a parameter
+    which has a lot of small gradients in the same direction and one that has
+    many small gradients in opposite directions have both a high LR !
+    """
     def __init__(self, inputs, loss, grads, params, extra_updates,
                  additional_outputs=None):
         super(AdaGrad, self).__init__(inputs, loss, grads, params,
@@ -213,11 +220,15 @@ class AdaGrad(Optimiser):
         self._init_done = False
 
 class AdaDelta(Optimiser):
-    # Like AdaGrad, but accumulate squared only over windo
-    # The delta part is some diagonal hessian approximation
-    # Claims to be robust agains suddon large gradients because then the
-    # denominator explodes, but this explosion is persistent for a while...
-    # (and this argumentation is true for any method accumulating squared grads)
+    """
+    AdaDelta optimiser (See https://arxiv.org/abs/1212.5701).
+
+    Like AdaGrad, but accumulate squared only over windo
+    The delta part is some diagonal hessian approximation.
+    Claims to be robust agains sudden large gradients because then the
+    denominator explodes, but this explosion is persistent for a while...
+    (and this argumentation is true for any method accumulating squared grads).
+    """
     def __init__(self,  inputs, loss, grads, params, extra_updates,
                  additional_outputs=None):
         super(AdaDelta, self).__init__(inputs, loss, grads, params,
@@ -260,9 +271,15 @@ class AdaDelta(Optimiser):
 
 
 class Adam(Optimiser):
-    # Like AdaGrad with windowed squared_accum and with momentum and a bias for the initial phase (t)
-    # The normalisation of Adam and AdaGrad (and RMSProp) does not damp but
-    # exaggerate sudden steep gradients (their squared_accum is small and their current grad is large)
+    """
+    Adam optimiser (See https://arxiv.org/abs/1412.6980v9).
+
+    Like AdaGrad with windowed squared_accum and with momentum and a bias for
+    the initial phase (t).
+    The normalisation of Adam and AdaGrad (and RMSProp) does not damp but
+    exaggerates sudden steep gradients (their squared_accum is small and their
+    current grad is large).
+    """
     def __init__(self,  inputs, loss, grads, params, extra_updates,
                  additional_outputs=None):
         super(Adam, self).__init__(inputs, loss, grads, params,
