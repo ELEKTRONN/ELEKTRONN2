@@ -1,4 +1,4 @@
-sklearn<0.20
+sklearn
 scikit-image>=0.12.3
 numpy>=1.8
 scipy>=0.14

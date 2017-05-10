@@ -22,11 +22,7 @@ import numpy as np
 
 logger = logging.getLogger('elektronn2log')
 
-try:
-    from sklearn import cross_validation
-except:
-    logger.warning("Can't import cross_validation from sklearn. Make sure to "
-    "install it if you want to use it.")
+import sklearn
 
 from ..utils import pickleload
 
@@ -110,10 +106,18 @@ class Data(object):
             return (data, label)
 
     def createCVSplit(self, data, label, n_folds=3, use_fold=2, shuffle=False, random_state=None):
-        cv = cross_validation.KFold(len(data), n_folds, shuffle=shuffle, random_state=random_state)
-        # TODO: cross_validation is removed in scikit-learn>=0.20. If we can require 0.18, replace the above line with:
-        # cv = sklearn.model_selection.KFold(n_splits=n_folds, shuffle=shuffle, random_state=random_state)
-        # (see http://scikit-learn.org/dev/whats_new.html#model-selection-enhancements-and-api-changes)
+        try:  # sklearn >=0.18 API
+            # (see http://scikit-learn.org/dev/whats_new.html#model-selection-enhancements-and-api-changes)
+            import sklearn.model_selection
+            kfold = sklearn.model_selection.KFold(
+                n_splits=n_folds, shuffle=shuffle, random_state=random_state
+            )
+            cv = kfold.split(data)
+        except:  # sklearn <0.18 API # TODO: We can remove this after a while.
+            import sklearn.cross_validation
+            cv = sklearn.cross_validation.KFold(
+                len(data), n_folds, shuffle=shuffle, random_state=random_state
+            )
         for fold, (train_i, valid_i) in enumerate(cv):
             if fold==use_fold:
                 self.valid_d = data[valid_i]

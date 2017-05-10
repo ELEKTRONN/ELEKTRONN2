@@ -34,7 +34,7 @@ ext_modules = []
 
 setup(
     name="elektronn2",
-    version="0.1",
+    version="0.1.0",
     packages=find_packages(),
     scripts=[
         'scripts/elektronn2-train',
@@ -58,7 +58,7 @@ setup(
         'jedi>=0.9.0',
         'pydotplus',
         'seaborn',
-        'scikit-learn<0.20',  # >=0.20 requires change, see todo-note in data.traindata import
+        'scikit-learn',
         'psutil>=5.0.1',
         'scikit-image>=0.12.3',
         'numba>=0.25'
