@@ -4,33 +4,35 @@ from __future__ import absolute_import, division, print_function
 
 import os
 from setuptools import setup, find_packages, Extension
-import numpy as np
 
 
-# Utility function to read the README file.
-# Used for the long_description.  It's nice, because now 1) we have a top level
-# README file and 2) it's easier to type in the README file than to put a raw
-# string in below ...
+malis = False  # Set to True to enable malis build.
+
+ext_modules = []
+if malis:
+    print('Trying to build the malis extension.\n'
+          'Requires a C++ compiler, Numpy, Cython and Boost to be installed.')
+    import numpy as np
+
+    ext_modules = [
+        Extension(
+            "elektronn2.malis._malis",  # Note: _malis_lib.cpp requires boost!
+            sources=[
+                "elektronn2/malis/_malis.pyx",
+                "elektronn2/malis/_malis_lib.cpp",
+            ],
+            include_dirs=[
+                'malis/',
+                np.get_include(),
+            ],
+            language='c++'
+        ),
+    ]
+
+
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
-ext_modules = [
-    Extension(
-        "elektronn2.malis._malis",  # Note: _malis_lib.cpp requires boost!
-        sources=[
-            "elektronn2/malis/_malis.pyx",
-            "elektronn2/malis/_malis_lib.cpp",
-        ],
-        include_dirs=[
-            'malis/',
-            np.get_include(),
-        ],
-        language='c++'
-    ),
-]
-
-# Disable malis build again until we can reliably build manylinux1 wheels.
-ext_modules = []
 
 setup(
     name="elektronn2",
@@ -40,12 +42,7 @@ setup(
         'scripts/elektronn2-train',
     ],
     ext_modules=ext_modules,
-    setup_requires=[
-        # 'cython>=0.23',  # malis
-        # 'numpy>=1.12',  # malis
-    ],
     install_requires=[
-        # 'cython>=0.23',  # malis
         'numpy>=1.8',
         'scipy>=0.14',
         'matplotlib>=1.4',
@@ -64,7 +61,7 @@ setup(
         'numba>=0.25'
     ],
     extras_require={
-            'knossos': ['knossos_utils'],
+        'knossos': ['knossos_utils'],
     },
     include_package_data=True,
     author="Marius Killinger",

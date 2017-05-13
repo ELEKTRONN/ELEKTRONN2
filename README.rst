@@ -151,7 +151,10 @@ We suggest that you do this inside a `virtualenv <https://virtualenv.pypa.io>`_
 or a `conda env <https://conda.io/docs/using/envs.html>`_ to prevent conflicts
 with system packages.
 
-.. TODO: Maybe describe and example setup of a virtualenv.
+.. TODO: Manual numpy install is only necessary because numba doesn't provide
+  wheels. Once wheels are public, delete the "pip install numpy" lines.
+
+.. TODO: Maybe describe an example setup of a virtualenv.
 
 Arch Linux (AUR)
 ^^^^^^^^^^^^^^^^
