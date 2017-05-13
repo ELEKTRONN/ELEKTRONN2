@@ -8,8 +8,8 @@ User guide
    :maxdepth: 3
 
    elektronn2
-   examples
    intro_nn
+   examples
 
 
 API documentation
