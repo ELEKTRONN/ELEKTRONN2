@@ -9,15 +9,24 @@ Practical Introduction to Neural Networks
      :depth: 2
 
 
-General
-=======
+Fundamentals
+============
 
-Neural Networks (NNs), including CNNs as a special case, are a class of
-non-linear, parametrised functions mapping
+Neural Networks (NNs), including Convolutional Neural Networks (CNNs) as a
+special case, are a class of non-linear, parametrised functions mapping
 :math:`\mathbb{R}^N \rightarrow \mathbb{R}^M` - seen from very narrow point of
 view assumed for the sake of this practical tutorial. For a more comprehensive
 description refer to
-`Marius' Intro <http://www.elektronn.org/downloads/Intro-ANN.pdf>`_.
+
+* Marius' `Introduction to Artificial Neural Networks [pdf] <http://www.elektronn.org/downloads/Intro-ANN.pdf>`_
+  (more concise).
+* http://neuralnetworksanddeeplearning.com (more detailed and slower-paced)
+
+  - `Chapter 1 <http://neuralnetworksanddeeplearning.com/chap1.html>`_
+    (about general neural networks).
+  - `Chapter 6 <http://neuralnetworksanddeeplearning.com/chap6.html>`_
+    (about deep convolutional neural networks).
+
 
 NNs are typically models for *supervised* training (excluding
 :ref:`auto encoders <autoencoder>`, which can be used for *unsupervised* tasks).
