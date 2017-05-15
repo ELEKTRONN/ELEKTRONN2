@@ -1,59 +1,62 @@
 # -*- coding: utf-8 -*-
-# TODO: Rewrite this to use publicly available data (e.g. neuro_data).
 
-save_path = '~/CNN_Training/3D/'
-
-
-preview_data_path = '~/lustre/mkilling/BirdGT/test_cubes_zyx.h5'
-preview_kwargs    = dict(export_class=[1,2,3,7,8], max_z_pred=3)
-initial_prev_h   = 0.3                  # hours: time after which first preview is made
-prev_save_h      = 3.0
-data_class = 'BatchCreatorImage' # <String>: Name of Data Class in TrainData or <tuple>: (path_to_file, class_name)
-background_processes = 8
-
-data_init_kwargs = dict(d_path='~/lustre/mkilling/BirdGT/', l_path='~/lustre/mkilling/BirdGT/',
-                    d_files=[('j0126_old/v2_old_%i-raw-zyx.h5' % ii, 'raw') for ii in range(6)]+\
-                    [('j0126_new/v2_new_%i-raw-zyx.h5' % ii, 'raw') for ii in range(22)]+\
-                    [('neg_ex/v2_neg_%i-raw-zyx.h5' % ii, 'raw') for ii in range(5)]+\
-                    [('myelin/v2_myelin_%i-raw-zyx.h5' % ii, 'raw') for ii in range(19)]+\
-                    [('objects/v2_center_cube-raw-zyx.h5', 'raw'),],
-                    l_files=[('j0126_old/v2_old_%i-combo-sparse-zyx.h5' % ii, 'combo') for ii in range(6)]+\
-                    [('j0126_new/v2_new_%i-combo-sparse-zyx.h5' % ii, 'combo') for ii in range(22)]+\
-                    [('neg_ex/v2_neg_%i-combo-sparse.h5' % ii, 'combo') for ii in range(5)]+\
-                    [('myelin/v2_myelin_%i-combo-propagate-sparse.h5' % ii, 'combo') for ii in range(19)]+\
-                    [('objects/v2_center_cube-combo-sparse-zyx.h5', 'combo'),],
-                    cube_prios= [3,]*(6-1+22-2)+[1,]*5+[0.3,]*19+[10,],
-                    aniso_factor=2.0,
-                    valid_cubes=[0,6,7],
-                    target_discrete_ix=[0,1,2],
-                    h5stream=True)
-
-sample_warp_params = dict(sample_aniso=True, lock_z=False,
-                          no_x_flip=False, warp_amount=0.4, perspective=True)
-
-data_batch_args = dict(grey_augment_channels=[0],
-                       ret_ll_mask=False,
-                       warp=0.4,
-                       warp_args=sample_warp_params,
-                       ignore_thresh=False)
-
-n_steps = 800000
-max_runtime = 4 * 24 * 3600 # in seconds
-history_freq = 150
-monitor_batch_size = 10
+save_path = '~/elektronn2_examples/'
+preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
+preview_kwargs    = {
+    'export_class': [1],
+    'max_z_pred': 3
+}
+initial_prev_h = 1.0  # hours: time after which the first preview is made
+prev_save_h = 1.0  # hours: time interval between planned previews.
+data_class = 'BatchCreatorImage'
+background_processes = 2
+data_init_kwargs = {
+    'd_path' : '~/neuro_data_zxy/',
+    'l_path': '~/neuro_data_zxy/',
+    'd_files': [('raw_%i.h5' %i, 'raw') for i in range(3)],
+    'l_files': [('barrier_int16_%i.h5' %i, 'lab') for i in range(3)],
+    'aniso_factor': 2,
+    'valid_cubes': [2],
+}
+data_batch_args = {
+    'grey_augment_channels': [0],
+    'warp': 0.5,
+    'warp_args': {
+        'sample_aniso': True,
+        'perspective': True
+    }
+}
+n_steps = 150000
+max_runtime = 24 * 3600 # in seconds
+history_freq = 200
+monitor_batch_size = 30
 optimiser = 'Adam'
-optimiser_params = dict(lr=2.5e-4, mom=0.95, wd=0.5e-3, beta2=0.995)
+optimiser_params = {
+    'lr': 0.0005,
+    'mom': 0.9,
+    'beta2': 0.999,
+    'wd': 0.5e-4
+}
+schedules = {
+    'lr': {'dec': 0.995}, # decay (multiply) lr by this factor every 1000 steps
+}
 batch_size = 1
+
 
 def create_model():
     from elektronn2 import neuromancer
     import theano.tensor as T
     import numpy as np
 
-    in_sh = (1,1,14,348-32*3,348-32*3)
-    img = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
+    in_sh = (None,1,24,188,188)
+    # For quickly trying out input shapes via CLI args, uncomment:
+    #import sys
+    #a = int(sys.argv[1])
+    #b = int(sys.argv[2])
+    #in_sh = (None,1,a,b,b)
+    inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    out0  = neuromancer.Conv(img,  64,  (1,3,3), (1,1,1))
+    out0  = neuromancer.Conv(inp,  64,  (1,3,3), (1,1,1))
     out1  = neuromancer.Conv(out0, 64,  (1,3,3), (1,1,1))
     out2  = neuromancer.Pool(out1, (1,2,2))
 
@@ -73,8 +76,6 @@ def create_model():
     out13 = neuromancer.Conv(out12, 1024,  (1,3,3), (1,1,1))
     out14 = neuromancer.Pool(out13, (1,2,2))
 
-    ####
-
     up0 = neuromancer.UpConvMerge(out10, out14, 1024)
     up1 = neuromancer.Conv(up0, 512,  (1,3,3), (1,1,1))
     up2 = neuromancer.Conv(up1, 512,  (1,3,3), (1,1,1))
@@ -89,51 +90,30 @@ def create_model():
 
     up9 = neuromancer.UpConvMerge(out1, up8, 128)
     up10 = neuromancer.Conv(up9, 64,  (3,3,3), (1,1,1))
-    top_feat = neuromancer.Conv(up10, 64,  (3,3,3), (1,1,1))
+    up11 = neuromancer.Conv(up10, 64,  (3,3,3), (1,1,1))
 
+    barr = neuromancer.Conv(up11,  3, (1,1,1), (1,1,1), activation_func='lin', name='barr')
+    probs = neuromancer.Softmax(barr)
 
-    # Target outputs
-    barr_out = neuromancer.Conv(top_feat,  3, (1,1,1), (1,1,1), activation_func='lin', name='barr')
-    obj_out  = neuromancer.Conv(top_feat,  4, (1,1,1), (1,1,1), activation_func='lin', name='obj')
-    my_out   = neuromancer.Conv(top_feat,  3, (1,1,1), (1,1,1), activation_func='lin', name='my')
-    barr_out = neuromancer.Softmax(barr_out)
-    obj_out  = neuromancer.Softmax(obj_out)
-    my_out   = neuromancer.Softmax(my_out)
+    target = neuromancer.Input_like(up11, override_f=1, name='target')
 
-    target   = neuromancer.Input_like(top_feat, dtype='int16', override_f=3, name='target')
-    barr, obj, my = neuromancer.split(target, 'f', n_out=3, name=['barr_t', 'obj_t', 'my_t'])
+    loss_pix = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 
-    # Target loss
-    barr_loss_pix = neuromancer.MultinoulliNLL(barr_out, barr, target_is_sparse=True,name='nll_barr')
-    obj_loss_pix  = neuromancer.MultinoulliNLL(obj_out, obj, target_is_sparse=True, name='nll_obj')
-    my_loss_pix   = neuromancer.MultinoulliNLL(my_out, my, target_is_sparse=True, name='nll_my')
-    pred          = neuromancer.Concat([barr_out, obj_out, my_out], axis='f')
-    pred.feature_names = ['barrier_bg', 'barr_mem', 'barr_ecs', 'obj_bg',
-                          'obj_mito', 'obj_ves', 'obj_syn', 'my_bg', 'my_out', 'my_in']
-
-    # Objective
-    weights = np.array([2.154, 0.42, 0.42])
-    weights *= len(weights) / weights.sum()
-    loss = neuromancer.AggregateLoss([barr_loss_pix,
-                                      obj_loss_pix,
-                                      my_loss_pix],
-                                      mixing_weights=weights)
-    # Monitoring  / Debug outputs
-    nll_barr   = neuromancer.ApplyFunc(barr_loss_pix, T.mean, name='mnll_barr')
-    nll_obj    = neuromancer.ApplyFunc(obj_loss_pix, T.mean, name='mnll_obj')
-    nll_my   = neuromancer.ApplyFunc(my_loss_pix, T.mean, name='mnll_my')
-    errors = neuromancer.Errors(barr_out, barr, target_is_sparse=True)
+    loss = neuromancer.AggregateLoss(loss_pix , name='loss')
+    errors = neuromancer.Errors(probs, target, target_is_sparse=True)
 
     model = neuromancer.model_manager.getmodel()
-    model.designate_nodes(input_node=img, target_node=target, loss_node=loss,
-                                  prediction_node=pred,
-                                  prediction_ext=[loss, errors, pred],
-                                  debug_outputs =[nll_barr, errors, nll_obj, nll_my])
-
+    model.designate_nodes(
+        input_node=inp,
+        target_node=target,
+        loss_node=loss,
+        prediction_node=probs,
+        prediction_ext=[loss, errors, probs]
+    )
     return model
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     print('Testing and visualising model...\n(If you want to train with this '
           'config file instead, run '
           '"$ elektronn2-train {}".)\n'.format(__file__))
