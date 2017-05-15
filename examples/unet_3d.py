@@ -48,39 +48,24 @@ def create_model():
     import theano.tensor as T
     import numpy as np
 
-    in_sh = (None,1,24,188,188)
+    in_sh = (None,1,18,148,148)
     # For quickly trying out input shapes via CLI args, uncomment:
-    #import sys
-    #a = int(sys.argv[1])
-    #b = int(sys.argv[2])
-    #in_sh = (None,1,a,b,b)
+    #import sys; a = int(sys.argv[1]); b = int(sys.argv[2]); in_sh = (None,1,a,b,b)
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    out0  = neuromancer.Conv(inp,  64,  (1,3,3), (1,1,1))
-    out1  = neuromancer.Conv(out0, 64,  (1,3,3), (1,1,1))
+    out0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
+    out1  = neuromancer.Conv(out0, 32,  (1,3,3), (1,1,1))
     out2  = neuromancer.Pool(out1, (1,2,2))
-
-    out3  = neuromancer.Conv(out2, 128,  (1,3,3), (1,1,1))
-    out4  = neuromancer.Conv(out3, 128,  (1,3,3), (1,1,1))
+    out3  = neuromancer.Conv(out2, 64,  (1,3,3), (1,1,1))
+    out4  = neuromancer.Conv(out3, 64,  (1,3,3), (1,1,1))
     out5  = neuromancer.Pool(out4, (1,2,2))
-
-    out6  = neuromancer.Conv(out5, 256,  (1,3,3), (1,1,1))
-    out7  = neuromancer.Conv(out6, 256,  (1,3,3), (1,1,1))
+    out6  = neuromancer.Conv(out5, 128,  (1,3,3), (1,1,1))
+    out7  = neuromancer.Conv(out6, 128,  (1,3,3), (1,1,1))
     out8  = neuromancer.Pool(out7, (1,2,2))
+    out9  = neuromancer.Conv(out8, 256,  (3,3,3), (1,1,1))
+    out10 = neuromancer.Conv(out9, 256,  (3,3,3), (1,1,1))
 
-    out9  = neuromancer.Conv(out8, 512,  (3,3,3), (1,1,1))
-    out10 = neuromancer.Conv(out9, 512,  (3,3,3), (1,1,1))
-    out11 = neuromancer.Pool(out10, (2,2,2))
-
-    out12 = neuromancer.Conv(out11, 1024,  (1,3,3), (1,1,1))
-    out13 = neuromancer.Conv(out12, 1024,  (1,3,3), (1,1,1))
-    out14 = neuromancer.Pool(out13, (1,2,2))
-
-    up0 = neuromancer.UpConvMerge(out10, out14, 1024)
-    up1 = neuromancer.Conv(up0, 512,  (1,3,3), (1,1,1))
-    up2 = neuromancer.Conv(up1, 512,  (1,3,3), (1,1,1))
-
-    up3 = neuromancer.UpConvMerge(out7, up2, 512)
+    up3 = neuromancer.UpConvMerge(out7, out10, 512)
     up4 = neuromancer.Conv(up3, 256,  (1,3,3), (1,1,1))
     up5 = neuromancer.Conv(up4, 256,  (1,3,3), (1,1,1))
 
@@ -92,7 +77,7 @@ def create_model():
     up10 = neuromancer.Conv(up9, 64,  (3,3,3), (1,1,1))
     up11 = neuromancer.Conv(up10, 64,  (3,3,3), (1,1,1))
 
-    barr = neuromancer.Conv(up11,  3, (1,1,1), (1,1,1), activation_func='lin', name='barr')
+    barr = neuromancer.Conv(up11,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
     probs = neuromancer.Softmax(barr)
 
     target = neuromancer.Input_like(up11, override_f=1, name='target')
