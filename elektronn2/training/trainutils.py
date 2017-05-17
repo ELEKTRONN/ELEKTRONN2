@@ -49,12 +49,13 @@ ptk_hist = InMemoryHistory()
 
 def user_input(local_vars):
     save_name = local_vars['exp_config'].save_name
-    banner = """
-    ======================
-    === ELEKTRONN2 MENU ===
-    ======================
+    _banner = """
+    ========================
+    === ELEKTRONN2 SHELL ===
+    ========================
     >> %s <<
     Shortcuts:
+    'help' (display this help text),
     'q' (leave menu),         'kill'(saving last params),
     'sethist <int>',          'setlr <float>',
     'setmom <float>',         'setwd <float> (weight decay)
@@ -62,10 +63,19 @@ def user_input(local_vars):
     'actstats' (print statistics)
     'sf <nodename>' (show filters)',
     'load <filename>' (param files only, no model files),
-    'preview'
+    'preview' (produce preview predictions),
+    'ip' (start embedded IPython shell)
 
     For everything else enter a command in the command line\n""" % (save_name,)
-    print(banner)
+
+    _ipython_banner = """    You are now in the embedded IPython shell.
+    You still have full access to the local scope of the ELEKTRONN2 shell
+    (e.g. 'model', 'batch'), but shortcuts like 'q' no longer work.
+
+    To leave the IPython shell and switch back to the ELEKTRONN2 shell, run
+    'exit()' or hit 'Ctrl-D'."""
+
+    print(_banner)
     data = local_vars['data']
     batch = local_vars['batch']
     trainer = local_vars['self']
@@ -93,6 +103,15 @@ def user_input(local_vars):
                 break
             elif inp=='kill':
                 break
+            elif inp == 'help':
+                print(_banner)
+            elif inp == 'ip':
+                try:
+                    import IPython
+                    IPython.embed(header=_ipython_banner)
+                except ImportError:
+                    print('IPython is not available. You will need to install '
+                          'it to use this function.')
             elif inp.startswith('sethist'):
                 i = int(inp.split()[1])
                 exp_config.history_freq = i

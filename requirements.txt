@@ -16,3 +16,4 @@ jedi>=0.9.0
 psutil>=5.0.1
 
 knossos_utils[knossos]
+ipython[ipython]

@@ -62,6 +62,7 @@ setup(
     ],
     extras_require={
         'knossos': ['knossos_utils'],
+        'ipython': ['ipython'],
     },
     include_package_data=True,
     author="Marius Killinger",
