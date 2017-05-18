@@ -307,32 +307,32 @@ class Node(with_metaclass(MetaNode, object)):
 
     Parameters
     ----------
-    parent: Node or list of Node
+    parent: Node or list[Node]
         The input node(s).
     name: str
-        Given name of node, may be an empty string.
+        Given name of the Node, may be an empty string.
     print_repr: bool
         Whether to print the node representation upon initialisation.
 
 
-    Models are built from the interplay of *node* to form a (directed,
+    Models are built from the interplay of *Nodes* to form a (directed,
     acyclic) computational graph.
 
-    The **ELEKTRONN2**-framework can be seen as an intelligent abstraction level
+    The **ELEKTRONN2** framework can be seen as an intelligent abstraction level
     that hides the raw theano-graph and manages the involved symbolic variables.
     The overall goal is the intuitive, flexible and **easy** creation of
     complicated graphs.
 
-    A *node* has an one or several inputs, called *parent*, (unless it is
-    an *source*, i.e. a node where external data is feed into the graph).
+    A ``Node`` has one or several inputs, called ``parent``, (unless it is
+    a *source*, i.e. a node where external data is feed into the graph).
     The inputs are node objects themselves.
 
     Layers automatically keep track of their previous inputs,
     parameters, computational cost etc. This allows to compile the
     theano-functions without manually specifying the inputs, outputs and
     parameters.
-    In the most simple case any node, which might be part of a more
-    complicated graph, can be called like as function (passing suitable
+    In the most simple case, any node, which might be part of a more
+    complicated graph, can be called as a function (passing suitable
     numpy arrays):
 
      >>> import elektronn2.neuromancer.utils
@@ -342,17 +342,17 @@ class Node(with_metaclass(MetaNode, object)):
      >>> np.allclose(out, test_data)
      True
 
-    At the first time the theano-function is compiled and cached
-    for reuse in future calls.
+    At the first time the theano function is compiled and cached
+    for re-use in future calls.
 
     Several properties (with respect to the sub-graph the node depends on, or
     only from the of the node itself)
-    this can also be looked up externally e.g. required sources,
-    parameter count, computational count.
+    These can also be looked up externally (e.g. required sources,
+    parameter count, computational count).
 
     The theano variable that represents the output of a node is kept
-    in the attribute ``output``. Subsequent node must use this attribute of
-    their inputs to perform their calculation and write the result their own
+    in the attribute ``output``. Subsequent Nodes must use this attribute of
+    their inputs to perform their calculation and write the result to their own
     output (this happens in the method ``_calc_output``, which is hidden
     because it must be called only internally at initialisation).
 
@@ -375,12 +375,12 @@ class Node(with_metaclass(MetaNode, object)):
       >>> print(out.input_nodes)
       Input_1
 
-    Computations that result in more than a single output for a node must be
+    Computations that result in more than a single output for a Node must be
     broken apart using divergence and individual nodes for the several outputs.
     Alternatively the function ``split`` can be used to create two
-    dummy nodes of the output of a previous node, by splitting along specified
-    axis.
-    Note that possible redundant computations in nodes are most likely
+    dummy nodes of the output of a previous Node by splitting along the
+    specified axis.
+    Note that possible redundant computations in Nodes are most likely
     eliminated by the theano graph optimiser.
 
 
@@ -396,8 +396,8 @@ class Node(with_metaclass(MetaNode, object)):
         This evokes the execution of the methods: ``_make_output``,
         ``_calc_shape`` and ``self._calc_comp_cost``. Each of those updates
         the corresponding attributes.
-        NOTE: if a node (except for the base ``Node``) is subclassed and the
-        derived calls ``__init__`` of the base node, this will also call
+        NOTE: if a Node (except for the base ``Node``) is subclassed and the
+        derived calls ``__init__`` of the base Node, this will also call
         ``_finialise_init`` exactly right the call to the superclass'
         ``__init__``.
 
@@ -407,11 +407,12 @@ class Node(with_metaclass(MetaNode, object)):
     * The name of of a node's trainable parameter in the parameter dict must
       be the same as the (optional) keyword used to initialise this parameter
       in ``__init__``;
-      moreover parameters must not be initialised/shared from positional arguments.
+      moreover, parameters must not be initialised/shared from positional
+      arguments.
     * When serialising only the current state of parameters is kept, parameter
       value arrays given for initialisation are never kept.
 
-    Depending on the purpose of the node the latter methods and others
+    Depending on the purpose of the node, the latter methods and others
     (e.g. ``__repr__``) must be overridden. The default behaviour of the base
     class is: output = input, outputs shape = input shape,
     computational cost = tensor size (!) ...
