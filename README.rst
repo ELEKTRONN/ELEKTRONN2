@@ -289,7 +289,7 @@ Trainer
 * Frequent printing and logging of current state, iteration speed etc.
 * Frequent plotting of monitored states (error samples on training and
   validation data, classification errors and custom monitoring targets)
-* Frequent saving intermediate parameter states and history of monitored
+* Frequent saving of intermediate parameter states and history of monitored
   variables
 * Frequent preview prediction images for CNN training
 * Customisable schedules for non-trainable meta-parameters (e.g. dropout rates,
