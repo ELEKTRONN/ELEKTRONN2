@@ -73,7 +73,7 @@ class and seamlessly integrated into neural network models).
   a method to generate high resolution 3D images from small samples, such as
   brain tissue.
 
-.. figure:: _images/j0126_blend.jpg
+.. figure:: https://raw.githubusercontent.com/ELEKTRONN/ELEKTRONN2/master/docs/_images/j0126_blend.jpg
 
   Example visualisation of ELEKTRONN2's usage on a 3D SBEM data set
   (blending input to output from left to right).
