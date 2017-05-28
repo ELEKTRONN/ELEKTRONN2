@@ -81,7 +81,9 @@ if not len(inspection_logger.handlers) > 0:
     inspection_logger.setLevel(logging.DEBUG)
     lfile_formatter = logging.Formatter('%(message)s')
     lfile_path = os.path.abspath(
-        os.path.expanduser('~/elektronn2-inspection.log'))
+        # os.path.expanduser('~/elektronn2-inspection.log')
+        '/tmp/elektronn2-inspection.log'
+    )
     lfile_level = logging.DEBUG
     lfile_handler = logging.FileHandler(lfile_path)
     lfile_handler.setLevel(lfile_level)
