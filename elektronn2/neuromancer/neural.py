@@ -1300,6 +1300,10 @@ class Pool(Node):
         (only if cuDNN is available)
         Mode can be any of the modes supported by Theano's dnn_pool():
         ('max', 'average_inc_pad', 'average_exc_pad', 'sum').
+
+        'max' (default): max-pooling
+        'average' or 'average_inc_pad': average-pooling
+        'sum': sum-pooling
     name: str
         Name of the pooling layer.
     print_repr: bool
@@ -1315,6 +1319,9 @@ class Pool(Node):
 
         if stride is None:
             stride = pool_shape
+
+        if mode == 'average':
+            mode = 'average_inc_pad'  # Theano's internal name. 'average' is deprecated.
 
         self.pool_shape = pool_shape
         self.pool_stride = stride

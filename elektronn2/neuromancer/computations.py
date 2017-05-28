@@ -527,7 +527,7 @@ def maxout(x, factor=2, axis=None):
 
 def pooling(x, pool, spatial_axes, mode='max', stride=None):
     """
-    Maxpooling along spatial axes of 3d and 2d tensors.
+    Pooling along spatial axes of 3d and 2d tensors.
 
     There are static assumptions which axes are spatial.
     The spatial axes must be divisible by the corresponding pooling factor,
@@ -542,6 +542,12 @@ def pooling(x, pool, spatial_axes, mode='max', stride=None):
         They refer to the spatial axes of ``x`` (x,y)/(z,x,y).
     spatial_axes: tuple
     mode: str
+        Can be any of the modes supported by Theano's dnn_pool():
+        ('max', 'average_inc_pad', 'average_exc_pad', 'sum').
+
+        'max' (default): max-pooling
+        'average' or 'average_inc_pad': average-pooling
+        'sum': sum-pooling
     stride: tuple
 
     Returns
@@ -561,7 +567,7 @@ def pooling(x, pool, spatial_axes, mode='max', stride=None):
 
     spatial_axes = list(spatial_axes)
     if not dnn_avail and config.use_manual_cudnn_pool and mode!='max':
-        logger.warning("Pooling modes can only be select if cuDNN is available, mode is ignored")
+        logger.warning("Pooling modes can only be selected if cuDNN is available, mode is ignored")
 
     if spatial_axes==[2,3,4]:
         axis_order = 'dnn'
@@ -569,6 +575,9 @@ def pooling(x, pool, spatial_axes, mode='max', stride=None):
         axis_order = 'theano'
     else:
         axis_order = None
+
+    if mode == 'average':
+        mode = 'average_inc_pad'  # Theano's internal name. 'average' is deprecated.
 
     ndim = len(pool)
     if ndim==3:
