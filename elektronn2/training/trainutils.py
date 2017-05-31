@@ -21,8 +21,6 @@ from os.path import abspath, dirname
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy.integrate import cumtrapz as integrate
-import theano
-import theano.sandbox.cuda
 
 from .. import utils
 from ..config import config, change_logging_file
@@ -513,9 +511,8 @@ class ExperimentConfig(object):
         now = datetime.datetime.today().isoformat()
         device = 'CPU'
         try:
-            if theano.sandbox.cuda.cuda_enabled:
-                device = 'GPU {}'.format(
-                    theano.sandbox.cuda.active_device_number())
+            device = 'unknown (libgpuarray)'  # TODO: How to find the device name with gpuarray?
+            # device = 'GPU {}'.format(theano.sandbox.cuda.active_device_number())
         except:
             pass
         logger.info('Running on {}@{}, using {}. Start time: {}'.format(
