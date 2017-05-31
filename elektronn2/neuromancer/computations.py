@@ -12,12 +12,11 @@ import re
 
 import numpy as np
 import theano
+import theano.gpuarray
 import theano.tensor as T
 from theano.tensor.nnet import conv2d
-from theano.tensor.nnet.abstract_conv import conv2d_grad_wrt_inputs
-# from theano.tensor.nnet.conv3d2d import conv3d
+from theano.tensor.nnet import conv2d_grad_wrt_inputs
 from theano.tensor.nnet import conv3d
-from theano.sandbox.cuda import dnn
 from theano.tensor.signal.pool import pool_2d
 from theano.tensor.signal.pool import pool_3d
 
@@ -25,7 +24,9 @@ from ..config import config
 
 logger = logging.getLogger('elektronn2log')
 
-dnn_avail = dnn.dnn_available()
+
+context_name = None  # TODO: What? Should we register a context first and retrieve it here?
+dnn_avail = theano.gpuarray.dnn.dnn_available(context_name)
 logger.warning("Manual dnn calls for conv, are much faster for prediction "
                "and much slower for training.")
 
@@ -148,7 +149,7 @@ def softmax(x, axis=1, force_builtin=False):
     """
     if dnn_avail and config.use_manual_cudnn_conv: # oder must always be bc01, and x must always be 4d
         if axis==1:
-            dnn_sm = dnn.GpuDnnSoftmax('bc01', 'accurate',  'channel')
+            dnn_sm = theano.gpuarray.dnn.GpuDnnSoftmax('accurate',  'channel')
             if x.ndim==4:
                 logger.debug("Using cuDNN softmax")
                 y = dnn_sm(x)
@@ -236,15 +237,15 @@ def upconv(x, w, stride, x_shape=None, w_shape=None, axis_order='dnn'):
     elif conv_dim==3:
         if not dnn_avail or axis_order!='dnn':
             raise ValueError("Need dnn and dnn axis order")
-        kerns = dnn.gpu_contiguous(w)
-        image = dnn.gpu_contiguous(x)
+        kerns = theano.gpuarray.basic_ops.gpu_contiguous(w)
+        image = theano.gpuarray.basic_ops.gpu_contiguous(x)
         k = kerns.shape[1]
         img_sh = list(image.shape)
         out_sh = img_sh[:1] + [k,] + [st*sh for st, sh in zip(stride, img_sh[2:])]
-        out = dnn.gpu_alloc_empty(*out_sh)
-        desc = dnn.GpuDnnConvDesc(border_mode='valid', subsample=stride,
+        out = theano.gpuarray.dnn.gpu_alloc_empty(*out_sh)
+        desc = theano.gpuarray.dnn.GpuDnnConvDesc(border_mode='valid', subsample=stride,
                                   conv_mode='cross')(out.shape, kerns.shape)
-        y = dnn.GpuDnnConv3dGradI()(kerns, image, out, desc)
+        y = theano.gpuarray.dnn.GpuDnnConvGradI()(kerns, image, out, desc)
 
     return y
 
