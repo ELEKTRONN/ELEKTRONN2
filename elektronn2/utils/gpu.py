@@ -17,35 +17,42 @@ def initgpu(gpu):
     if gpu is None:
         gpu = 'none'
     no_gpu = ['none', 'None']
-    import theano.sandbox.cuda
+    import theano.gpuarray
 
-    if theano.sandbox.cuda.cuda_available:
-        if isinstance(gpu, str) and gpu.lower() == 'auto':
-            gpu = int(get_free_gpu())
-            print("Automatically assigned free GPU %i" % (gpu,))
+    # try:
+    if isinstance(gpu, str) and gpu.lower() == 'auto':
+        gpu = int(get_free_gpu())
+        print("Automatically assigned free GPU %i" % (gpu,))
 
-        if gpu in no_gpu and gpu != 0:
-            pass
-        else:
-            try:
-                theano.sandbox.cuda.use("gpu" + str(gpu))
-                print("Initialising GPU to %s" % gpu)
-            except:
-                sys.excepthook(*sys.exc_info())
-                print("Failed to init GPU, argument not understood.")
-
+    if gpu in no_gpu and gpu != 0:
+        pass
     else:
-        if gpu in no_gpu and gpu != 0:
-            pass
-        else:
-            print("'--gpu' argument is not 'none' but CUDA is not available. "
-                  "Falling back to CPU.")
+        try:
+            theano.gpuarray.use('cuda' + str(gpu))
+            print("Initialising GPU to cuda%s" % gpu)
+        except:
+            sys.excepthook(*sys.exc_info())
+            print("Failed to init GPU, argument not understood.")
+
+    # except:
+    #     if gpu in no_gpu and gpu != 0:
+    #         pass
+    #     else:
+    #         print("'--gpu' argument is not 'none' but CUDA is not available. "
+    #               "Falling back to CPU.")
 
 
 def _check_if_gpu_is_free(nb_gpu):
-    process_output = subprocess.Popen('nvidia-smi -i %d -q -d PIDS' % nb_gpu,
-                                      stdout=subprocess.PIPE,
-                                      shell=True).communicate()[0]
+    try:
+        process_output = subprocess.Popen(
+            'nvidia-smi -i %d -q -d PIDS' % nb_gpu,
+             stdout=subprocess.PIPE,
+             shell=True
+        ).communicate()[0]
+    except Exception as e:
+        print('nvidia-smi can\'t be executed.\n'
+              'Please make sure CUDA is available on your machine.\n')
+        raise e
     if b"Process ID" in process_output and b"Used GPU Memory" in process_output:
         return 0
     else:
@@ -53,8 +60,14 @@ def _check_if_gpu_is_free(nb_gpu):
 
 
 def _get_number_gpus():
-    process_output = subprocess.Popen('nvidia-smi -L', stdout=subprocess.PIPE,
-                                      shell=True).communicate()[0].decode()
+    try:
+        process_output = subprocess.Popen(
+            'nvidia-smi -L', stdout=subprocess.PIPE, shell=True
+        ).communicate()[0].decode()
+    except Exception as e:
+        print('nvidia-smi can\'t be executed.\n'
+              'Please make sure CUDA is available on your machine.\n')
+        raise e
     nb_gpus = 0
     while True:
         if "GPU %d" % nb_gpus in process_output:
@@ -65,12 +78,6 @@ def _get_number_gpus():
 
 
 def get_free_gpu(wait=0, nb_gpus=-1):
-    import theano.sandbox.cuda
-
-    if not theano.sandbox.cuda.cuda_available:
-        print("Cannot get free gpu. Cuda not available on this "
-              "host")
-        return -1
     if nb_gpus==-1:
         nb_gpus = _get_number_gpus()
     while True:
