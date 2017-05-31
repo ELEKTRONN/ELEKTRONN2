@@ -10,7 +10,7 @@ dependencies:
   - scikit-learn =0.18
   - scikit-image =0.13
   - h5py =2.7
-  - theano =0.8
+  - theano =0.9
   - future =0.16
   - tqdm =4.11
   - numba =0.32
