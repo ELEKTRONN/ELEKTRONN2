@@ -58,7 +58,8 @@ setup(
         'scikit-learn',
         'psutil>=5.0.1',
         'scikit-image>=0.12.3',
-        'numba>=0.25'
+        'numba>=0.25',
+        # 'pygpu',  # pygpu and libgpuarray installations are (currently) not easy to automate: http://deeplearning.net/software/libgpuarray/installation.html
     ],
     extras_require={
         'knossos': ['knossos_utils'],

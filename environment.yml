@@ -11,6 +11,7 @@ dependencies:
   - scikit-image =0.13
   - h5py =2.7
   - theano =0.9
+  - pygpu =0.6
   - future =0.16
   - tqdm =4.11
   - numba =0.32
