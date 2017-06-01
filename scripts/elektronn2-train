@@ -15,28 +15,30 @@ from subprocess import check_call, CalledProcessError
 import matplotlib
 
 def parseargs():
-    def convert(s):
+    def gpu_spec(s):
         if s.lower() == 'auto':
             return 'auto'
         elif s.lower() in ['none', 'false']:
             return None
         else:
+            if not (s.isdigit() or s.startswith('cuda') or s.startswith('opencl')):
+                raise argparse.ArgumentTypeError(
+                    '"--gpu" option invalid.\n'
+                    'Possible values are:\n'
+                    '  - "none", "false": Use CPU, no GPU acceleration (default)\n'
+                    '  - "auto": automatically assign a free CUDA-enabled GPU (might not work optimally)\n'
+                    '  - "cuda", "cuda0", "cuda1", ...: for CUDA-enabled GPUs\n'
+                    '  - "opencl0:0", "opencl0:1", ...: for OpenCL devices (experimental, unlikely to work)'
+                )
             return s
 
-    n_gpus = 32
-    gpu_digits = [str(i) for i in range(n_gpus)]
-    # gpu_choices = gpu_digits +\
-    #               ['cuda{}'.format(i) for i in range(n_gpus)] +\
-    #               ['opencl{}:{}'.format(i, j) for i in range(3) for j in range(n_gpus)]
-
-    parser = argparse.ArgumentParser(usage="$ elektronn2-train </path/to_config_file> [--gpu={auto|none|<int>}] [--mpl-backend={auto|<backend_name>}]")
+    parser = argparse.ArgumentParser(usage="$ elektronn2-train </path/to_config_file> [--gpu={auto|none|cuda<int>}] [--mpl-backend={auto|<backend_name>}]")
     parser.add_argument("config", type=str)
     parser.add_argument("--func", type=str, choices=['train', 'trace', 'tracernn'], default='train')  # TODO: Reflect this in ``usage`` once it's ready
     parser.add_argument(
         "--gpu",
         default=None,
-        type=convert,
-        # choices=gpu_choices,
+        type=gpu_spec,
     )
     parser.add_argument("--mpl-backend", type=str, default='auto')
     parsed = parser.parse_args()
