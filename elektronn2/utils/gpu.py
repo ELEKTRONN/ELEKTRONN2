@@ -37,7 +37,7 @@ def initgpu(gpu):
             print("Initialising GPU to %s" % gpu)
         except:
             sys.excepthook(*sys.exc_info())
-            print("Failed to init GPU, argument not understood.")
+            raise RuntimeError("Failed to init GPU {}. Aborting...".format(gpu))
 
     # except:
     #     if gpu in no_gpu and gpu != 0:
