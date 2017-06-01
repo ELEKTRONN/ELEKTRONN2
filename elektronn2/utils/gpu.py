@@ -17,19 +17,24 @@ def initgpu(gpu):
     if gpu is None:
         gpu = 'none'
     no_gpu = ['none', 'None']
+    gpu = str(gpu)
     import theano.gpuarray
 
     # try:
-    if isinstance(gpu, str) and gpu.lower() == 'auto':
-        gpu = int(get_free_gpu())
-        print("Automatically assigned free GPU %i" % (gpu,))
+    if gpu.lower() == 'auto':
+        gpu = str(get_free_gpu())
+        print("Automatically assigning free GPU %s" % (gpu,))
 
-    if gpu in no_gpu and gpu != 0:
+    if gpu in no_gpu and gpu != '0':
         pass
     else:
         try:
-            theano.gpuarray.use('cuda' + str(gpu))
-            print("Initialising GPU to cuda%s" % gpu)
+            if False or gpu.isdigit():
+                gpu = 'cuda{}'.format(gpu)
+                theano.gpuarray.use(gpu)
+            else:
+                theano.gpuarray.use(gpu)
+            print("Initialising GPU to %s" % gpu)
         except:
             sys.excepthook(*sys.exc_info())
             print("Failed to init GPU, argument not understood.")
