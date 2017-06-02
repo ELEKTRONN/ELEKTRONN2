@@ -65,7 +65,7 @@ class DefaultConfig(object):
         self.save_path = os.path.abspath(os.path.expanduser("~/CNN_Training/"))
         self.plot_on = True  # <Bool>: whether to create plots of the errors etc.
         self.print_status = True  # <Bool>: whether to print Training status to std.out
-        self.device = None  # None/int/'auto' (use .theanorc value) or int (use gpu<i>)
+        self.device = None  # None|'auto'|'none'|'cuda<int>' (use .theanorc value) or int (use GPU <i>)
         self.param_save_h = 1.0  # hours: frequency to save a permanent parameter snapshot
         self.param_save_it = 10000
         self.initial_prev_h = 1.0  # hours: time after which first preview is made
@@ -93,15 +93,15 @@ class DefaultConfig(object):
         # Init GPU stuff
         if self.device or self.device==0:
             if self.device=='auto':
-                gpu_num = gpu.get_free_gpu(wait=2.0)
-                if gpu_num < 0:
+                _device = gpu.get_free_gpu(wait=2.0)
+                if _device < 0:
                     raise RuntimeError("Could not find free GPU.")
 
             else:
-                assert isinstance(self.device, int)
-                gpu_num = self.device
+                # assert isinstance(self.device, int)
+                _device = self.device
 
-            gpu.initgpu(gpu_num)
+            gpu.initgpu(_device)
 
         change_logging_file(logger, self.save_path, file_name='elektronn2.log')
 

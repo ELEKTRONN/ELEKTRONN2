@@ -13,7 +13,7 @@ import subprocess
 import time
 
 
-def initgpu(gpu):
+def initgpu(gpu, prefix='cuda'):
     if gpu is None:
         gpu = 'none'
     no_gpu = ['none', 'None']
@@ -26,15 +26,17 @@ def initgpu(gpu):
         print("Automatically assigning free GPU %s" % (gpu,))
 
     if gpu in no_gpu and gpu != '0':
-        pass
+        return 'cpu'
     else:
         try:
-            if False or gpu.isdigit():
-                gpu = 'cuda{}'.format(gpu)
+            if gpu.isdigit():  # If int, prepend prefix
+                gpu = '{}{}'.format(prefix, gpu)
                 theano.gpuarray.use(gpu)
             else:
                 theano.gpuarray.use(gpu)
             print("Initialising GPU to %s" % gpu)
+            return gpu
+
         except:
             sys.excepthook(*sys.exc_info())
             raise RuntimeError("Failed to init GPU {}. Aborting...".format(gpu))
@@ -59,9 +61,9 @@ def _check_if_gpu_is_free(nb_gpu):
               'Please make sure CUDA is available on your machine.\n')
         raise e
     if b"Process ID" in process_output and b"Used GPU Memory" in process_output:
-        return 0
+        return False
     else:
-        return 1
+        return True
 
 
 def _get_number_gpus():
@@ -82,13 +84,13 @@ def _get_number_gpus():
     return nb_gpus
 
 
-def get_free_gpu(wait=0, nb_gpus=-1):
+def get_free_gpu(wait=0, nb_gpus=-1, prefix='cuda'):
     if nb_gpus==-1:
         nb_gpus = _get_number_gpus()
     while True:
         for nb_gpu in range(nb_gpus):
-            if _check_if_gpu_is_free(nb_gpu)==1:
-                return nb_gpu
+            if _check_if_gpu_is_free(nb_gpu):
+                return '{}{}'.format(prefix, nb_gpu)
         if wait > 0:
             time.sleep(2)
         else:

@@ -72,11 +72,14 @@ from elektronn2.config import config
 
 if config.device is None:
     from elektronn2.utils.gpu import initgpu
-    initgpu(gpu)
+    config.device = initgpu(gpu)
 else:
     if gpu:
         print("Cannot init gpu to %s because there is already the value %s "
               "in ~/.elektronn2rc." %(gpu, config.device))
+    else:
+        config.device = 'cpu'
+
 
 from elektronn2.training import trainer
 from elektronn2.training import trainutils

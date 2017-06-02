@@ -509,14 +509,8 @@ class ExperimentConfig(object):
 
         host_name = socket.gethostname()
         now = datetime.datetime.today().isoformat()
-        device = 'CPU'
-        try:
-            device = 'unknown (libgpuarray)'  # TODO: How to find the device name with gpuarray?
-            # device = 'GPU {}'.format(theano.sandbox.cuda.active_device_number())
-        except:
-            pass
-        logger.info('Running on {}@{}, using {}. Start time: {}'.format(
-            user_name, host_name, device, now))
+        logger.info('Running on {}@{}, using device {}. Start time: {}'.format(
+            user_name, host_name, config.device, now))
 
     def read_user_config(self):
         logger.info("Reading exp_config-file %s" % (self.exp_file,))
