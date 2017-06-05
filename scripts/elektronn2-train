@@ -10,7 +10,7 @@ import os
 import inspect
 import argparse
 import traceback
-from subprocess import check_call, CalledProcessError
+from subprocess import call, check_call, CalledProcessError
 
 import matplotlib
 
@@ -23,7 +23,7 @@ def parseargs():
         else:
             return int(s)
 
-    parser = argparse.ArgumentParser(usage="$ elektronn2-train </path/to_config_file> [--gpu={auto|none|<int>}] [--mpl-backend={auto|<backend_name>}]")
+    parser = argparse.ArgumentParser(usage="$ elektronn2-train </path/to_config_file> [--gpu={auto|none|<int>}] [--mpl-backend={auto|<backend_name>|force-<backend_name>}]")
     parser.add_argument("config", type=str)
     parser.add_argument("--func", type=str, choices=['train', 'trace', 'tracernn'], default='train')  # TODO: Reflect this in ``usage`` once it's ready
     parser.add_argument("--gpu", default=None, type=convert, choices=['auto', False, None]+list(range(0,100)))
@@ -38,21 +38,24 @@ if mpl_backend.lower() == 'agg':
     matplotlib.use('AGG')
     print('Using the AGG backend for matplotlib. No support for X11 windows.')
 else:
-    # Prevent setting of mpl qt-backend on machines without X-server before other modules import mpl.
-    with open(os.devnull, 'w') as devnull:
-        try:
-            # "xset q" will always succeed to run if an X server is currently running
-            check_call(['xset', 'q'], stdout=devnull, stderr=devnull)
-            if mpl_backend.lower() == 'auto':
-                pass  # Backend is silently set to system default.
-            else:
-                matplotlib.use(mpl_backend)
-            print('Using the {} backend for matplotlib.'.format(matplotlib.get_backend()))
-            # Don't set backend explicitly, use system default...
-        # if "xset q" fails, conclude that X is not running
-        except (OSError, CalledProcessError):
-            print('No X11 server found. Falling back to AGG backend for matplotlib.')
-            matplotlib.use('AGG')
+    if mpl_backend.startswith('force-'):
+        matplotlib.use(mpl_backend.partition('force-')[-1])
+    else:
+        # Prevent setting of mpl qt-backend on machines without X-server before other modules import mpl.
+        with open(os.devnull, 'w') as devnull:
+            try:
+                # "xset q" will always succeed to run if an X server is currently running
+                check_call(['xset', 'q'], stdout=devnull, stderr=devnull)
+                if mpl_backend.lower() == 'auto':
+                    pass  # Backend is silently set to system default.
+                else:
+                    matplotlib.use(mpl_backend)
+                print('Using the {} backend for matplotlib.'.format(matplotlib.get_backend()))
+                # Don't set backend explicitly, use system default...
+            # if "xset q" fails, conclude that X is not running
+            except (OSError, CalledProcessError):
+                print('No X11 server found. Falling back to AGG backend for matplotlib.')
+                matplotlib.use('AGG')
 
 
 from elektronn2.config import config
