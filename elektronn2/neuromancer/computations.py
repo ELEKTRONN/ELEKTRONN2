@@ -13,12 +13,8 @@ import re
 import numpy as np
 import theano
 import theano.gpuarray
+import theano.tensor.signal.pool
 import theano.tensor as T
-from theano.tensor.nnet import conv2d
-from theano.tensor.nnet import conv2d_grad_wrt_inputs
-from theano.tensor.nnet import conv3d
-from theano.tensor.signal.pool import pool_2d
-from theano.tensor.signal.pool import pool_3d
 
 from ..config import config
 
@@ -27,10 +23,8 @@ logger = logging.getLogger('elektronn2log')
 
 context_name = None  # TODO: What? Should we register a context first and retrieve it here?
 dnn_avail = theano.gpuarray.dnn.dnn_available(context_name)
-logger.warning("Manual dnn calls for conv, are much faster for prediction "
-               "and much slower for training.")
 
-dnn_algo = 'small' # Only 'none' is implemented for the conv3d
+# TODO: Once everything works, try removing explicit distinctions between dnn and theano-native stuff. The new backend should handle them automatically.
 
 def apply_except_axis(x, axis, func):
     """
@@ -226,12 +220,12 @@ def upconv(x, w, stride, x_shape=None, w_shape=None, axis_order='dnn'):
             x_shape = list(x_shape) + [1, ]
 
         stride  = list(stride) + [1, ]
-        y = conv2d_grad_wrt_inputs(x, w, x_shape, w_shape, border_mode,
+        y = T.nnet.conv2d_grad_wrt_inputs(x, w, x_shape, w_shape, border_mode,
                                    subsample=stride, filter_flip=False)
         y = y[:, :, :, 0]
 
     elif conv_dim==2:
-        y = conv2d_grad_wrt_inputs(x, w, x_shape, w_shape, border_mode,
+        y = T.nnet.conv2d_grad_wrt_inputs(x, w, x_shape, w_shape, border_mode,
                                        subsample=stride, filter_flip=False)
 
     elif conv_dim==3:
@@ -356,13 +350,13 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
 
         elif dnn_avail and config.use_manual_cudnn_conv:
             logger.debug("Using cuDNN 2dconv")
-            y = conv2d(
+            y = T.nnet.conv2d(
                 x, w,
                 x_shape, w_shape,
                 border_mode=border_mode, subsample=stride
             )
         else: # fallback to theano
-            y = conv2d(
+            y = T.nnet.conv2d(
                 x, w,
                 x_shape, w_shape,
                 border_mode=border_mode, subsample=stride
@@ -395,7 +389,7 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
                 stride = (1, 1, 1)
             if axis_order=='dnn':
                 logger.debug("Using cuDNN 3dconv")
-                y = conv3d(
+                y = T.nnet.conv3d(
                     x, w,
                     x_shape, w_shape,
                     border_mode=border_mode, subsample=stride
@@ -408,7 +402,7 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
                     "Using dnn 3dconv")
                 x = x.dimshuffle(0,2,1,3,4)
                 w = w.dimshuffle(0, 2, 1, 3, 4)
-                y = conv3d(
+                y = T.nnet.conv3d(
                     x, w,
                     x_shape, w_shape,
                     border_mode=border_mode, subsample=stride
@@ -418,7 +412,7 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
         else: # fallback to theano
             if axis_order=='theano':
                 logger.debug("Using theano 3dconv")
-                y = conv3d(
+                y = T.nnet.conv3d(
                     x, w,
                     x_shape, w_shape,
                     border_mode=border_mode, subsample=stride
@@ -443,7 +437,7 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
                     x_shape[2] = z
                     x_shape[1] = f
 
-                y = conv3d(
+                y = T.nnet.conv3d(
                     x, w,
                     x_shape, w_shape,
                     border_mode=border_mode, subsample=stride
@@ -620,7 +614,9 @@ def pooling(x, pool, spatial_axes, mode='max', stride=None):
             pad = (0,0,0)
             if axis_order=='dnn':
                 logger.debug("Using dnn 3dpool")
-                y = pool_3d(x, pool, stride=stride, pad=pad, mode=mode) # (b, f, x, y, z)
+                y = T.signal.pool.pool_3d(
+                    x, pool, stride=stride, pad=pad, mode=mode
+                ) # (b, f, x, y, z)
             else:
                 logger.warning("cuDNN is available but the used axis order is "
                 "for theano (z before features). This requires possibly "
@@ -628,16 +624,22 @@ def pooling(x, pool, spatial_axes, mode='max', stride=None):
                 "Using dnn 3pool")
 
                 x = x.dimshuffle(0,2,1,3,4)
-                y = pool_3d(x, pool, stride=stride, pad=pad, mode=mode) # (b, f, x, y, z)
+                y = T.signal.pool.pool_3d(
+                    x, pool, stride=stride, pad=pad, mode=mode
+                ) # (b, f, x, y, z)
                 y = y.dimshuffle(0,2,1,3,4)
 
         else: # fallback to theano
             if pool != stride:
                 raise NotImplementedError("Stride!=Pool using theano 3d pooling (dnn pooling will work)")
 
+            # TODO: The following code manually uses pool_2d for 3d pooling. Try to use pool_3d directly or maybe we can eliminate this whole fallback with the new backend?
             if axis_order=='theano':
                 logger.debug("Using theano 3dpool")
-                y = pool_2d(x, pool[1:], stride=stride[1:], ignore_border=True, mode=mode)  # (b, z, f, x, y)
+                y = T.signal.pool.pool_2d(
+                    x, pool[1:], stride=stride[1:],
+                    ignore_border=True, mode=mode
+                )  # (b, z, f, x, y)
                 m = y[:,0::pool[0]]
                 for z in range(1,pool[0]): ### TODO obey stride
                     t = y[:, z::pool[0]]
@@ -645,7 +647,10 @@ def pooling(x, pool, spatial_axes, mode='max', stride=None):
                 y = m
             else:
                 logger.debug("Using theano 3dpool")
-                y = pool_2d(x, pool[1:], stride=stride[1:], ignore_border=True, mode=mode) # (b, z, f, x, y)
+                y = T.signal.pool.pool_2d(
+                    x, pool[1:], stride=stride[1:],
+                    ignore_border=True, mode=mode
+                ) # (b, z, f, x, y)
                 m = y[:, :, 0::pool[0]]
                 for z in range(1,pool[0]): ### TODO obey stride
                     t = y[:, :, z::pool[0]]
@@ -657,15 +662,23 @@ def pooling(x, pool, spatial_axes, mode='max', stride=None):
         if spatial_axes!=[2,3]:
             raise NotImplemented("Can only pool on last axes [2,3], this input hat spatial axes %s" %(spatial_axes,))
         if dnn_avail and config.use_manual_cudnn_pool:
-            y = pool_2d(x, pool, stride=stride, ignore_border=True, mode=mode)
+            y = T.signal.pool.pool_2d(
+                x, pool, stride=stride, ignore_border=True, mode=mode
+            )
         else:
-            y = pool_2d(x, pool, stride=stride, ignore_border=True, mode=mode)
+            # TODO: This currently does the same as above. Can we just remove the if-else or should the call be different?
+            y = T.signal.pool.pool_2d(
+                x, pool, stride=stride, ignore_border=True, mode=mode
+            )
 
     elif ndim==1:
         x = x.dimshuffle(0,1,2,'x')
         pool = [pool[0], 1]
         stride = [stride[0], 1]
-        y = pool_2d(x, pool, stride=stride, ignore_border=True, mode=mode)[:,:,:,0]
+        y = T.signal.pool.pool_2d(
+            x, pool, stride=stride,
+            ignore_border=True, mode=mode
+        )[:,:,:,0]
     else:
         raise NotImplementedError("Only 1/2/3-dim maxpooling with this function.")
 
