@@ -10,7 +10,7 @@ import os
 import inspect
 import argparse
 import traceback
-from subprocess import call, check_call, CalledProcessError
+from subprocess import check_call, CalledProcessError
 
 import matplotlib
 
@@ -68,15 +68,9 @@ else:
         print("Cannot init gpu to %s because there is already the value %s "
               "in ~/.elektronn2rc." %(gpu, config.device))
 
+
 from elektronn2.training import trainer
 from elektronn2.training import trainutils
-
-if exp_config_file in [None, "None"]:
-    #exp_config_file  = "/home/mfk/axon/mkilling/investigation/MA-TEX/CNN-Timings/DS-3-2-unet2d.py"
-    #exp_config_file  = "/home/mfk/axon/mkilling/CNN_Training/configs_numa/DualScale/Testold.py"
-    #exp_config_file  = "~/axon/mkilling/CNN_Training/configs_numa/TR-P-1-DBG.py"
-    exp_config_file = "~/axon/mkilling/CNN_Training/configs_numa/TM-RB-0-2-static.py"
-    func = 'tracernn'
 
 
 this_file = os.path.abspath(inspect.getframeinfo(inspect.currentframe()).filename)
