@@ -708,14 +708,14 @@ def modelload(file_name, override_mfp_to_active=False,
 
                 else:
                     valid_patch_size = imposed_patch_size
-                    logger.warning("Impose patch size is not failsave for UpConvs")
+                    logger.warning("Imposed patch size is not failsafe for UpConvs")
                 for i, sh in enumerate(valid_patch_size):
                     old_shape = old_shape.updateshape(old_shape.spatial_axes[i], sh)
 
         if changed:
             input_node_descr.args[0] = tuple(old_shape.shape)
             logger.warning("Warning: the input shape of the image input node "
-            "was changed during modelload, this change is NOT reflected in "
+            "was changed during modelload. This change is NOT reflected in "
             "the printed shapes of other nodes (e.g. labels), but they "
             "have changed accordingly! This should be fixed in future, "
             "but the model can now be used for predictions nonetheless.")
@@ -731,7 +731,7 @@ def modelload(file_name, override_mfp_to_active=False,
 
 def inject_source(node_descr, child_name, shape, tags, strides=None,
                   fov=None, dtype=theano.config.floatX, name='input', parent_no=0):
-    logger.warning("'inject_source' is unsave: it works only for nodes that have"
+    logger.warning("'inject_source' is unsafe: it works only for nodes that have"
                    "1 child and this child must have 1 parent. You are trying"
                    "to insert a source node prior to %s" %child_name)
     from elektronn2.neuromancer.node_basic import Input
@@ -764,7 +764,7 @@ def inject_source(node_descr, child_name, shape, tags, strides=None,
 def inject_source_split(node_descr, split_name, shape, tags, strides=None,
                       fov=None, dtype=theano.config.floatX, name='input'):
 
-    logger.warning("'inject_source_split' is unsave")
+    logger.warning("'inject_source_split' is unsafe")
     from elektronn2.neuromancer.node_basic import Input
 
     input_descr = graphmanager.NodeDescriptor((shape, tags),

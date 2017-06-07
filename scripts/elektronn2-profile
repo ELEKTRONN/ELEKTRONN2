@@ -22,11 +22,9 @@ sys.setrecursionlimit(10000)
 
 def parseargs():
     def convert(s):
-        if s=='auto':
-            return s
-        elif s.lower()=='false':
-            return False
-        elif s.lower()=='none':
+        if s.lower() == 'auto':
+            return 'auto'
+        elif s.lower() in ['none', 'false']:
             return None
         else:
             return int(s)
@@ -35,44 +33,65 @@ def parseargs():
         return ast.literal_eval(sh)
 
     parser = argparse.ArgumentParser(
-    usage="MemProfile </path/model_file> [--gpu={Auto|False|<int>}]")
+        usage="$ elektronn2-profile </path/to_model_file> "
+              "[--in_sh=<input_shape>] "
+              "[--gpu={auto|none|<int>}] "
+              "[--mpl-backend={auto|<backend_name>|force-<backend_name>}]"
+    )
     parser.add_argument("model_path", type=str)
     parser.add_argument("--in_sh", default=None, type=convert_sh)
+    parser.add_argument("--gpu", default=None, type=convert, choices=['auto', False, None] + list(range(0, 100)))
+    parser.add_argument("--mpl-backend", type=str, default='auto')
     parsed = parser.parse_args()
-    return parsed.model_path, parsed.in_sh
+    return parsed.model_path, parsed.in_sh, parsed.gpu, parsed.mpl_backend
 
-model_path, in_sh = parseargs()
+model_path, in_sh, gpu, mpl_backend = parseargs()
 
-# prevent setting of mpl qt-backend on machines without X-server before other
-# modules import mpl #  Redirect to /dev/null because xset output is unimportant
-with open(os.devnull, 'w') as devnull:
-    try:
-        # "xset q" will always succeed to run if an X server is currently running
-        check_call(['xset', 'q'], stdout=devnull, stderr=devnull)
-        print('X available')
-        # Don't set backend explicitly, use system default...
-    # if "xset q" fails, conclude that X is not running
-    except (OSError, CalledProcessError):
-        print('X unavailable')
-        matplotlib.use('AGG')
+if mpl_backend.lower() == 'agg':
+    matplotlib.use('AGG')
+    print('Using the AGG backend for matplotlib. No support for X11 windows.')
+else:
+    if mpl_backend.startswith('force-'):
+        matplotlib.use(mpl_backend.partition('force-')[-1])
+    else:
+        # Prevent setting of mpl qt-backend on machines without X-server before other modules import mpl.
+        with open(os.devnull, 'w') as devnull:
+            try:
+                # "xset q" will always succeed to run if an X server is currently running
+                check_call(['xset', 'q'], stdout=devnull, stderr=devnull)
+                if mpl_backend.lower() == 'auto':
+                    pass  # Backend is silently set to system default.
+                else:
+                    matplotlib.use(mpl_backend)
+                print('Using the {} backend for matplotlib.'.format(matplotlib.get_backend()))
+                # Don't set backend explicitly, use system default...
+            # if "xset q" fails, conclude that X is not running
+            except (OSError, CalledProcessError):
+                print('No X11 server found. Falling back to AGG backend for matplotlib.')
+                matplotlib.use('AGG')
 
 
 from elektronn2.config import config
+
 config.use_manual_cudnn_conv = True
 config.use_manual_cudnn_conv_not_w1 = False
-config.uuse_manual_cudnn_pool = True
+config.use_manual_cudnn_pool = True
+
+
 if config.device is None:
     from elektronn2.utils.gpu import initgpu
-    initgpu('auto')
+    initgpu(gpu)
+else:
+    if gpu:
+        print("Cannot init gpu to %s because there is already the value %s "
+              "in ~/.elektronn2rc." %(gpu, config.device))
 
-from elektronn2.neuromancer.model import modelload, kernel_lists_from_node_descr
 
-if model_path in [None, 'None']:
-    model_path  = "~/axon/mkilling/investigation/MA-TEX/CNN-Timings/old_cnn_rec.mdl"
+from elektronn2.neuromancer.model import modelload
+
 
 no_gc = False
 mfp = False
-
 
 
 model_path = os.path.expanduser(model_path)
@@ -121,7 +140,7 @@ else:
     in_sh0 = model_flexi.input_node.shape.spatial_shape
     z_ratio = float(fov[-1])/fov[0]
     ndim = len(fov)
-    fp = "~/devel/ELEKTRONN2/scripts/MemProfile.py"
+    this_file = os.path.abspath(sys.argv[0])
     with open(f_name, 'a') as f:
         if ndim==3:
             f.write("z-shape\txy-shape\tpixel\tSpeed [MPix/s]\n")
@@ -203,9 +222,10 @@ else:
         print("Flexi has reached memory error")
 
     for in_sh_str in call_args[::-1]:
+        python = sys.executable
         if no_gc:
-            call("python %s %s --in_sh=%s"%(fp, model_path, in_sh_str),
+            call("%s %s %s --in_sh=%s" % (python, this_file, model_path, in_sh_str),
                  shell=True, executable="/bin/bash")
         else:
-            call("THEANO_FLAGS='linker=cvm,allo_gc=True' python %s %s --in_sh=%s"%(fp, model_path, in_sh_str),
+            call("THEANO_FLAGS='linker=cvm,allo_gc=True' %s %s %s --in_sh=%s" % (python, this_file, model_path, in_sh_str),
                  shell=True, executable="/bin/bash")

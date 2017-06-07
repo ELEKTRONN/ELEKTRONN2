@@ -40,6 +40,7 @@ setup(
     packages=find_packages(),
     scripts=[
         'scripts/elektronn2-train',
+        'scripts/elektronn2-profile',
     ],
     ext_modules=ext_modules,
     install_requires=[
