@@ -22,13 +22,61 @@ the input image (this might however introduce some artifacts because
 mirroring is not a natural continuation of the image).
 
 For making predictions, you can write a custom prediction script. Here is
-a small example for its content:
+a small example:
 
-.. code-block:: python
 
-  # TODO: Example prediction script
+Prediction example for ``neuro3d``
+----------------------------------
+
+(Optional) If you want to predict on a GPU that is not already assigned in
+``~/.theanorc`` or ``~/.elektronn2rc``, you need to initialise it
+**before** the other imports::
+
+  from elektronn2.utils import initgpu
+  initgpu('auto')  # or "initgpu('0')" for the first GPU etc.
+
+Find the save directory and choose a model file (you probably want the
+one called ``<save_name>-FINAL.mdl``) and a file that contains the raw
+images on which you want to execute the neural network, e.g.::
+
+  model_path = '~/elektronn2_examples/neuro3d/neuro3d-FINAL.mdl'
+  raw_path = '~/neuro_data_zxy/raw_2.h5'  # raw cube for validation
+
+For loading data from (reasonably small) hdf5 files, you can use the
+:py:meth:`h5load() <elektronn2.utils.utils_basic.h5load()>` utility
+function. Here we load the 3D numpy array called `'raw'`` from the
+input file::
+
+  from elektronn2.utils import h5load
+  raw3d = h5load(raw_path, 'raw')
+
+Now we load the neural network model::
+
+  from elektronn2 import neuromancer as nm
+  model = nm.model.modelload(model_path)
+
+Input sizes should be at least as large as the spatial input shape of
+the model's input node (which you can query by
+``model.input_node.shape.spatial_shape``). Smaller inputs are
+automatically padded. Here we take an arbitrary ``32x160x160``
+subvolume of the raw data to demonstrate the predictions::
+
+  raw3d = raw3d[:32, :160, :160]
+
+.. TODO: Explain in general why we need (f,z,x,y)
+
+To match the input node's expected input shape, we need to prepend an empty
+axis for the single input channel. An empty axis is sufficient because we
+trained with only 1 input channel here (the uint8 pixel intensities)::
+
+  raw4d = raw3d[None, :, :, :]  # shape: (f=1, z=32, x=160, y=160)
+
+  pred = model.predict_dense(raw4d)
+
+.. TODO: Link to complete copy-pastable example "predict.py"? Or even automate (templated) predict.py creation in save_dir and refer to it?
 
 .. TODO: Mention/explain non-image predictions?
+
 
 Optimal patch sizes
 ===================
@@ -59,7 +107,6 @@ shared. But this is obviously impossible due to limited GPU-RAM.
   ``linker = cvm`` in the ``[global]`` section of ``.theanorc``) and by using cuDNN.
 
 
-
 .. _mfp:
 
 Max Fragment Pooling (MFP)
@@ -71,4 +118,4 @@ It requires more GPU RAM (you may need to adjust the input size) but it can
 speed up predictions by a factor of 2 - 10. The larger the patch size (i.e.
 the more RAM you have) the faster. Compilation time is significantly longer.
 
-.. TODO Explain why it's fast and how it works ###TODO
+.. TODO Explain why it's fast and how it works

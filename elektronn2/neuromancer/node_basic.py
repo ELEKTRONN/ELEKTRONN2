@@ -866,7 +866,7 @@ class Node(with_metaclass(MetaNode, object)):
             Return class proabilites as uint8 image (scaled between 0 and 255!)
         pad_raw: Bool
             Whether to apply padding (by mirroring) to the raw input image
-            in order to get predictions on the full imgae domain.
+            in order to get predictions on the full image domain.
 
         Returns
         -------
