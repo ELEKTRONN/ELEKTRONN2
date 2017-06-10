@@ -87,7 +87,7 @@ def insert_vec(cube, coords, vec, off):
                         coords[i,1]-off[1],
                         coords[i,2]-off[2],j])>1e-5:
                 double_inserts += 1
-                cube[coords[i,0]-off[0], coords[i,1]-off[1], coords[i,2]-off[2],j] = np.nan # in case of doubt, dont train here...
+                cube[coords[i,0]-off[0], coords[i,1]-off[1], coords[i,2]-off[2],j] = np.nan # in case of doubt, don't train here...
             else:
                 cube[coords[i,0]-off[0], coords[i,1]-off[1], coords[i,2]-off[2],j] = vec[i, j]
 
@@ -186,7 +186,7 @@ def find_peaks(cube):
 # WARNING / NOTE: skeleton objects are in xyz-order
 class SkeletonMFK(object):
     """
-    Joints: all branches and end points / node terminatons (nodes not of deg 2)
+    Joints: all branches and end points / node terminations (nodes not of deg 2)
     Branches: Joints of degree >= 3
     """
     @staticmethod
@@ -276,7 +276,7 @@ class SkeletonMFK(object):
                             edge = (current_node.ID, joint_id)
                         self.edges.append(edge)
                         break
-                    else: # The node has 2 neibgs, one from which we come and
+                    else: # The node has 2 neighbours, one from which we come and
                         # another one to which we go
                         nb = list(current_node.getNeighbors())
                         assert len(nb) == 2
@@ -522,7 +522,7 @@ class SkeletonMFK(object):
     def sample_local_direction_iso(self, point, n_neighbors=6):
         """
         For a point gives the local skeleton direction/orientation by
-        fitting a line through the nearest neigbours, sign is randomly assigned
+        fitting a line through the nearest neighbours, sign is randomly assigned
         """
         kdt = self.get_kdtree(self.all_nodes, k=n_neighbors, jobs=1)
         dist, ind, coord = self.get_knn(kdt, point)
@@ -598,7 +598,7 @@ class SkeletonMFK(object):
             inspection_logger.info("nearest_s: %s"% (nearest_s.tolist()))
 
         if dist<1.5: # we are within inner hull. The maximal distance if
-            # within hull is excatly: np.linalg.norm(np.multiply(
+            # within hull is exactly: np.linalg.norm(np.multiply(
             # [0.5, 0.5, 0.6], [1, 1, 2])) = 1.22... --> add some margin
             loss = 0.0
             grad_s = np.zeros((3,), dtype=np.float32)
@@ -627,7 +627,7 @@ class SkeletonMFK(object):
 
     def _new_training_trace(self, **get_batch_kwargs):
         """
-        Preprate skeleton for a new training (sample location/direction,
+        Prepare skeleton for a new training (sample location/direction,
         reset stuff)
 
         Parameters
@@ -703,7 +703,7 @@ class SkeletonMFK(object):
         elif new_factor < 1.0:  # right side
             if change <= BASE_IH:  # zoom out
                 new_factor = old_factor * BASE_I
-            elif change > BASE_H:  # zoome in
+            elif change > BASE_H:  # zoom in
                 new_factor = old_factor * BASE
             else:
                 new_factor = old_factor
@@ -766,7 +766,7 @@ class SkeletonMFK(object):
         -------
         batch: img, target_img, target_grid, target_node
         """
-        get_batch_kwargs = dict(get_batch_kwargs) # copy because we destory it
+        get_batch_kwargs = dict(get_batch_kwargs) # copy because we destroy it
         if self.start_new_training:
             self._new_training_trace(**get_batch_kwargs)
             self.start_new_training = False
@@ -1075,7 +1075,7 @@ class SkeletonMFK(object):
            not np.all(np.isfinite(self.hull_branch['dist'])):
              raise ValueError("InfiniteValue")
 
-        self.kdt_hull = self.get_kdtree(self.hull_points, k=1, jobs=1) # store for later usa
+        self.kdt_hull = self.get_kdtree(self.hull_points, k=1, jobs=1) # store for later use
 
     @utils.cache()
     def get_hull_points_inner(self, cutoff=1.0/3, return_indices=False):
@@ -1551,7 +1551,7 @@ class TraceTree(object):
             Threshold of relative distance between endpoint and other trace tp
             count as a connection
         """
-        # Rename trace keys to smaller contigious numbers
+        # Rename trace keys to smaller contiguous numbers
         if not isinstance(traces, dict):
             traces = dict(zip(range(len(traces)), traces))
 
@@ -1906,7 +1906,7 @@ class TraceTree(object):
             if is_loop:
                 pruned_traces[tr_i] = traces.pop(tr_i)
 
-            else: # Dont cut traces here, it might mess up connection parts
+            else: # Don't cut traces here, it might mess up connection parts
                 #if cuts: # cut traces must be put to stack again because they might be a loop now
                 #    cut_tr = tr.new_cut_trace(*cuts)
                 #    traces[tr_i] = cut_tr

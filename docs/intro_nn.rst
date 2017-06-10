@@ -423,7 +423,7 @@ In every iteration:
       of drawn examples is called *batch size*.
     - The output of the NN, given the current weights, is calculated
     - The **gradient** of the loss (deviation between output and desired
-      output) is calculated w.r.t to the weights
+      output) is calculated w.r.t. the weights
     - The weights are *updated* by following down the gradient for a fixed
       step size - the *learning rate*
     - The whole procedure is repeated with a new batch until convergence

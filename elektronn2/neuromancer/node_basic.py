@@ -863,7 +863,7 @@ class Node(with_metaclass(MetaNode, object)):
         raw_img : np.ndarray
             raw data in the format (ch, (z,) y, x)
         as_uint8: Bool
-            Return class proabilites as uint8 image (scaled between 0 and 255!)
+            Return class probabilites as uint8 image (scaled between 0 and 255!)
         pad_raw: Bool
             Whether to apply padding (by mirroring) to the raw input image
             in order to get predictions on the full image domain.
@@ -1509,7 +1509,7 @@ class ApplyFunc(Node):
 
 class ValueNode(Node):
     """
-    (Optinally) trainable Value Node
+    (Optionally) trainable Value Node
 
     Parameters
     ----------

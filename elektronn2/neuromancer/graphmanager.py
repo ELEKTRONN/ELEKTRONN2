@@ -171,7 +171,7 @@ class NodeDescriptor(object):
                     new_kwargs['batch_normalisation'] = False
                 elif replace_bn=='predict':
                     new_kwargs['batch_normalisation'] = 'predict'
-                    #new_kwargs['mean'] = param_values['mean'] # settind is done already below
+                    #new_kwargs['mean'] = param_values['mean'] # setting is done already below
                     #new_kwargs['std']  = param_values['std']
                 elif replace_bn=='const':
                     new_kwargs['batch_normalisation'] = 'predict'
@@ -226,7 +226,7 @@ class GraphManager(object):
         self.node_descriptors[name] = NodeDescriptor(args, kwargs, node.__class__, self)
         self.nodes[name] = node # Add node only after descriptor has been created:
         # descriptor may check all existing nodes, but this not has not yet finished
-        # initialisation, and so lookups might fail
+        # initialisation, and so look-ups might fail
 
     def register_split(self, node, func, name, args, kwargs):
         name = node_basic.choose_name(name, self.node_descriptors.keys())

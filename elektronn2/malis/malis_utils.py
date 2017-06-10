@@ -32,7 +32,7 @@ __all__ = ['compute_V_rand_N2',
 
 def compute_V_rand_N2(seg_true, seg_pred):
     """
-    Computes Rand index of ``seg_pred`` w.r.t ``seg_true``.
+    Computes Rand index of ``seg_pred`` w.r.t. ``seg_true``.
     Small is better!!!
     The input arrays both contain label IDs and
     may be of arbitrary, but equal, shape.
@@ -87,7 +87,7 @@ def mknhood2d(radius=1):
 def mknhood3d(radius=1):
     """
     Makes nhood structures for some most used dense graphs.
-    The neighborhood reference for the dense graph representation we use
+    The neighbourhood reference for the dense graph representation we use
     nhood(1,:) is a 3 vector that describe the node that conn(:,:,:,1) connects to
     so to use it: conn(23,12,42,3) is the edge between node [23 12 42] and [23 12 42]+nhood(3,:)
     See? It's simple! nhood is just the offset vector that the edge corresponds to.
@@ -333,7 +333,7 @@ class AffgraphToSeg(object):
         nhood[i] contains the displacement coordinates of edge i
         The number and order of edges is arbitrary
     size_thresh: int
-        Theshold for size filter after connected components
+        Threshold for size filter after connected components
 
     Returns
     -------

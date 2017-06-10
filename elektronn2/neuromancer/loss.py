@@ -234,7 +234,7 @@ class MultinoulliNLL(Node):
         else:
             if isinstance(pred, FromTensor) and isinstance(pred.parent,
                                                            Softmax):
-                parent = pred.parent  # splitted softmax...
+                parent = pred.parent  # split softmax...
             else:
                 raise ValueError(
                     "The prob input to a MultinoulliNLL-node must be "
@@ -433,7 +433,7 @@ class BlockedMultinoulliNLL(Node):
         else:
             if isinstance(pred, FromTensor) and isinstance(pred.parent,
                                                            Softmax):
-                parent = pred.parent  # splitted softmax...
+                parent = pred.parent  # split softmax...
             else:
                 raise ValueError(
                     "The prob input to a MultinoulliNLL-node must be "
@@ -830,7 +830,7 @@ class GaussianNLL(Node):
     sig: Node
         Sigma of the predictive Gaussian density
     sig_is_log: bool
-        Whether ``sig`` is actaully the ln(sig), then it is
+        Whether ``sig`` is actually the ln(sig), then it is
         exponentiated internally
 
 
@@ -1094,7 +1094,7 @@ class SquaredLoss(Node):
 
 class EuclideanDistance(Node):
     """
-    Euclidian distance node.
+    Euclidean distance node.
 
     Parameters
     ----------
@@ -1217,7 +1217,7 @@ class AbsLoss(SquaredLoss):
     margin: float or None
     scale_correction: float or None
         Boosts loss for large target values: if target=1 the error
-        is multiplied by this value (and linearliy for other targets)
+        is multiplied by this value (and linearly for other targets)
     name: str
         Node name.
     print_repr: bool

@@ -336,7 +336,7 @@ class ShotgunRegistry(object):
         self.mask = np.full(registry_extent, -1, dtype=np.int32)
         self.traces = []
         self.edges = []
-        self.curr_seed_num = -1 # wrt to original seeds
+        self.curr_seed_num = -1 # wrt original seeds
         self.curr_trace_num = -1
         self.directions = directions
         self.last_merge_count = 0
@@ -829,7 +829,7 @@ def find_job(args):
             direc_pairs = closest_point_long - closest_point_short
             direc_pairs /= np.linalg.norm(direc_pairs)
 
-            # algin all dirctions:
+            # align all directions:
             if np.dot(direc_short, direc_centers) < 0:
                 direc_short *= -1
             if np.dot(direc_long, direc_centers) < 0:

@@ -250,7 +250,7 @@ class Schedule(object):
                 else:
                     self.next_update = min(iteration + 1000,
                                            self.update_steps[0])
-            else:  # make mutiplicative update
+            else:  # make multiplicative update
                 self.variable_setter(
                     np.multiply(self.variable_getter(), self.factor))
                 if len(self.update_steps)==0:  # only mult decay
@@ -288,7 +288,7 @@ class Schedule(object):
                 self.variable_setter = lambda val: prop.fset(obj, val)
                 self._target = prop_name
             if hasattr(obj,
-                       prop_name):  # it is a atrribute, create the s/getters
+                       prop_name):  # it is a attribute, create the s/getters
                 prop = getattr(obj, prop_name)
                 self.variable_getter = lambda: getattr(obj, prop_name)
                 self.variable_setter = lambda val: setattr(obj, prop_name, val)
@@ -386,8 +386,6 @@ class HistoryTracker(object):
             file_name)
 
     def plot(self, save_name=None, autoscale=True, close=True):
-        ###TODO Martin: Plotting in subprocsses fequently fails. why? fix?
-
         #        if self.plotting_proc is not None:
         #            self.plotting_proc.join()
         #
@@ -483,7 +481,7 @@ class ExperimentConfig(object):
         if not use_existing_dir:
             self.make_dir()
 
-        # Set logfile to save path:
+        # Set log file to save path:
         old_lfile_handler = \
             [x for x in logger.handlers if isinstance(x, logging.FileHandler)][
                 0]
@@ -584,9 +582,9 @@ class ExperimentConfig(object):
 
         self.check_config()
 
-        self.create_model.__globals__.update(custom_dict)  # this is neccesary
+        self.create_model.__globals__.update(custom_dict)  # this is necessary
         # to make variable in the config file usable in create_model (as it
-        # would naturally be excpected by humans)
+        # would naturally be expected by humans)
 
     def check_config(self):
         for k, v in self.__dict__.items():
@@ -720,7 +718,7 @@ def find_nearest(array, value):
 
 def evaluate(gt, preds, save_name, thresh=None, n_proc=None):
     """
-    Evaluate prediction w.r.t to GT
+    Evaluate prediction w.r.t. GT
     Saves plot to file
     :param save_name:
     :param gt:

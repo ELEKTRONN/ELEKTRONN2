@@ -243,7 +243,7 @@ def get_random_warpmat(lock_z=False, perspective=False, amount=1.0, rng=None):
 @utils.cache()
 def make_dest_coords(sh):
     """
-    Make coordinate list for destiantion array of shape sh
+    Make coordinate list for destination array of shape sh
     """
     zz,xx,yy = np.mgrid[0:sh[0], 0:sh[1], 0:sh[2]]
     hh = np.ones(sh, dtype=np.int)
@@ -340,7 +340,7 @@ def warp_slice(img, ps, M, target=None, target_ps=None,
     """
     Cuts a warped slice out of the input image and out of the target image.
     Warping is applied by multiplying the original source coordinates with
-    the inverse of the homogenous (forward) transformation matrix ``M``.
+    the inverse of the homogeneous (forward) transformation matrix ``M``.
     
     "Source coordinates" (``src_coords``) signify the coordinates of voxels in
     ``img`` and ``target`` that are used to compose their respective warped
@@ -450,7 +450,7 @@ def warp_slice(img, ps, M, target=None, target_ps=None,
         src_coords_target = src_coords[off_ps[0]:off_ps[0]+target_ps[0],
                                        off_ps[1]:off_ps[1]+target_ps[1],
                                        off_ps[2]:off_ps[2]+target_ps[2]]
-        # shift coords to be w.r.t to origin of target array
+        # shift coords to be w.r.t. to origin of target array
         lo_targ = np.floor(src_coords_target.min(2).min(1).min(0) - off).astype(np.int)
         # add 1 because linear interp
         hi_targ = np.ceil(src_coords_target.max(2).max(1).max(0) - off + 1).astype(np.int)
@@ -496,8 +496,8 @@ def get_tracing_slice(img, ps, pos, z_shift=0, aniso_factor=2,
                       target=None, target_ps=None, target_vec_ix=None,
                       target_discrete_ix=None, rng=None, last_ch_max_interp=False):
 
-    # positive z_shift --> see more slices in positive z-direction w.r.t pos
-    # scale_factor > 1 zooms into image / magifies
+    # positive z_shift --> see more slices in positive z-direction w.r.t. pos
+    # scale_factor > 1 zooms into image / magnifies
     rng = np.random.RandomState() if rng is None else rng
     dest_center = np.array(ps, dtype=np.float)/2
     dest_center[0] -= z_shift
@@ -533,7 +533,7 @@ def get_warped_slice(img, ps, aniso_factor=2, sample_aniso=True,
     (Wraps :py:meth:`elektronn2.data.transformations.warp_slice()`)
     
     Generates the warping transformation parameters and composes them into a
-    single 4D homogenous transformation matrix ``M``.
+    single 4D homogeneous transformation matrix ``M``.
     Then this transformation is applied to ``img`` and ``target`` in the
     ``warp_slice()`` function and the transformed input and target image are
     returned.

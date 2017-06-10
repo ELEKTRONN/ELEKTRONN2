@@ -70,7 +70,7 @@ class NeuralLayer(Node):
             p_name = '<%s%s>'%(name, tuple(shape))
         else:
             p_name = '<%s_%s%s>'%(self.name, name, tuple(shape))
-        # create new trainable by initialistaion
+        # create new trainable by initialisation
         if param is None:
             p = VariableWeight(shape=shape,
                                init_kwargs=init_kwargs,
@@ -292,11 +292,11 @@ class Perceptron(NeuralLayer):
         If it is a T.TensorVariable, it is directly used (weight sharing
         with the layer which this variable comes from).
     gamma
-        (For batch normalisation) Initializes gamma parameter.
+        (For batch normalisation) Initialises gamma parameter.
     mean
-        (For batch normalisation) Initializes mean parameter.
+        (For batch normalisation) Initialises mean parameter.
     std
-        (For batch normalisation) Initializes std parameter.
+        (For batch normalisation) Initialises std parameter.
     gradnet_mode
     """  # TODO: Write docs on batch normalisation modes.
     # TODO: gradnet_mode seems to be unused. Should it be removed?
@@ -548,11 +548,11 @@ class Conv(Perceptron):
         If it is a T.TensorVariable, it is directly used (weight sharing
         with the layer which this variable comes from).
     gamma
-        (For batch normalisation) Initializes gamma parameter.
+        (For batch normalisation) Initialises gamma parameter.
     mean
-        (For batch normalisation) Initializes mean parameter.
+        (For batch normalisation) Initialises mean parameter.
     std
-        (For batch normalisation) Initializes std parameter.
+        (For batch normalisation) Initialises std parameter.
     gradnet_mode
     """
 
@@ -939,11 +939,11 @@ class UpConv(Conv):
         If it is a T.TensorVariable, it is directly used (weight sharing
         with the layer which this variable comes from).
     gamma
-        (For batch normalisation) Initializes gamma parameter.
+        (For batch normalisation) Initialises gamma parameter.
     mean
-        (For batch normalisation) Initializes mean parameter.
+        (For batch normalisation) Initialises mean parameter.
     std
-        (For batch normalisation) Initializes std parameter.
+        (For batch normalisation) Initialises std parameter.
     gradnet_mode
     """
 
@@ -1253,7 +1253,7 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
     crop_lo = []
     crop_hi = []
     for i in range(len(sh_hi)):
-        diff = sh_hi[i] - sh_lo[i]  # different in orignal space
+        diff = sh_hi[i] - sh_lo[i]  # different in original space
         if diff % 2!=0:
             raise ValueError("hi_res and lo_res maps cannot "
                              "be aligned with shapes:\n%s\n%s" % (sh_hi,sh_lo))
@@ -1554,11 +1554,11 @@ class GRU(NeuralLayer):
         If it is a T.TensorVariable, it is directly used (weight sharing
         with the layer which this variable comes from).
     gamma
-        (For batch normalisation) Initializes gamma parameter.
+        (For batch normalisation) Initialises gamma parameter.
     mean
-        (For batch normalisation) Initializes mean parameter.
+        (For batch normalisation) Initialises mean parameter.
     std
-        (For batch normalisation) Initializes std parameter.
+        (For batch normalisation) Initialises std parameter.
     gradnet_mode
     """
 
@@ -1747,11 +1747,11 @@ class LSTM(NeuralLayer):
         If it is a T.TensorVariable, it is directly used (weight sharing
         with the layer which this variable comes from).
     gamma
-        (For batch normalisation) Initializes gamma parameter.
+        (For batch normalisation) Initialises gamma parameter.
     mean
-        (For batch normalisation) Initializes mean parameter.
+        (For batch normalisation) Initialises mean parameter.
     std
-        (For batch normalisation) Initializes std parameter.
+        (For batch normalisation) Initialises std parameter.
     gradnet_mode
     """
 

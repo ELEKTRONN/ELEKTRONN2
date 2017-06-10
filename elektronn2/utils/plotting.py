@@ -82,7 +82,7 @@ def scroll_plot(images, names=None, init_z=None):
     Usage
     -----
 
-    For the scroll interation to work, the "scroller" object
+    For the scroll interaction to work, the "scroller" object
     must be returned to the calling scope
 
     >>> fig, scroller = _scroll_plot4(images, names)
@@ -116,7 +116,7 @@ def _scroll_plot1(image, name, init_z):
     Usage
     -----
 
-    For the scroll interation to work, the "scroller" object
+    For the scroll interaction to work, the "scroller" object
     must be returned to the calling scope
 
     >>> fig, scroller = scroll_plot(image, name)
@@ -148,7 +148,7 @@ def _scroll_plot2(images, names, init_z):
     Usage
     -----
 
-    For the scroll interation to work, the "scroller" object
+    For the scroll interaction to work, the "scroller" object
     must be returned to the calling scope
 
     >>> fig, scroller = _scroll_plot4(images, names)
@@ -181,7 +181,7 @@ def _scroll_plot4(images, names, init_z):
     Usage
     -----
 
-    For the scroll interation to work, the "scroller" object
+    For the scroll interaction to work, the "scroller" object
     must be returned to the calling scope
 
     >>> fig, scroller = _scroll_plot4(images, names)

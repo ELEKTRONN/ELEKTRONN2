@@ -280,7 +280,7 @@ class SkelLossOP(theano.Op):
         new_position_l, _ = trafo.cnn_pred2lab_position(new_position_c)
         new_position_s = new_position_l[::-1]
         loss_, grad_s = skel_obj.get_loss_and_gradient(new_position_s,
-                                         **self.loss_kwargs) # loggs nearest_s
+                                         **self.loss_kwargs) # loss nearest_s
         grad_l = grad_s[::-1]
         grad_c = trafo.lab_coord2cnn_coord(grad_l)
 
@@ -300,7 +300,7 @@ class SkelLossOP(theano.Op):
         return [grad_0, grad_1, grad_2]
 
     def connection_pattern(self, node):
-        # there is only a grad of the first output w.r.t to the first input
+        # there is only a grad of the first output w.r.t. the first input
         return [[True, False],[False, False],[False, False]]
 
 
@@ -395,7 +395,7 @@ class SkelLossRecOP(theano.Op):
         return [grad_0, grad_1, grad_2]
 
     def connection_pattern(self, node):
-        # there is only a grad of the first output w.r.t to the first input
+        # there is only a grad of the first output w.r.t. the first input
         return [[True, False],[False, False],[False, False]]
 
 class SkelLossRec(Node):
@@ -469,7 +469,7 @@ class SkelGridUpdateOP(theano.Op):
         return [grad_0, grad_1]
 
     def connection_pattern(self, node):
-        # there is only a grad of the first output w.r.t to the first input
+        # there is only a grad of the first output w.r.t. the first input
         return [[True, False, False], [False, False, False]]
 
 
@@ -660,9 +660,9 @@ def SkelGetBatch(skel, aux, img_sh, t_img_sh, t_grid_sh, t_node_sh,
 
 class ScanN(Node):
     """
-    WARNING: this node may only be used in conjuction with ``scansplit``
+    WARNING: this node may only be used in conjunction with ``scansplit``
     because its ``output`` and ``shape`` attributes are lists which
-    will confuse normal nodes. The split wraps the outputs in indivdual
+    will confuse normal nodes. The split wraps the outputs in individual
     Nodes (FromTensor).
 
     Parameters
@@ -670,7 +670,7 @@ class ScanN(Node):
     step_result: node/list(nodes)
         nodes that represent results of step function
     in_memory: node/list(nodes)
-        nodes that inidcate at which place in the computational graph
+        nodes that indicate at which place in the computational graph
         the memory is feed back into the step function. If ``out_memory``
         is not specified this must contain a node for *every* node in
         ``step_result`` because then the whole result will be fed back.
@@ -881,7 +881,7 @@ def Scan(step_result, in_memory, out_memory=None,
     step_result: node/list(nodes)
         nodes that represent results of step function
     in_memory: node/list(nodes)
-        nodes that inidcate at which place in the computational graph
+        nodes that indicate at which place in the computational graph
         the memory is feed back into the step function. If ``out_memory``
         is not specified this must contain a node for *every* node in
         ``step_result`` because then the whole result will be fed back.
@@ -977,7 +977,7 @@ if __name__=="__main__":
             self.grad = np.array([1, 3, 5], dtype=np.float32)
 
         def get_loss(self, predicted):
-            # print("Im here %s" %predicted)
+            # print("I'm here %s" %predicted)
             return self.val, self.grad * predicted
 
     skel_var = gof.type.Generic()()

@@ -147,10 +147,10 @@ class KnossosArray(object):
         return s
 
     def _initialize_from_knossos_path(self, path, fixed_mag=0):
-        """ Initializes the dataset by parsing the knossos.conf in path + "mag1"
+        """ Initialises the dataset by parsing the knossos.conf in path + "mag1"
 
         :param path: str
-            forward-slash separated path to the datasetfolder - not .../mag !
+            forward-slash separated path to the dataset folder - not .../mag !
         :param fixed_mag: int
             fixes available mag to one specific value
 
@@ -213,7 +213,7 @@ class KnossosArray(object):
         self._shape[1] = parsed_dict['boundary y ']
         self._shape[0] = parsed_dict['boundary z ']
         self._shape_spatial[:] = self._shape
-        self._cube_boundary = np.ceil(self._shape.astype(np.float) / self._cube_length).astype(np.int) # the boundary is the first for which no cube is availbale!
+        self._cube_boundary = np.ceil(self._shape.astype(np.float) / self._cube_length).astype(np.int) # the boundary is the first for which no cube is available!
         self.scale[2] = parsed_dict['scale x ']
         self.scale[1] = parsed_dict['scale y ']
         self.scale[0] = parsed_dict['scale z ']
@@ -357,7 +357,7 @@ class KnossosArray(object):
             try: # without waiting
                 self._clear_q(None)
                 self._release_cubes(center_cube, keep, n_left)
-            except: # if it doesnt work, wait for all
+            except: # if it doesn't work, wait for all
                 self._clear_q('all')
                 self._release_cubes(center_cube, keep, n_left)
             return

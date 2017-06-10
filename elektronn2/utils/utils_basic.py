@@ -515,7 +515,7 @@ class DynamicKDT(object):
             k = self._k
 
         if k>(len(self._new_points) + len(self._static_points)):
-            raise ValueError("The requested number of neigbours is larger "
+            raise ValueError("The requested number of neighbours is larger "
                              "than the number of stored points")
         if query_points.ndim==1:
             query_points = query_points[None]
