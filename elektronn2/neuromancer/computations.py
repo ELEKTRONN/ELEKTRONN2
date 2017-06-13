@@ -410,39 +410,12 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
                 y = y.dimshuffle(0,2,1,3,4)
 
         else: # fallback to theano
-            if axis_order=='theano':
-                logger.debug("Using theano 3dconv")
-                y = T.nnet.conv3d(
-                    x, w,
-                    x_shape, w_shape,
-                    border_mode=border_mode, subsample=stride
-                )  # (b, z, f, x, y)
-            else:
-                if config.use_manual_cudnn_conv and not dnn_avail:
-                    if config.show_axis_order_warning:
-                        logger.warning("cuDNN not available but axis order is"
-                         "for cuDNN (z after features). This leads to possibly "
-                         "inefficient dimshuffles Use theano axis order or "
-                         "install cuDNN.\nUsing theano 3dconv")
-                x = x.dimshuffle(0,2,1,3,4)
-                w = w.dimshuffle(0, 2, 1, 3, 4)
-                # Also swap shapes!
-                w_shape = list(w_shape)
-                z,f = w_shape[1], w_shape[2]
-                w_shape[2] = z
-                w_shape[1] = f
-                if x_shape is not None:
-                    x_shape = list(x_shape)
-                    z,f = x_shape[1], x_shape[2]
-                    x_shape[2] = z
-                    x_shape[1] = f
-
-                y = T.nnet.conv3d(
-                    x, w,
-                    x_shape, w_shape,
-                    border_mode=border_mode, subsample=stride
-                )  # (b, z, f, x, y)
-                y = y.dimshuffle(0,2,1,3,4)
+            logger.debug("Using theano conv3d")
+            y = T.nnet.conv3d(
+                x, w,
+                x_shape, w_shape,
+                border_mode=border_mode, subsample=stride
+            )
 
     if crop_full:
         cropper = []
