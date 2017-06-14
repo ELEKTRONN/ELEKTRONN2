@@ -894,9 +894,11 @@ class FragmentsToDense(Node):
 
 class UpConv(Conv):
     """
-    Upconvolution layer.
+    Upconvolution layer. Also known as transposed convolution.
 
-    E.g. pooling + upconv with p=3::
+    See http://deeplearning.net/software/theano/tutorial/conv_arithmetic.html#transposed-convolution-arithmetic
+
+    E.g. pooling + upconv with pool_shape = 3::
 
           x x x x x x x x x    before pooling (not in this layer)
            \|/   \|/   \|/     pooling (not in this layer)
@@ -912,7 +914,7 @@ class UpConv(Conv):
     n_f: int
         Number of filters (nodes) in layer.
     pool_shape: tuple
-        Size/shape of pooling.
+        Size of the UpConvolution.
     activation_func: str
         Activation function name.
     identity_init: bool
