@@ -22,7 +22,7 @@ except:
 def create_cnn(config_file, n_ch, param_file=None, mfp=False,
                axis_order='theano', constant_weights=False,
                imposed_input_size=None):
-    raise RuntimeError("Dont use this, rebuild the graph and import the "
+    raise RuntimeError("Don't use this, rebuild the graph and import the "
                        "weights using load_params_into_model")
 
     config = Config(config_file, None, None, use_existing_dir=True,

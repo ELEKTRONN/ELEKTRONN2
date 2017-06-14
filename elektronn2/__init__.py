@@ -102,6 +102,6 @@ if not len(inspection_logger.handlers) > 0:
         lstream_level = logging.INFO
         lstream_handler.setLevel(lstream_level)
         inspection_logger.addHandler(
-            lstream_handler)  # comment out to supress printing
+            lstream_handler)  # comment out to suppress printing
 
     inspection_logger.propagate = False

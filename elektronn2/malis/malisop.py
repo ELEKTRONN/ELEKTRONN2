@@ -115,11 +115,11 @@ class MalisWeights(theano.Op):
                                                    unrestrict_neg)
 
     def grad(self, inputs, outputs_gradients):
-        # The gradient of all outputs is 0 w.r.t to all inputs
+        # The gradient of all outputs is 0 w.r.t. to all inputs
         return [disconnected_type(),]*5
 
     def connection_pattern(self, node):
-        # The gradient of all outputs is 0 w.r.t to all inputs
+        # The gradient of all outputs is 0 w.r.t. to all inputs
         return [[False, False],]*5
 
 def malis_weights(affinity_pred, affinity_gt, seg_gt, nhood, unrestrict_neg=False):

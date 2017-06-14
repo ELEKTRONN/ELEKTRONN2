@@ -755,7 +755,7 @@ class TracingTrainer(Trainer):
             i = -1
             t0 = time.time()
             while i < exp_config.n_steps:
-                # update max every loop to make it modifyable during training
+                # update max every loop to make it modifiable during training
                 max_tracing = exp_config.sequence_training if exp_config.sequence_training>1 else 50
                 try:
                     if config.inspection:
@@ -1088,7 +1088,7 @@ class TracingTrainerRNN(TracingTrainer):
             t0 = time.time()
             skel_example = None
             while i < exp_config.n_steps:
-                # update max every loop to make it modifyable during training
+                # update max every loop to make it modifiable during training
                 max_tracing = exp_config.sequence_training
                 try:
                     if skel_example is None:

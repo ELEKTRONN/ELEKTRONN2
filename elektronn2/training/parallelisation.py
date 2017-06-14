@@ -366,7 +366,7 @@ class SharedQ(SharedMem):
     >>> for i in range(5):
     >>>     Q.startproc(target=, shape= args=, kwargs=)
     >>>     item = Q.get() # starts as many new jobs as to maintain n_proc
-    >>>     dosomehtingelse(item) # processes work in background to pre-fetch data for next iteration
+    >>>     dosomethingelse(item) # processes work in background to pre-fetch data for next iteration
     """
 
     def __init__(self, n_proc=0, profile=False):
@@ -441,7 +441,7 @@ class SharedQ(SharedMem):
 
 
 ### Testing etc. ##############################################################
-# Pre requisits
+# Prerequisites
 if __name__=="__main__":
     import gc
     import h5py

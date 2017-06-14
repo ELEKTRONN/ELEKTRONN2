@@ -548,7 +548,7 @@ class Model(graphmanager.GraphManager):
     def trainingstep(self, *args, **kwargs):
         """
         Perform one optimiser iteration.
-        Optimizers can be chosen by the kwarg ``optimiser``.
+        Optimisers can be chosen by the kwarg ``optimiser``.
 
         **Signature**: ``trainingstep(data, target(, *aux)(, **kwargs**))``
 

@@ -141,7 +141,7 @@ def softmax(x, axis=1, force_builtin=False):
     T.Tensor
         ``x`` with softmax applied, same shape.
     """
-    if dnn_avail and config.use_manual_cudnn_conv: # oder must always be bc01, and x must always be 4d
+    if dnn_avail and config.use_manual_cudnn_conv: # order must always be bc01, and x must always be 4d
         if axis==1:
             dnn_sm = theano.gpuarray.dnn.GpuDnnSoftmax('accurate',  'channel')
             if x.ndim==4:

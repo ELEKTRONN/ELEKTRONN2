@@ -1,5 +1,5 @@
 """
-Visualisiation code taken form Theano
+Visualisation code taken form Theano
 Original Author: Christof Angermueller <cangermueller@gmail.com>
 Adapted with permission for the ELEKTRONN2 Toolkit by Marius Killinger 2016
 Note that this code is licensed under the original terms of Theano (see license
@@ -194,7 +194,7 @@ class PyDotFormatter2(object):
         elif node.shape:
             nparams['dtype'] = node.shape
 
-        nparams['tag'] = None  # 'tag' # Noone Not needed?
+        nparams['tag'] = None  # 'tag' # None Not needed?
         nparams['node_type'] = 'node type'  # not needed?
         nparams['apply_op'] = 'apply_op'  # not needed?
         return nparams
@@ -228,7 +228,7 @@ class PyDotFormatter2(object):
             for i, c in enumerate(node.children.values()):
                 if c.__class__.__name__=="ScanN":
                     if node in c.in_memory:
-                        # print("Skippnig",node,'for',c)
+                        # print("Skipping",node,'for',c)
                         continue
                 p_id = self.__node_id(node)
                 c_id = self.__node_id(c)

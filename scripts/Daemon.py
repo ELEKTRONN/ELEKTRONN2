@@ -246,7 +246,7 @@ class TaskList(object):
                 create_window_and_run(self.command,task["CONFIG"],
                                   task,self.exec_dir)
 
-            task.pop('GPU') # dont write this back
+            task.pop('GPU') # don't write this back
             with open("StartedTasks.txt", 'a') as f:
                 if simulate:
                     f.write(dict2str(task) + " - SIMULATED \n")

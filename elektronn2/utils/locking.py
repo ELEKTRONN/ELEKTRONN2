@@ -165,7 +165,7 @@ class FileLock(object):
         return True
 
     def release(self):
-        """ Get rid of the lock by deleting the lockfile. 
+        """ Get rid of the lock by deleting the lockfile.
             When working in a `with` statement, this gets automatically 
             called at the end.
         """

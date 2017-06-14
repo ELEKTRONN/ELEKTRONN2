@@ -235,7 +235,7 @@ class BatchCreatorImage(object):
         nhood_targets
         ret_ll_mask: bool
             If True additional information for reach batch example is returned.
-            Currently implemented are two ll_mask arrays to indicate the targetling mode.
+            Currently implemented are two ll_mask arrays to indicate the targeting mode.
             The first dimension of those arrays is the batch_size!
 
         Returns
@@ -608,7 +608,7 @@ class DummySkel(object):
     def __init__(self):
         self.grad = np.array([0,0,0], dtype=np.float32)
         self.last_slicing_params = None
-        self.lost_track = True # don't train seqentially on this
+        self.lost_track = True # don't train sequentially on this
         self.debug_traces = []
         self.debug_traces_current = []
         self.debug_grads = []
@@ -664,7 +664,7 @@ class AgentData(BatchCreatorImage):
                               # will be inferred when reading data
         self.t_n_f  = None # the shape of the returned label batch at index 1
         self.t_dtype = side_target_node.output.dtype
-        # Need to infer this when reading lables and with n_target/encoded_targets
+        # Need to infer this when reading labels and with n_target/encoded_targets
 
         # Setup internal stuff
         self.rng = np.random.RandomState(np.uint32((time.time()*0.0001 -
@@ -839,7 +839,7 @@ class AgentData(BatchCreatorImage):
 
         image = greyAugment(image, grey_augment_channels, self.rng)
 
-        if vec is not None: # allow for usin this with no vec data
+        if vec is not None: # allow for using this with no vec data
             target[0] = vec
 
         images[0] = image

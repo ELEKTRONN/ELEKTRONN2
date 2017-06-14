@@ -223,9 +223,9 @@ class AdaDelta(Optimiser):
     """
     AdaDelta optimiser (See https://arxiv.org/abs/1212.5701).
 
-    Like AdaGrad, but accumulate squared only over windo
+    Like AdaGrad, but accumulate squared only over window
     The delta part is some diagonal hessian approximation.
-    Claims to be robust agains sudden large gradients because then the
+    Claims to be robust against sudden large gradients because then the
     denominator explodes, but this explosion is persistent for a while...
     (and this argumentation is true for any method accumulating squared grads).
     """

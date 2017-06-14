@@ -10,6 +10,7 @@ User guide
    elektronn2
    intro_nn
    examples
+   predictions
 
 
 API documentation
