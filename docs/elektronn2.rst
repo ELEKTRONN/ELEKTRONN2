@@ -124,7 +124,7 @@ Other dependencies:
 
 
 Installation
-------------
+============
 
 .. note:: ELEKTRONN2 is supported on Linux (x86_64), with Python versions
   2.7, 3.4, 3.5 and 3.6.
@@ -133,44 +133,82 @@ Installation
   you are interested in support for other platforms.
 
 
+Installing with ``conda``
+-------------------------
+
+The recommended way to install ELEKTRONN2 is to use the
+`conda <https://conda.io/docs/>`_ package manager, which is included
+in `Anaconda <https://www.continuum.io/downloads>`_
+(`Miniconda <https://conda.io/miniconda.html>`_ also works).
+The ELEKTRONN2 package is hosted by the
+`conda-forge <https://conda-forge.github.io/>`_
+channel, so you first need to add it to your local channel list
+if you haven't yet done this::
+
+  conda config --add channels conda-forge
+
+Then you can either install ELEKTRONN2 directly into your current
+environment::
+
+  conda install elektronn2
+
+... or create a new `conda env <https://conda.io/docs/using/envs.html>`_
+just for ELEKTRONN2::
+
+  conda create -n elektronn2_env elektronn2
+
+Optionally run `source activate elektronn2_env`
+(or `conda activate elektronn2_env` if you use the fish shell) to activate
+the new environment and ensure all ELEKTRONN2 executables are on your PATH.
+The effects of the activation only last for the current shell session, so
+remember to repeat this step after re-opening your shell.
+
+
 Installing with ``pip``
-^^^^^^^^^^^^^^^^^^^^^^^
+-----------------------
 
 You can install the current git version of ELEKTRONN2 and all of its
 dependencies with the ``pip`` package manager. For Python 3, run::
 
-  python3 -m pip install numpy # numpy has to be installed manually first!
-  python3 -m pip install git+https://github.com/ELEKTRONN/ELEKTRONN2
+  python3 -m pip install numpy
+  python3 -m pip install elektronn2
 
 Or if you want to install ELEKTRONN2 for Python 2::
 
-  python2 -m pip install numpy # numpy has to be installed manually first!
-  python2 -m pip install git+https://github.com/ELEKTRONN/ELEKTRONN2
+  python2 -m pip install numpy
+  python2 -m pip install elektronn2
 
-We suggest that you do this inside a `virtualenv <https://virtualenv.pypa.io>`_
-or a `conda env <https://conda.io/docs/using/envs.html>`_ to prevent conflicts
-with system packages.
+To prevent permission errors and conflicts with other packages,
+we suggest that you run these ``pip install`` commands
+inside a `virtualenv <https://virtualenv.pypa.io>`_
+or a `conda env <https://conda.io/docs/using/envs.html>`_.
+
+Please **do not** attempt to use ``sudo`` or the ``root`` account for ``pip install``,
+because this can overwrite system packages and thus potentially destroy your
+operating system (this is not specific to ELEKTRONN2, but a general flaw in ``pip``
+and applies to all packages (see `this issue <https://github.com/pypa/pip/issues/1668>`_).
+``pip install --user`` can be used instead, but this method can also break other
+Python packages due to the version/precedence conflicts between system and user packages.
 
 .. TODO: Manual numpy install is only necessary because numba doesn't provide
   wheels. Once wheels are public, delete the "pip install numpy" lines.
 
 .. TODO: Maybe describe an example setup of a virtualenv.
 
+
 Arch Linux (AUR)
-^^^^^^^^^^^^^^^^
+----------------
 
 If you use Arch Linux, you can install the
-`ELEKTRONN2 AUR package <https://aur.archlinux.org/packages/python-elektronn2-git/>`_
+`ELEKTRONN2 AUR packages <https://aur.archlinux.org/packages/python-elektronn2-git/>`_
 by running::
 
-  pacaur -S python-elektronn2-git # for Python 3
-  pacaur -S python2-elektronn2-git # for Python 2
+  pacaur -S python-elektronn2 # for Python 3
+  pacaur -S python2-elektronn2 # for Python 2
 
 .. note:: In the Python 2 AUR package, the ``elektronn2-train`` command is
   named ``elektronn2-train2`` to prevent file name conflicts.
 
-
-.. TODO: conda/conda-forge install once we have a tagged release
 
 
 .. _design:
