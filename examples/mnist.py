@@ -2,7 +2,7 @@
 # ELEKTRONN2 Toolkit
 # Copyright (c) 2016 Philipp J. Schubert
 # All rights reserved
-save_path = '~/elektronn2_examples/'
+save_path = '~/elektronn2_training/'
 # save_name = 'MNIST'  # Overwrite save name (default: derived from filename).
 data_class = 'MNISTData'  # <String>: Name of the data class in
                           # ``elektronn2.data.traindata`` (as used here) or

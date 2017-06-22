@@ -4,7 +4,7 @@
 # All rights reserved
 
 optimiser = 'Adam'
-save_path = '~/elektronn2_examples/'
+save_path = '~/elektronn2_training/'
 save_name = "piano_gru_%s" % optimiser
 
 data_class = 'PianoData'

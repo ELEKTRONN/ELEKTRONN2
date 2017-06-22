@@ -3,7 +3,7 @@
 # Copyright (c) 2016 Philipp J. Schubert
 # All rights reserved
 
-save_path = '~/elektronn2_examples/'
+save_path = '~/elektronn2_training/'
 data_class = 'PianoData_perc'
 background_processes = 2
 n_steps=10000

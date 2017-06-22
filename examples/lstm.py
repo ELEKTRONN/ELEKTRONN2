@@ -3,7 +3,7 @@
 # Copyright (c) 2016 Philipp J. Schubert
 # All rights reserved
 
-save_path = '~/elektronn2_examples/'
+save_path = '~/elektronn2_training/'
 preview_data_path = None
 preview_kwargs    = {
     'export_class': 'all',

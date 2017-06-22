@@ -39,7 +39,7 @@ Find the save directory and choose a model file (you probably want the
 one called ``<save_name>-FINAL.mdl``) and a file that contains the raw
 images on which you want to execute the neural network, e.g.::
 
-  model_path = '~/elektronn2_examples/neuro3d/neuro3d-FINAL.mdl'
+  model_path = '~/elektronn2_training/neuro3d/neuro3d-FINAL.mdl'
   raw_path = '~/neuro_data_zxy/raw_2.h5'  # raw cube for validation
 
 For loading data from (reasonably small) hdf5 files, you can use the

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-save_path = '~/elektronn2_examples/'
+save_path = '~/elektronn2_training/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
     'export_class': [1],
