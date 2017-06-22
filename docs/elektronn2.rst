@@ -157,8 +157,8 @@ just for ELEKTRONN2::
 
   conda create -n elektronn2_env elektronn2
 
-Optionally run `source activate elektronn2_env`
-(or `conda activate elektronn2_env` if you use the fish shell) to activate
+Optionally run ``source activate elektronn2_env``
+(or ``conda activate elektronn2_env`` if you use the fish shell) to activate
 the new environment and ensure all ELEKTRONN2 executables are on your PATH.
 The effects of the activation only last for the current shell session, so
 remember to repeat this step after re-opening your shell.
@@ -167,7 +167,7 @@ remember to repeat this step after re-opening your shell.
 Installing with ``pip``
 -----------------------
 
-You can install the current git version of ELEKTRONN2 and all of its
+You can install the current version of ELEKTRONN2 and all of its
 dependencies with the ``pip`` package manager. For Python 3, run::
 
   python3 -m pip install numpy
@@ -200,7 +200,7 @@ Arch Linux (AUR)
 ----------------
 
 If you use Arch Linux, you can install the
-`ELEKTRONN2 AUR packages <https://aur.archlinux.org/packages/python-elektronn2-git/>`_
+`ELEKTRONN2 AUR packages <https://aur.archlinux.org/packages/python-elektronn2/>`_
 by running::
 
   pacaur -S python-elektronn2 # for Python 3
