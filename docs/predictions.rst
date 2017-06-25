@@ -32,11 +32,12 @@ Prediction example for ``neuro3d``
 ``~/.theanorc`` or ``~/.elektronn2rc``, you need to initialise it
 **before** the other imports::
 
-  from elektronn2.utils import initgpu
+  from elektronn2.utils.gpu import initgpu
   initgpu('auto')  # or "initgpu('0')" for the first GPU etc.
 
 Find the save directory and choose a model file (you probably want the
-one called ``<save_name>-FINAL.mdl``) and a file that contains the raw
+one called ``<save_name>-FINAL.mdl``, or alternatively ``<save_name>-LAST.mdl``
+if the training process is not finished yet) and a file that contains the raw
 images on which you want to execute the neural network, e.g.::
 
   model_path = '~/elektronn2_training/neuro3d/neuro3d-FINAL.mdl'
@@ -72,6 +73,10 @@ trained with only 1 input channel here (the uint8 pixel intensities)::
   raw4d = raw3d[None, :, :, :]  # shape: (f=1, z=32, x=160, y=160)
 
   pred = model.predict_dense(raw4d)
+
+The numpy array ``pred`` now contains the predicted output in the
+shape ``(f=2, z=18, x=56, y=56)`` (same axis order but different sizes than
+the input ``raw4d`` due to convolution padding etc.).
 
 .. TODO: Link to complete copy-pastable example "predict.py"? Or even automate (templated) predict.py creation in save_dir and refer to it?
 

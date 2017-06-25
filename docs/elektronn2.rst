@@ -163,6 +163,9 @@ the new environment and ensure all ELEKTRONN2 executables are on your PATH.
 The effects of the activation only last for the current shell session, so
 remember to repeat this step after re-opening your shell.
 
+.. TODO: "conda activate" works in all shells starting with conda 4.4, so we
+can remove the "activate" distinction above in, let's say 2018.
+
 
 Installing with ``pip``
 -----------------------
