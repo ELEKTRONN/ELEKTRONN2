@@ -24,8 +24,8 @@ from ..config import config
 logger = logging.getLogger('elektronn2log')
 
 dnn_avail = dnn.dnn_available()
-logger.warning("Manual dnn calls for conv, are much faster for prediction "
-               "and much slower for training.")
+#logger.warning("Manual dnn calls for conv, are much faster for prediction "
+#               "and much slower for training.")
 
 dnn_algo = 'small' # Only 'none' is implemented for the conv3d
 
