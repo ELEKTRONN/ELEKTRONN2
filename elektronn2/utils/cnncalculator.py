@@ -157,7 +157,7 @@ class _Cnncalculator(object):
             + "\nStrides:\t\t" + repr(stride)\
             + "\nOverlap:\t\t" + repr(overlap) + "\nOffset:\t\t"\
             + repr(self.offset) + "\nIf offset is non-int: output neurons " \
-            + "lie centered on patch_size neurons,they have an odd FOV\n"
+            + "lie centered on patch_size neurons, they have an odd FOV.\n"
         return s
 
     @staticmethod
@@ -201,6 +201,9 @@ class _Multi_cnncalculator(_Cnncalculator):
             self.stride.append(c.stride)
 
 
+# TODO: Make it work with more complex models (multi-branch architectures, dilated/transposed convolution etc.)
+#       Currently, only sequential conv/pool models are supported.
+#       Probably the whole idea of passing shape lists is not applicable to non-sequential models...
 def cnncalculator(filters, poolings, desired_patch_size=None, mfp=False,
                   force_center=False, desired_output=None, ndim=1):
     """
@@ -217,17 +220,17 @@ def cnncalculator(filters, poolings, desired_patch_size=None, mfp=False,
       Filter shapes (for anisotropic filters the shapes are again a list)
     poolings: list
       Pooling factors
-    desired_patch_size: int or list of int
+    desired_patch_size: int or list[int]
       Desired patch_size size(s). If ``None`` a range of suggestions can be
       found in the attribute ``valid_patch_sizes``
-    mfp: list of int/{0,1}
+    mfp: list[bool] or bool
       Whether to apply Max-Fragment-Pooling in this Layer and check
       compliance with max-fragment-pooling
       (requires other patch_size sizes than normal pooling)
     force_center: Bool
       Check if output neurons/pixel lie at center of patch_size
       neurons/pixel (and not in between)
-    desired_output: int or list of int
+    desired_output: None or int or list[int]
       Alternative to ``desired_patch_size``
     ndim: int
       Dimensionality of CNN
@@ -237,28 +240,25 @@ def cnncalculator(filters, poolings, desired_patch_size=None, mfp=False,
 
     Calculation for anisotropic "flat" 3d CNN with mfp in the first layers only::
 
-      >>> desired_patch_size   = [211, 211, 20]
-      >>> filters         = [[6,6,1], [4,4,4], [2,2,2], [1,1,1]]
-      >>> pool            = [[2,2,1], [2,2,2], [2,2,2], [1,1,1]]
-      >>> mfp             = [1,        1,       0,       0,   ]
-      >>> ndim=3
-      >>> d = cnncalculator(filters, pool, desired_patch_size, mfp=mfp, force_center=True, desired_output=None, ndim=ndim)
-      Info: patch_size (211) changed to (210) (size not possible)
-      Info: patch_size (211) changed to (210) (size not possible)
-      Info: patch_size (20) changed to (22) (size too small)
-      >>> print(d)
-      patch_size: [210, 210, 22]
-      Layer/Fragment sizes:	[[102, 49, 24, 24], [102, 49, 24, 24], [22, 9, 4, 4]]
-      Unpooled Layer sizes:	[[205, 99, 48, 24], [205, 99, 48, 24], [22, 19, 8, 4]]
-      Receptive fields:	[[7, 15, 23, 23], [7, 15, 23, 23], [1, 5, 9, 9]]
-      Strides:		[[2, 4, 8, 8], [2, 4, 8, 8], [1, 2, 4, 4]]
-      Overlap:		[[5, 11, 15, 15], [5, 11, 15, 15], [0, 3, 5, 5]]
-      Offset:		[11.5, 11.5, 4.5].
-          If offset is non-int: floor(offset).
-          Select labels from within img[offset-x:offset+x]
-          (non-int means, output neurons lie centered on patch_size neurons,
-          i.e. they have an odd field of view)
-    """  # TODO: The example is still ELEKTRONN1-specific. Check the whole function for incompatibilities.
+        >>> desired_patch_size   = [8, 211, 211]
+        >>> filters         = [[1,6,6], [4,4,4], [2,2,2], [1,1,1]]
+        >>> pool            = [[1,2,2], [2,2,2], [2,2,2], [1,1,1]]
+        >>> mfp             = [True,    True,    False,    False ]
+        >>> ndim=3
+        >>> d = cnncalculator(filters, pool, desired_patch_size, mfp=mfp, force_center=True, desired_output=None, ndim=ndim)
+        patch_size (8) changed to (10) (size too small)
+        patch_size (211) changed to (210) (size not possible)
+        patch_size (211) changed to (210) (size not possible)
+        >>> print(d)
+        patch_size: [10, 210, 210]
+        Layer/Fragment sizes:   [(1, 24, 24), (1, 24, 24), (3, 49, 49), (10, 102, 102)]
+        Unpooled Layer sizes:   [(1, 24, 24), (2, 48, 48), (7, 99, 99), (10, 205, 205)]
+        Receptive fields:       [(9, 23, 23), (9, 23, 23), (5, 15, 15), (1, 7, 7)]
+        Strides:                [(4, 8, 8), (4, 8, 8), (2, 4, 4), (1, 2, 2)]
+        Overlap:                [(5, 15, 15), (5, 15, 15), (3, 11, 11), (0, 5, 5)]
+        Offset:         [4.5, 11.5, 11.5]
+        If offset is non-int: output neurons lie centered on patch_size neurons,they have an odd FOV
+    """
 
     assert len(poolings)==len(filters)
 
