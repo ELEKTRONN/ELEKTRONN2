@@ -80,7 +80,7 @@ class DefaultConfig(object):
         self.use_manual_cudnn_conv_not_w1 = True
         self.use_manual_cudnn_pool = True
         self.allow_floatX_downcast = True
-        self.show_axis_order_warning = True
+        self.show_axis_order_warning = False
         self.use_ortho_init = False
         # Flag used to conditionally do something different for inspection/debugging
         self.inspection = False
