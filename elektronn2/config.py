@@ -62,7 +62,7 @@ class DefaultConfig(object):
         ### Toolkit Setup ###------------------------------------------------------
         # (*) <String>: where to create the CNN directory.
         # In this directory a new folder is created with the name of the model
-        self.save_path = os.path.abspath(os.path.expanduser("~/CNN_Training/"))
+        self.save_path = os.path.abspath(os.path.expanduser('~/elektronn2_training/'))
         self.plot_on = True  # <Bool>: whether to create plots of the errors etc.
         self.print_status = True  # <Bool>: whether to print Training status to std.out
         self.device = None  # None/int/'auto' (use .theanorc value) or int (use gpu<i>)
