@@ -86,6 +86,10 @@ class DefaultConfig(object):
         self.inspection = False
         # Whether to create a backup of the current source code in the save directory
         self.backupsrc = True
+        # Whether to display some initial plots in a pop-up GUI.
+        # TODO: This needs to be cleaned up. Plotting outputs (files, GUI) should be more distinguished globally.
+        #       (Currently, several plotting functions try to both write pngs and open GUIs all over the place).
+        self.gui_plot = False
         self.__doc__ = ""  # Just a hack
 
         self.read_user_config()

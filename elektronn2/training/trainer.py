@@ -425,14 +425,18 @@ class Trainer(object):
                 i = self.data.offsets[0] # z offset
                 plot_trainingtarget(data[0,i+t_i], target, 1)
 
-            plt.ion()
-            plt.show()
             with FileLock('plotting'):
                 plt.savefig('Batch_test_image.png', bbox_inches='tight')
-            plt.pause(0.01)
-            plt.pause(2.0)
-            plt.close('all')
-            plt.pause(0.01)
+                # Hard to reason about plt here. It's a side effect of plot_traingtarget calls.
+
+            if config.gui_plot:
+                plt.ion()
+                plt.show()
+                plt.pause(0.01)
+                plt.pause(2.0)
+                plt.close('all')
+                plt.pause(0.01)
+
             return batch
         else:
             logger.warning('debug_getcnnbatch() is only available for "img-img"'
@@ -708,14 +712,16 @@ class TracingTrainer(Trainer):
 
                         quiver.savefig(dest+'vec-%i.png'%j, bbox_inches='tight')
 
-        plt.ion()
-        plt.show()
         with FileLock('plotting'):
             plt.savefig('Batch_test_image.png', bbox_inches='tight')
-        plt.pause(0.01)
-        plt.pause(2.0)
-        plt.close('all')
-        plt.pause(0.01)
+
+        if config.gui_plot:
+            plt.ion()
+            plt.show()
+            plt.pause(0.01)
+            plt.pause(2.0)
+            plt.close('all')
+            plt.pause(0.01)
 
         return batch
 
