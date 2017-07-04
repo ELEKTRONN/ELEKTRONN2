@@ -874,6 +874,8 @@ class Node(with_metaclass(MetaNode, object)):
             Predictions.
         """
 
+        # TODO: Fix "negative dimensions are not allowed" errors with raw_img.shape < patch size
+
         # determine normalisation depending on int or float type
         if self.shape.ndim<2:
             logger.error("'predict_dense' works only for nodes with 2 or 3 "
@@ -908,7 +910,7 @@ class Node(with_metaclass(MetaNode, object)):
         strip_z = False
         if raw_img.ndim==3:
             strip_z = True
-            raw_img = raw_img[:,None] # add singleton z-channel
+            raw_img = raw_img[:,None] # add singleton z-channel  # TODO: Correct order?
 
         n_lab      = self.shape['f']
         cnn_out_sh = self.shape.spatial_shape
