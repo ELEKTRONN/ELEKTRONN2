@@ -93,7 +93,17 @@ predictions by loading an already trained model with with the
 
 .. code-block:: python
 
-  # TODO: Example here, something like "model = modelload(model_file, imposed_patch_size=...)"
+  from elektronn2 import neuromancer as nm
+  ps = (103,201,201)
+  model = nm.model.modelload(model_path, imposed_patch_size=ps)
+
+During the network initialization that is launched by calling
+:py:meth:`modelload() <elektronn2.neuromancer.model.modelload()>`,
+invalid values of ``imposed_patch_size`` will be rejected and
+the first dimension which needs to be changed will be shown. If one of the dimensions
+does not fit the model, you should be able to find a valid one by
+by trial and error (either in an IPython session or with a script that loops over
+possible values until the model compiles successfully),
 
 To find an optimal patch size that works on your hardware, you can use the
 ``elektronn2-profile`` command, which varies the input size of a given
