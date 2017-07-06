@@ -10,7 +10,7 @@ Introduction
 .. General information about ELEKTRONN2 and neural networks.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    elektronn2
    intro_nn
