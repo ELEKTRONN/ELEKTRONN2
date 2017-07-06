@@ -91,7 +91,7 @@ Installation
 ------------
 
 See the installation instructions at
-https://elektronn2.readthedocs.io/en/latest/elektronn2.html#installation.
+https://elektronn2.readthedocs.io/en/latest/installation.html.
 
 
 .. _design:

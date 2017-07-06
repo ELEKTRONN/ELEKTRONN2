@@ -14,6 +14,7 @@ Introduction
 
    elektronn2
    intro_nn
+   installation
 
 
 Tutorial
