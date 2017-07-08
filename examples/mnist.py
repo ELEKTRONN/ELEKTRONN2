@@ -23,6 +23,9 @@ optimiser_params = {
 }
 batch_size = 20
 
+# TODO: Make preview predictions work? Not sure if it is worth the effort
+#       with the custom MNISTData data_class, which can only handle MNIST...
+
 def create_model():
     from elektronn2 import neuromancer
 
