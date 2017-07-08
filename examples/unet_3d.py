@@ -45,36 +45,41 @@ batch_size = 1
 
 def create_model():
     from elektronn2 import neuromancer
-    import theano.tensor as T
-    import numpy as np
 
-    in_sh = (None,1,18,148,148)
+    in_sh = (None,1,20,188,188)
     # For quickly trying out input shapes via CLI args, uncomment:
     #import sys; a = int(sys.argv[1]); b = int(sys.argv[2]); in_sh = (None,1,a,b,b)
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    out0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
-    out1  = neuromancer.Conv(out0, 32,  (1,3,3), (1,1,1))
-    out2  = neuromancer.Pool(out1, (1,2,2))
-    out3  = neuromancer.Conv(out2, 64,  (1,3,3), (1,1,1))
-    out4  = neuromancer.Conv(out3, 64,  (1,3,3), (1,1,1))
-    out5  = neuromancer.Pool(out4, (1,2,2))
-    out6  = neuromancer.Conv(out5, 128,  (1,3,3), (1,1,1))
-    out7  = neuromancer.Conv(out6, 128,  (1,3,3), (1,1,1))
-    out8  = neuromancer.Pool(out7, (1,2,2))
-    out9  = neuromancer.Conv(out8, 256,  (3,3,3), (1,1,1))
-    out10 = neuromancer.Conv(out9, 256,  (3,3,3), (1,1,1))
+    # This model is inspired by the U-Net paper https://arxiv.org/abs/1505.04597
+    # (but not an exact re-implementation).
 
-    up3 = neuromancer.UpConvMerge(out7, out10, 512)
-    up4 = neuromancer.Conv(up3, 256,  (1,3,3), (1,1,1))
-    up5 = neuromancer.Conv(up4, 256,  (1,3,3), (1,1,1))
+    # Convolution and downsampling of intermediate features
+    conv0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
+    conv1  = neuromancer.Conv(conv0, 32,  (1,3,3), (1,1,1))
+    down0  = neuromancer.Pool(conv1, (1,2,2), mode='max')  # mid res
+    conv2  = neuromancer.Conv(down0, 64,  (1,3,3), (1,1,1))
+    conv3  = neuromancer.Conv(conv2, 64,  (1,3,3), (1,1,1))
+    down1  = neuromancer.Pool(conv3, (1,2,2), mode='max')  # low res
+    conv4  = neuromancer.Conv(down1, 128,  (1,3,3), (1,1,1))
+    conv5  = neuromancer.Conv(conv4, 128,  (1,3,3), (1,1,1))
+    down2  = neuromancer.Pool(conv5, (1,2,2), mode='max')  # very low res
+    conv6  = neuromancer.Conv(down2, 256,  (3,3,3), (1,1,1))
+    conv7  = neuromancer.Conv(conv6, 256,  (3,3,3), (1,1,1))
 
-    up6 = neuromancer.UpConvMerge(out4, up5, 256)
-    up7 = neuromancer.Conv(up6, 128,  (3,3,3), (1,1,1))
-    up8 = neuromancer.Conv(up7, 128,  (3,3,3), (1,1,1))
+    # Merging very low-res features with low-res features
+    mrg0 = neuromancer.UpConvMerge(conv5, conv7, 512)
+    up4  = neuromancer.Conv(mrg0, 256,  (1,3,3), (1,1,1))
+    up5  = neuromancer.Conv(up4, 256,  (1,3,3), (1,1,1))
 
-    up9 = neuromancer.UpConvMerge(out1, up8, 128)
-    up10 = neuromancer.Conv(up9, 64,  (3,3,3), (1,1,1))
+    # Merging low-res with mid-res features
+    mrg1 = neuromancer.UpConvMerge(conv3, up5, 256)
+    up7  = neuromancer.Conv(mrg1, 128,  (3,3,3), (1,1,1))
+    up8  = neuromancer.Conv(up7, 128,  (3,3,3), (1,1,1))
+
+    # Merging mid-res with high-res features
+    mrg2 = neuromancer.UpConvMerge(conv1, up8, 128)
+    up10 = neuromancer.Conv(mrg2, 64,  (3,3,3), (1,1,1))
     up11 = neuromancer.Conv(up10, 64,  (3,3,3), (1,1,1))
 
     barr = neuromancer.Conv(up11,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
