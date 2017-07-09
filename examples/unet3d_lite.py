@@ -53,7 +53,7 @@ def create_model():
     in_sh = (None,1,22,140,140)
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    # Convolution and downsampling of intermediate features
+    # Convolution, downsampling of intermediate features
     conv0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
     conv1  = neuromancer.Conv(conv0, 32,  (1,3,3), (1,1,1))
     down0  = neuromancer.Pool(conv1, (1,2,2), mode='max')  # mid res
@@ -67,24 +67,24 @@ def create_model():
     conv7  = neuromancer.Conv(conv6, 256,  (3,3,3), (1,1,1))
 
     # Merging very low-res features with low-res features
-    mrg0 = neuromancer.UpConvMerge(conv5, conv7, 512)
-    up4  = neuromancer.Conv(mrg0, 256,  (1,3,3), (1,1,1))
-    up5  = neuromancer.Conv(up4, 256,  (1,3,3), (1,1,1))
+    mrg0   = neuromancer.UpConvMerge(conv5, conv7, 512)
+    mconv0 = neuromancer.Conv(mrg0, 256,  (1,3,3), (1,1,1))
+    mconv1 = neuromancer.Conv(mconv0, 256,  (1,3,3), (1,1,1))
 
     # Merging low-res with mid-res features
-    mrg1 = neuromancer.UpConvMerge(conv3, up5, 256)
-    up7  = neuromancer.Conv(mrg1, 128,  (3,3,3), (1,1,1))
-    up8  = neuromancer.Conv(up7, 128,  (3,3,3), (1,1,1))
+    mrg1   = neuromancer.UpConvMerge(conv3, mconv1, 256)
+    mconv2 = neuromancer.Conv(mrg1, 128,  (3,3,3), (1,1,1))
+    mconv3 = neuromancer.Conv(mconv2, 128,  (3,3,3), (1,1,1))
 
     # Merging mid-res with high-res features
-    mrg2 = neuromancer.UpConvMerge(conv1, up8, 128)
-    up10 = neuromancer.Conv(mrg2, 64,  (3,3,3), (1,1,1))
-    up11 = neuromancer.Conv(up10, 64,  (3,3,3), (1,1,1))
+    mrg2   = neuromancer.UpConvMerge(conv1, mconv3, 128)
+    mconv4 = neuromancer.Conv(mrg2, 64,  (3,3,3), (1,1,1))
+    mconv5 = neuromancer.Conv(mconv4, 64,  (3,3,3), (1,1,1))
 
-    barr = neuromancer.Conv(up11,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
+    barr = neuromancer.Conv(mconv5,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
     probs = neuromancer.Softmax(barr)
 
-    target = neuromancer.Input_like(up11, override_f=1, name='target')
+    target = neuromancer.Input_like(mconv5, override_f=1, name='target')
 
     loss_pix = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 
