@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+# Inspired by "3D U-Net", Özgün Çiçek et al.,
+# (https://arxiv.org/abs/1606.06650). For a more faithful (but much heavier)
+# implementation, refer to examples/unet_3d.py.
+
 save_path = '~/elektronn2_training/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
@@ -46,13 +50,8 @@ batch_size = 1
 def create_model():
     from elektronn2 import neuromancer
 
-    in_sh = (None,1,20,188,188)
-    # For quickly trying out input shapes via CLI args, uncomment:
-    #import sys; a = int(sys.argv[1]); b = int(sys.argv[2]); in_sh = (None,1,a,b,b)
+    in_sh = (None,1,22,140,140)
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
-
-    # This model is inspired by the U-Net paper https://arxiv.org/abs/1505.04597
-    # (but not an exact re-implementation).
 
     # Convolution and downsampling of intermediate features
     conv0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
