@@ -36,7 +36,7 @@ def read(fname):
 
 setup(
     name="elektronn2",
-    version="0.1.0",
+    version="0.2.0",
     packages=find_packages(),
     scripts=[
         'scripts/elektronn2-train',
@@ -59,7 +59,7 @@ setup(
         'scikit-learn',
         'psutil>=5.0.1',
         'scikit-image>=0.12.3',
-        'numba>=0.25'
+        'numba>=0.25',
     ],
     extras_require={
         'knossos': ['knossos_utils'],
