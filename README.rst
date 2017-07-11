@@ -1,6 +1,9 @@
 .. image:: https://readthedocs.org/projects/elektronn2/badge/?version=latest
   :target: http://elektronn2.readthedocs.io/en/latest/?badge=latest
-  :alt: Documentation Status
+.. image:: https://img.shields.io/pypi/v/elektronn2.svg
+  :target: https://pypi.org/project/elektronn2/
+.. image:: https://anaconda.org/conda-forge/elektronn2/badges/version.svg
+  :target: https://anaconda.org/conda-forge/elektronn2
 
 ****************
 About ELEKTRONN2
