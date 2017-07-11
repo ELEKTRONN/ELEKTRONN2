@@ -10,6 +10,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, \
 import logging
 import os
 import getpass
+import sys
 
 try:
     import colorlog
@@ -52,12 +53,12 @@ if not len(logger.handlers) > 0:
     logger.addHandler(lfile_handler)
 
     if colorize:
-        lstream_handler = colorlog.StreamHandler()
+        lstream_handler = colorlog.StreamHandler(sys.stdout)
         lstream_handler.setFormatter(
             colorlog.LevelFormatter(fmt=log_level_formats,
                                     log_colors=log_colors))
     else:
-        lstream_handler = logging.StreamHandler()  # log to stderr
+        lstream_handler = logging.StreamHandler(sys.stdout)
     # set this to logging.DEBUG to enable output for logger.debug() calls
     lstream_level = logging.INFO
     lstream_handler.setLevel(lstream_level)
@@ -92,12 +93,12 @@ if not len(inspection_logger.handlers) > 0:
 
     if config.inspection:
         if colorize:
-            lstream_handler = colorlog.StreamHandler()
+            lstream_handler = colorlog.StreamHandler(sys.stdout)
             lstream_handler.setFormatter(
                 colorlog.LevelFormatter(fmt=log_level_formats,
                                         log_colors=log_colors_inspection))
         else:
-            lstream_handler = logging.StreamHandler()  # log to stderr
+            lstream_handler = logging.StreamHandler(sys.stdout)
         # set this to logging.DEBUG to enable output for inspection_logger.debug() calls
         lstream_level = logging.INFO
         lstream_handler.setLevel(lstream_level)
