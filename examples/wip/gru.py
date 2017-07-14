@@ -81,7 +81,11 @@ if __name__ == "__main__":
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
+        import getpass
+
+        user_name = getpass.getuser()
+        filename_noext = __file__.split('.')[-2]
+        vispath = '/tmp/{}_{}_model-graph'.format(user_name, filename_noext)
         visualise_model(model, vispath)
         print('Visualisation files are saved at {}'.format(
             vispath + '.{png,html}'))
