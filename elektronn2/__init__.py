@@ -45,7 +45,7 @@ if not len(logger.handlers) > 0:
     lfile_formatter = logging.Formatter(
         '[%(asctime)s] [%(levelname)s]\t%(message)s',
         datefmt='%Y-%m-%d %H:%M:%S')
-    lfile_path = os.path.abspath('/tmp/elektronn2-%s.log' % user_name)
+    lfile_path = os.path.abspath('/tmp/{}_elektronn2.log'.format(user_name))
     lfile_level = logging.DEBUG
     lfile_handler = logging.FileHandler(lfile_path)
     lfile_handler.setLevel(lfile_level)
@@ -83,7 +83,7 @@ if not len(inspection_logger.handlers) > 0:
     lfile_formatter = logging.Formatter('%(message)s')
     lfile_path = os.path.abspath(
         # os.path.expanduser('~/elektronn2-inspection.log')
-        '/tmp/elektronn2-inspection.log'
+        '/tmp/{}_elektronn2-inspection.log'.format(user_name)
     )
     lfile_level = logging.DEBUG
     lfile_handler = logging.FileHandler(lfile_path)

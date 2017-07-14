@@ -20,6 +20,7 @@ import time
 import functools
 import uuid
 import gc
+import getpass
 from collections import OrderedDict
 from functools import reduce
 
@@ -43,6 +44,8 @@ if sys.version_info.major >= 3:
 logger = logging.getLogger('elektronn2log')
 
 floatX = theano.config.floatX
+
+user_name = getpass.getuser()
 
 ###############################################################################
 
@@ -1063,7 +1066,7 @@ class Node(with_metaclass(MetaNode, object)):
         """
         Plot the execution graph of this Node's Theano function to a file.
 
-        If "outfile" is not specified, the plot is saved in "/tmp/<NAME>.png"
+        If "outfile" is not specified, the plot is saved in "/tmp/<user>_<name>.png"
 
         Parameters
         ----------
@@ -1076,7 +1079,7 @@ class Node(with_metaclass(MetaNode, object)):
             theano.printing.pydotprint().
         """
         if outfile is None:
-            outfile ='/tmp/%s.png'%self.name
+            outfile ='/tmp/{}_{}.png'.format(user_name, self.name)
         kwargs['outfile'] = outfile
         if 'var_with_name_simple' not in kwargs:
             kwargs['var_with_name_simple'] = True

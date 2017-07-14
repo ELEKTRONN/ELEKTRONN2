@@ -13,6 +13,7 @@ import logging
 import os
 import sys
 import time
+import getpass
 
 try:
     from importlib import reload
@@ -30,6 +31,8 @@ from ..config import config
 
 logger = logging.getLogger('elektronn2log')
 inspection_logger = logging.getLogger('elektronn2log-inspection')
+
+user_name = getpass.getuser()
 
 ###############################################################################
 
@@ -872,8 +875,8 @@ class AgentData(BatchCreatorImage):
                 target_vec_ix=self.target_vec_ix,
                 target_discrete_ix=self.target_discrete_ix, rng=self.rng)
             i = np.random.randint(0, 1014)
-            utils.h5save(image, '/tmp/img%i-%.2f.h5'%(i,scale))
-            utils.h5save(image_ref, '/tmp/img%i-ref.h5' % i)
+            utils.h5save(image, '/tmp/%s_img%i-%.2f.h5'%(user_name, i,scale))
+            utils.h5save(image_ref, '/tmp/%s_img%i-ref.h5' % (user_name, i))
             #utils.h5save(debug_img, '/tmp/dbg-img-%.2f.h5' % scale)
             ret = [images, target, trafo, debug_img]
 

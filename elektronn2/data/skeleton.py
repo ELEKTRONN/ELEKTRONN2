@@ -13,6 +13,7 @@ import os
 import sys
 from subprocess import check_call
 import logging
+import getpass
 from collections import OrderedDict
 
 import numba
@@ -42,6 +43,8 @@ except ImportError as e:
                  ' install the knossos_utils module'
                  ' (https://github.com/knossos-project/knossos_utils)\n')
     raise e
+
+user_name = getpass.getuser()
 
 with open(os.devnull, 'w') as devnull:
     # mayavi is to dumb to raise an exception and instead crashes whole script....
@@ -933,7 +936,8 @@ class SkeletonMFK(object):
                                              suppress_small=True)))
         if config.inspection>1:
             img, grid_t = self.debug_store
-            utils.picklesave([img[0,0], grid_t[0], grid[0,0]], '/tmp/debug_skel_%i' %self.skel_num)
+            utils.picklesave(
+                [img[0,0], grid_t[0], grid[0,0]], '/tmp/{}_debug_skel_{}'.format(user_name, self.skel_num))
 
         self.current_trace.append(new_position_s, coord_cnn=new_position_c,
                                   features=pred_features)
