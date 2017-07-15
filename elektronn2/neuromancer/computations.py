@@ -53,11 +53,12 @@ def apply_except_axis(x, axis, func):
     return y
 
 
+# TODO: Support arbitrary callables for activation_func arg
 def apply_activation(x, activation_func, b1=None):
     """
     Return an activation function callable matching the name
     Allowed names: 'relu', 'tanh','prelu', 'sigmoid', 'maxout <i>',
-    'lin','abs','soft+'.
+    'lin','abs','soft+', 'elu', 'selu'.
 
     Parameters
     ----------
