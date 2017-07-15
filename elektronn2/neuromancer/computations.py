@@ -78,16 +78,11 @@ def apply_activation(x, activation_func, b1=None):
     if activation_func=='tanh': # range = [-1,1]
         func = T.tanh
     elif activation_func=='relu': # rectified linear unit ,range = [0,inf]
-        def relu(y):
-            return (0.5 * (y + abs(y)))
-        func = relu
+        func = T.nnet.relu
 
     elif activation_func=='prelu': # parameterised relu
-        def prelu(y, alpha):
-            pos = ((y + abs(y)) / 2.0)
-            neg = alpha * ((y - abs(y)) / 2.0)
-            return pos + neg
-        func = prelu
+        # T.nnet.relu also implements prelu (with extra "alpha" parameter)
+        func = T.nnet.relu
 
     elif activation_func=='abs': # abs unit ,range = [0,inf]
         func = T.abs_
