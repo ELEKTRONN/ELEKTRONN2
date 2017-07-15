@@ -48,7 +48,7 @@ setup(
         'scipy>=0.14',
         'matplotlib>=1.4',
         'h5py>=2.2',
-        'theano>=0.7,<0.10',  # ELEKTRONN2 relies on the old Theano backend that has been removed now
+        'theano>=0.8,<0.10',  # ELEKTRONN2 relies on the old Theano backend that has been removed now
         'future>=0.15',
         'tqdm>=4.5',
         'colorlog>=2.7',
