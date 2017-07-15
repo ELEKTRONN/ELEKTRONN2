@@ -79,11 +79,23 @@ def apply_activation(x, activation_func, b1=None):
         func = T.tanh
     elif activation_func=='relu': # rectified linear unit ,range = [0,inf]
         func = T.nnet.relu
-
     elif activation_func=='prelu': # parameterised relu
         # T.nnet.relu also implements prelu (with extra "alpha" parameter)
         func = T.nnet.relu
+    elif activation_func=='elu':  # exponential linear unit
+        func = T.nnet.elu
+    elif activation_func=='selu':  # scaled exponential linear unit (for SNNs)
+        def selu(y):
+            """
+            SELU for Self-Normalizing Networks (https://arxiv.org/abs/1706.02515)
 
+            T.nnet.selu() is only available in Theano 0.10+, so we implement
+            it ourselves.
+            """
+            alpha = 1.6732632423543772848170429916717
+            scale = 1.0507009873554804934193349852946
+            return scale * T.nnet.elu(x, alpha)
+        func = selu
     elif activation_func=='abs': # abs unit ,range = [0,inf]
         func = T.abs_
     elif activation_func in ['sig', 'logistic', 'sigmoid']: # range = [0,1]
