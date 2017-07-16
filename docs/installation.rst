@@ -163,9 +163,7 @@ don't want to specify it all the time in your command line, you can also
 configure it in ``~/.theanorc``::
 
   [global]
-  device = gpu0
-
-.. TODO: When the switch to the new back end is complete, replace gpu0 by cuda0.
+  device = cuda0
 
 More options to configure Theano can be found in the
 `theano.config <http://deeplearning.net/software/theano/library/config.html>`_
