@@ -20,6 +20,7 @@ import time
 import functools
 import uuid
 import gc
+import getpass
 from collections import OrderedDict
 from functools import reduce
 
@@ -43,6 +44,8 @@ if sys.version_info.major >= 3:
 logger = logging.getLogger('elektronn2log')
 
 floatX = theano.config.floatX
+
+user_name = getpass.getuser()
 
 ###############################################################################
 
@@ -874,6 +877,8 @@ class Node(with_metaclass(MetaNode, object)):
             Predictions.
         """
 
+        # TODO: Fix "negative dimensions are not allowed" errors with raw_img.shape < patch size
+
         # determine normalisation depending on int or float type
         if self.shape.ndim<2:
             logger.error("'predict_dense' works only for nodes with 2 or 3 "
@@ -908,7 +913,7 @@ class Node(with_metaclass(MetaNode, object)):
         strip_z = False
         if raw_img.ndim==3:
             strip_z = True
-            raw_img = raw_img[:,None] # add singleton z-channel
+            raw_img = raw_img[:,None] # add singleton z-channel  # TODO: Correct order?
 
         n_lab      = self.shape['f']
         cnn_out_sh = self.shape.spatial_shape
@@ -1061,7 +1066,7 @@ class Node(with_metaclass(MetaNode, object)):
         """
         Plot the execution graph of this Node's Theano function to a file.
 
-        If "outfile" is not specified, the plot is saved in "/tmp/<NAME>.png"
+        If "outfile" is not specified, the plot is saved in "/tmp/<user>_<name>.png"
 
         Parameters
         ----------
@@ -1074,7 +1079,7 @@ class Node(with_metaclass(MetaNode, object)):
             theano.printing.pydotprint().
         """
         if outfile is None:
-            outfile ='/tmp/%s.png'%self.name
+            outfile ='/tmp/{}_{}.png'.format(user_name, self.name)
         kwargs['outfile'] = outfile
         if 'var_with_name_simple' not in kwargs:
             kwargs['var_with_name_simple'] = True

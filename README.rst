@@ -1,6 +1,9 @@
 .. image:: https://readthedocs.org/projects/elektronn2/badge/?version=latest
   :target: http://elektronn2.readthedocs.io/en/latest/?badge=latest
-  :alt: Documentation Status
+.. image:: https://img.shields.io/pypi/v/elektronn2.svg
+  :target: https://pypi.org/project/elektronn2/
+.. image:: https://anaconda.org/conda-forge/elektronn2/badges/version.svg
+  :target: https://anaconda.org/conda-forge/elektronn2
 
 ****************
 About ELEKTRONN2
@@ -87,90 +90,11 @@ class and seamlessly integrated into neural network models).
   +--------------------------------------------------+------------------------------------------------------------+
 
 
-Technology
-----------
-
-As the back-end we chose `Theano <http://deeplearning.net/software/theano/>`_
-because of good prior experience and competitive performance.
-With Theano, symbolic computational graphs can be created, in which nodes stand
-for operations and edges carry values (input and output can be seen as a special
-operation i.e. a node).
-Theano is able to compile a graph into a binary executable for different targets
-(CPU, openMP, GPUs with CUDA support); highly optimised routines from numerical
-libraries for those targets (e.g. BLAS, cuBLAS, cuDNN) will be used for
-corresponding operations. Using a symbolic graph facilitates automatic
-differentiation and optimisation of the graph prior to compilation (e.g. common
-subexpression elimination, fusion of composed element-wise operations, constant
-folding). For (convolutional) neural networks the GPU is the most efficient
-target and Theano can itself be seen as a back-end for low-level CUDA.
-
-Other dependencies:
-
-* **matplotlib** (plotting of training statistics and prediction previews)
-* **h5py** (reading and writing data sets)
-* **numpy** (math and data types)
-* **scipy** (math and image handling)
-* **numba** (accelerating numpy code)
-* **future** (maintaining Python 2/3 compatibility)
-* **tqdm** (progress bars in the CLI)
-* **colorlog** (logging framework)
-* **prompt_toolkit** (interactive training shell)
-* **jedi** (shell autocompletions)
-* **scikit-learn** (cross-validation)
-* **scikit-image** (image processing)
-* **seaborn** (plot style)
-* **pydotplus** (visualizing computation graphs)
-* **psutil** (parallelisation)
-
-
 Installation
 ------------
 
-.. note:: ELEKTRONN2 is supported on Linux (x86_64), with Python versions
-  2.7, 3.4, 3.5 and 3.6.
-  Everything else is untested, but some other platforms might work as well.
-  Please create an `issue <https://github.com/ELEKTRONN/ELEKTRONN2/issues>`_ if
-  you are interested in support for other platforms.
-
-
-Installing with ``pip``
-^^^^^^^^^^^^^^^^^^^^^^^
-
-You can install the current git version of ELEKTRONN2 and all of its
-dependencies with the ``pip`` package manager. For Python 3, run::
-
-  python3 -m pip install numpy # numpy has to be installed manually first!
-  python3 -m pip install git+https://github.com/ELEKTRONN/ELEKTRONN2
-
-Or if you want to install ELEKTRONN2 for Python 2::
-
-  python2 -m pip install numpy # numpy has to be installed manually first!
-  python2 -m pip install git+https://github.com/ELEKTRONN/ELEKTRONN2
-
-We suggest that you do this inside a `virtualenv <https://virtualenv.pypa.io>`_
-or a `conda env <https://conda.io/docs/using/envs.html>`_ to prevent conflicts
-with system packages.
-
-.. TODO: Manual numpy install is only necessary because numba doesn't provide
-  wheels. Once wheels are public, delete the "pip install numpy" lines.
-
-.. TODO: Maybe describe an example setup of a virtualenv.
-
-Arch Linux (AUR)
-^^^^^^^^^^^^^^^^
-
-If you use Arch Linux, you can install the
-`ELEKTRONN2 AUR package <https://aur.archlinux.org/packages/python-elektronn2-git/>`_
-by running::
-
-  pacaur -S python-elektronn2-git # for Python 3
-  pacaur -S python2-elektronn2-git # for Python 2
-
-.. note:: In the Python 2 AUR package, the ``elektronn2-train`` command is
-  named ``elektronn2-train2`` to prevent file name conflicts.
-
-
-.. TODO: conda/conda-forge install once we have a tagged release
+See the installation instructions at
+https://elektronn2.readthedocs.io/en/latest/installation.html.
 
 
 .. _design:
@@ -189,49 +113,6 @@ performing the convolution, adding the bias, applying the activation function
 and optional operations such as dropout or batch normalisation. Involved
 parameters might be trainable (e.g. convolution weights) or non-trainable but
 changeable during training (e.g. dropout rates).
-
-
-Nodes and layers
-----------------
-
-Nodes automatically keep track of their parents and children, parameters, computational
-cost, output shape, spatial field of view, spatial strides etc. Users can call a node object
-simply like a numpy function. The corresponding Theano compilation is done on demand
-upon first call; all arguments Theano needs for the compilation process are automatically
-gathered from the node meta data. Methods for profiling, checking the correct output
-shape or making dense predictions with a (strided) CNN on arbitrarily shaped input are
-additionally provided. Shapes are augmented with usage tags e.g. 'x', 'y', 'z' for spatial
-axes, 'f' for the feature axis.
-
-Nodes are mostly generic, e.g. the ``Perceptron`` node can operate on any input by reading
-from the input shape tags which axis the dot product should be applied over, irrespective
-of the total input dimensionality. Likewise there is only one type of convolution node
-which can handle 1-, 2- and 3-dimensional convolutions and determines the case based on
-the input shape tags, it does also make replacements of the convolution operation if this
-makes computation faster: for a 3-dimensional convolution where the filter size is 1 on
-the z-axis using a 2-dimensional convolution back-end is faster for gradient computation;
-convolutions where all filter shapes are 1 can be calculated faster using the dot product.
-
-
-Network models
---------------
-
-Whenever a ``Node`` is created, it is registered internally to a ``model`` object which also
-records the exact arguments with which the node was created as node descriptors. The
-model provides an interface for the trainer by designating nodes as input, target, loss
-and monitoring outputs. The model also offers functions for plotting the computational
-graph as image, and showing statistics about gradients, neuron activations and parameters
-(mean, standard deviation, median).
-
-Furthermore, the ``model`` offers methods loading and saving from/to disk. Because for this
-the descriptors are used and not the objects itself, these can programmatically be manipulated
-before restoration of a saved graph.
-This is used for:
-* changing input image size of a CNN (including sanity check of new shape),
-* inserting Max-Fragment-Pooling (MFP) into a CNN that was trained without MFP,
-* marking specific parameters as non-trainable for faster training,
-* changing batch normalisation from training mode to prediction mode
-* creating a one-step function from a multi-step RNN.
 
 
 .. _features:

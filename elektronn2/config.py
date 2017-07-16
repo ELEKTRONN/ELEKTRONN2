@@ -62,7 +62,7 @@ class DefaultConfig(object):
         ### Toolkit Setup ###------------------------------------------------------
         # (*) <String>: where to create the CNN directory.
         # In this directory a new folder is created with the name of the model
-        self.save_path = os.path.abspath(os.path.expanduser("~/CNN_Training/"))
+        self.save_path = os.path.abspath(os.path.expanduser('~/elektronn2_training/'))
         self.plot_on = True  # <Bool>: whether to create plots of the errors etc.
         self.print_status = True  # <Bool>: whether to print Training status to std.out
         self.device = None  # None|'auto'|'none'|'cuda<int>' (use .theanorc value) or int (use GPU <i>)
@@ -86,6 +86,10 @@ class DefaultConfig(object):
         self.inspection = False
         # Whether to create a backup of the current source code in the save directory
         self.backupsrc = True
+        # Whether to display some initial plots in a pop-up GUI.
+        # TODO: This needs to be cleaned up. Plotting outputs (files, GUI) should be more distinguished globally.
+        #       (Currently, several plotting functions try to both write pngs and open GUIs all over the place).
+        self.gui_plot = False
         self.__doc__ = ""  # Just a hack
 
         self.read_user_config()

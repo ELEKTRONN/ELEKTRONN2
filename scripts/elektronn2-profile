@@ -94,13 +94,13 @@ no_gc = False
 mfp = False
 
 
-model_path = os.path.expanduser(model_path)
+model_path = os.path.abspath(os.path.expanduser(model_path))
 model_dir, model_name = os.path.split(model_path)
 os.chdir(model_dir)
 f_name = model_name[:-4]+'-Speed.csv'
 
 
-# Benchmark Model Compiled with static Shape #
+# Benchmark Model Compiled with static Shape
 if in_sh:
     model_static = modelload(model_path, override_mfp_to_active=mfp,
                              imposed_patch_size=in_sh[2:],
@@ -134,7 +134,8 @@ if in_sh:
 
 else:
     model_flexi = modelload(model_path, override_mfp_to_active=mfp,
-                            imposed_batch_size='flexi', make_weights_constant=True)
+                            make_weights_constant=True)
+    # TODO: Also iterate over possible batch sizes?
 
     fov = model_flexi.prediction_node.shape.fov
     in_sh0 = model_flexi.input_node.shape.spatial_shape
@@ -147,6 +148,9 @@ else:
         else:
             f.write("xy-shape\tpixel\tSpeed [MPix/s]\n")
 
+    # Gradually enhance in_sh until the device's memory limit is reached.
+    # Collect the tried in_sh values as strings to be passed to this
+    # script as the "--in_sh=" argument.
     call_args = []
     try:
         if ndim==2:
@@ -221,11 +225,16 @@ else:
     except MemoryError:
         print("Flexi has reached memory error")
 
+    # Try profiling the collected input shapes individually, in reverse order
+    # (the potentially best-performing ones are tried first). Many of these runs
+    # are expected to fail because these automatic shapes often lead to invalid models.
+    # If a model can be sucessfully compiled, its performance is evaluated and logged
+    # into *-Speed.csv in the model's directory.
     for in_sh_str in call_args[::-1]:
         python = sys.executable
         if no_gc:
             call("%s %s %s --in_sh=%s" % (python, this_file, model_path, in_sh_str),
                  shell=True, executable="/bin/bash")
         else:
-            call("THEANO_FLAGS='linker=cvm,allo_gc=True' %s %s %s --in_sh=%s" % (python, this_file, model_path, in_sh_str),
+            call("THEANO_FLAGS='linker=cvm,allow_gc=True' %s %s %s --in_sh=%s" % (python, this_file, model_path, in_sh_str),
                  shell=True, executable="/bin/bash")

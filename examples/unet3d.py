@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 
-save_path = '~/elektronn2_examples/'
+# Implements the "3D U-Net" by Özgün Çiçek et al.
+# (https://arxiv.org/abs/1606.06650). Notable differences:
+# - Optimiser changes (Adam instead of SGD, changed lr etc.)
+# - Enhanced image augmentation pipeline
+# - No batch normalization
+# - 2 output channels instead of 3 (because of neuro_data_zxy)
+#
+# Note that this network has high memory requirements and is
+# very slow to train. A similar, but more light-weight model
+# can be found in examples/unet_3d_lite.py.
+
+save_path = '~/elektronn2_training/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
     'export_class': [1],
@@ -45,42 +56,42 @@ batch_size = 1
 
 def create_model():
     from elektronn2 import neuromancer
-    import theano.tensor as T
-    import numpy as np
 
-    in_sh = (None,1,18,148,148)
-    # For quickly trying out input shapes via CLI args, uncomment:
-    #import sys; a = int(sys.argv[1]); b = int(sys.argv[2]); in_sh = (None,1,a,b,b)
+    in_sh = (None,1,116,132,132)
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    out0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
-    out1  = neuromancer.Conv(out0, 32,  (1,3,3), (1,1,1))
-    out2  = neuromancer.Pool(out1, (1,2,2))
-    out3  = neuromancer.Conv(out2, 64,  (1,3,3), (1,1,1))
-    out4  = neuromancer.Conv(out3, 64,  (1,3,3), (1,1,1))
-    out5  = neuromancer.Pool(out4, (1,2,2))
-    out6  = neuromancer.Conv(out5, 128,  (1,3,3), (1,1,1))
-    out7  = neuromancer.Conv(out6, 128,  (1,3,3), (1,1,1))
-    out8  = neuromancer.Pool(out7, (1,2,2))
-    out9  = neuromancer.Conv(out8, 256,  (3,3,3), (1,1,1))
-    out10 = neuromancer.Conv(out9, 256,  (3,3,3), (1,1,1))
+    # Convolution, downsampling of intermediate features
+    conv0  = neuromancer.Conv(inp,  32,  (3,3,3), (1,1,1))
+    conv1  = neuromancer.Conv(conv0, 64,  (3,3,3), (1,1,1))
+    down0  = neuromancer.Pool(conv1, (2,2,2), mode='max')  # mid res
+    conv2  = neuromancer.Conv(down0, 64,  (3,3,3), (1,1,1))
+    conv3  = neuromancer.Conv(conv2, 128,  (3,3,3), (1,1,1))
+    down1  = neuromancer.Pool(conv3, (2,2,2), mode='max')  # low res
+    conv4  = neuromancer.Conv(down1, 128,  (3,3,3), (1,1,1))
+    conv5  = neuromancer.Conv(conv4, 256,  (3,3,3), (1,1,1))
+    down2  = neuromancer.Pool(conv5, (2,2,2), mode='max')  # very low res
+    conv6  = neuromancer.Conv(down2, 256,  (3,3,3), (1,1,1))
+    conv7  = neuromancer.Conv(conv6, 512,  (3,3,3), (1,1,1))
 
-    up3 = neuromancer.UpConvMerge(out7, out10, 512)
-    up4 = neuromancer.Conv(up3, 256,  (1,3,3), (1,1,1))
-    up5 = neuromancer.Conv(up4, 256,  (1,3,3), (1,1,1))
+    # Merging very low-res features with low-res features
+    mrg0   = neuromancer.UpConvMerge(conv5, conv7, 512)
+    mconv0 = neuromancer.Conv(mrg0, 256,  (3,3,3), (1,1,1))
+    mconv1 = neuromancer.Conv(mconv0, 256,  (3,3,3), (1,1,1))
 
-    up6 = neuromancer.UpConvMerge(out4, up5, 256)
-    up7 = neuromancer.Conv(up6, 128,  (3,3,3), (1,1,1))
-    up8 = neuromancer.Conv(up7, 128,  (3,3,3), (1,1,1))
+    # Merging low-res with mid-res features
+    mrg1   = neuromancer.UpConvMerge(conv3, mconv1, 256)
+    mconv2 = neuromancer.Conv(mrg1, 128,  (3,3,3), (1,1,1))
+    mconv3 = neuromancer.Conv(mconv2, 128,  (3,3,3), (1,1,1))
 
-    up9 = neuromancer.UpConvMerge(out1, up8, 128)
-    up10 = neuromancer.Conv(up9, 64,  (3,3,3), (1,1,1))
-    up11 = neuromancer.Conv(up10, 64,  (3,3,3), (1,1,1))
+    # Merging mid-res with high-res features
+    mrg2   = neuromancer.UpConvMerge(conv1, mconv3, 128)
+    mconv4 = neuromancer.Conv(mrg2, 64,  (3,3,3), (1,1,1))
+    mconv5 = neuromancer.Conv(mconv4, 64,  (3,3,3), (1,1,1))
 
-    barr = neuromancer.Conv(up11,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
+    barr = neuromancer.Conv(mconv5,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
     probs = neuromancer.Softmax(barr)
 
-    target = neuromancer.Input_like(up11, override_f=1, name='target')
+    target = neuromancer.Input_like(mconv5, override_f=1, name='target')
 
     loss_pix = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 
@@ -115,7 +126,11 @@ if __name__ == '__main__':
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
+        import getpass
+
+        user_name = getpass.getuser()
+        filename_noext = __file__.split('.')[-2]
+        vispath = '/tmp/{}_{}_model-graph'.format(user_name, filename_noext)
         visualise_model(model, vispath)
         print('Visualisation files are saved at {}'.format(
             vispath + '.{png,html}'))

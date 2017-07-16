@@ -18,6 +18,7 @@ import numpy as np
 import seaborn as sns
 
 from .locking import FileLock
+from ..config import config
 
 import logging
 
@@ -697,7 +698,8 @@ def plot_trainingtarget(img, lab, stride=1):
         plt.subplot(133)
         plt.imshow(overlay, interpolation='none', cmap=plt.get_cmap('gray'))
         plt.title('overlay')
-    plt.show()
+    if config.gui_plot:
+        plt.show()
     return img - lab
 
 

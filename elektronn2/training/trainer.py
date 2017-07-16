@@ -425,14 +425,18 @@ class Trainer(object):
                 i = self.data.offsets[0] # z offset
                 plot_trainingtarget(data[0,i+t_i], target, 1)
 
-            plt.ion()
-            plt.show()
             with FileLock('plotting'):
                 plt.savefig('Batch_test_image.png', bbox_inches='tight')
-            plt.pause(0.01)
-            plt.pause(2.0)
-            plt.close('all')
-            plt.pause(0.01)
+                # Hard to reason about plt here. It's a side effect of plot_traingtarget calls.
+
+            if config.gui_plot:
+                plt.ion()
+                plt.show()
+                plt.pause(0.01)
+                plt.pause(2.0)
+                plt.close('all')
+                plt.pause(0.01)
+
             return batch
         else:
             logger.warning('debug_getcnnbatch() is only available for "img-img"'
@@ -685,13 +689,13 @@ class TracingTrainer(Trainer):
 
 
         if self.model.ndim==3 and extended:
-            dest = '/tmp/%s-'%user_name
+            dest = '/tmp/%s_' % user_name
             data, target = batch[0], batch[1]
             target[np.isclose(target, -666)] = 0
             i = self.data.offsets[0]  # z offset
             with FileLock('plotting'):
                 for j in range(data.shape[2]):
-                    plt.imsave('/tmp/img-%i.png' % j, data[0, 0, j], cmap='gray')
+                    plt.imsave('/tmp/%s_img-%i.png' % (user_name, j), data[0, 0, j], cmap='gray')
                     if j - i >= 0 and j - i < target.shape[2]:
                         plt.imsave(dest+'img-%i-br.png'%j, target[0, 4, j - i],cmap='gray')
                         plt.imsave(dest+'img-%i-z.png'%j, target[0,0,j-i], cmap='gray')
@@ -708,14 +712,16 @@ class TracingTrainer(Trainer):
 
                         quiver.savefig(dest+'vec-%i.png'%j, bbox_inches='tight')
 
-        plt.ion()
-        plt.show()
         with FileLock('plotting'):
             plt.savefig('Batch_test_image.png', bbox_inches='tight')
-        plt.pause(0.01)
-        plt.pause(2.0)
-        plt.close('all')
-        plt.pause(0.01)
+
+        if config.gui_plot:
+            plt.ion()
+            plt.show()
+            plt.pause(0.01)
+            plt.pause(2.0)
+            plt.close('all')
+            plt.pause(0.01)
 
         return batch
 

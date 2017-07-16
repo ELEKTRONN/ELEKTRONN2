@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-save_path = '~/elektronn2_examples/'
+save_path = '~/elektronn2_training/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
     'export_class': [1],
@@ -93,7 +93,11 @@ if __name__ == '__main__':
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
+        import getpass
+
+        user_name = getpass.getuser()
+        filename_noext = __file__.split('.')[-2]
+        vispath = '/tmp/{}_{}_model-graph'.format(user_name, filename_noext)
         visualise_model(model, vispath)
         print('Visualisation files are saved at {}'.format(
             vispath + '.{png,html}'))

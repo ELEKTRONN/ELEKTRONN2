@@ -32,14 +32,15 @@ Prediction example for ``neuro3d``
 ``~/.theanorc`` or ``~/.elektronn2rc``, you need to initialise it
 **before** the other imports::
 
-  from elektronn2.utils import initgpu
+  from elektronn2.utils.gpu import initgpu
   initgpu('auto')  # or "initgpu('0')" for the first GPU etc.
 
 Find the save directory and choose a model file (you probably want the
-one called ``<save_name>-FINAL.mdl``) and a file that contains the raw
+one called ``<save_name>-FINAL.mdl``, or alternatively ``<save_name>-LAST.mdl``
+if the training process is not finished yet) and a file that contains the raw
 images on which you want to execute the neural network, e.g.::
 
-  model_path = '~/elektronn2_examples/neuro3d/neuro3d-FINAL.mdl'
+  model_path = '~/elektronn2_training/neuro3d/neuro3d-FINAL.mdl'
   raw_path = '~/neuro_data_zxy/raw_2.h5'  # raw cube for validation
 
 For loading data from (reasonably small) hdf5 files, you can use the
@@ -73,6 +74,10 @@ trained with only 1 input channel here (the uint8 pixel intensities)::
 
   pred = model.predict_dense(raw4d)
 
+The numpy array ``pred`` now contains the predicted output in the
+shape ``(f=2, z=18, x=56, y=56)`` (same axis order but different sizes than
+the input ``raw4d`` due to convolution padding etc.).
+
 .. TODO: Link to complete copy-pastable example "predict.py"? Or even automate (templated) predict.py creation in save_dir and refer to it?
 
 .. TODO: Mention/explain non-image predictions?
@@ -88,7 +93,17 @@ predictions by loading an already trained model with with the
 
 .. code-block:: python
 
-  # TODO: Example here, something like "model = modelload(model_file, imposed_patch_size=...)"
+  from elektronn2 import neuromancer as nm
+  ps = (103,201,201)
+  model = nm.model.modelload(model_path, imposed_patch_size=ps)
+
+During the network initialization that is launched by calling
+:py:meth:`modelload() <elektronn2.neuromancer.model.modelload()>`,
+invalid values of ``imposed_patch_size`` will be rejected and
+the first dimension which needs to be changed will be shown. If one of the dimensions
+does not fit the model, you should be able to find a valid one by
+by trial and error (either in an IPython session or with a script that loops over
+possible values until the model compiles successfully),
 
 To find an optimal patch size that works on your hardware, you can use the
 ``elektronn2-profile`` command, which varies the input size of a given

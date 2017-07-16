@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+# Inspired by "3D U-Net", Özgün Çiçek et al.,
+# (https://arxiv.org/abs/1606.06650). For a more faithful (but much heavier)
+# implementation, refer to examples/unet_3d.py.
+
 save_path = '~/elektronn2_training/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
@@ -45,26 +49,44 @@ batch_size = 1
 
 def create_model():
     from elektronn2 import neuromancer
-    in_sh = (None,1,23,185,185)
+
+    in_sh = (None,1,22,140,140)
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    out   = neuromancer.Conv(inp, 20,  (1,6,6), (1,2,2))
-    out   = neuromancer.Conv(out, 30,  (1,5,5), (1,2,2))
-    out   = neuromancer.Conv(out, 40,  (1,5,5), (1,1,1))
-    out   = neuromancer.Conv(out, 80,  (4,4,4), (2,1,1))
+    # Convolution, downsampling of intermediate features
+    conv0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
+    conv1  = neuromancer.Conv(conv0, 32,  (1,3,3), (1,1,1))
+    down0  = neuromancer.Pool(conv1, (1,2,2), mode='max')  # mid res
+    conv2  = neuromancer.Conv(down0, 64,  (1,3,3), (1,1,1))
+    conv3  = neuromancer.Conv(conv2, 64,  (1,3,3), (1,1,1))
+    down1  = neuromancer.Pool(conv3, (1,2,2), mode='max')  # low res
+    conv4  = neuromancer.Conv(down1, 128,  (1,3,3), (1,1,1))
+    conv5  = neuromancer.Conv(conv4, 128,  (1,3,3), (1,1,1))
+    down2  = neuromancer.Pool(conv5, (1,2,2), mode='max')  # very low res
+    conv6  = neuromancer.Conv(down2, 256,  (3,3,3), (1,1,1))
+    conv7  = neuromancer.Conv(conv6, 256,  (3,3,3), (1,1,1))
 
-    out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 150, (2,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
+    # Merging very low-res features with low-res features
+    mrg0   = neuromancer.UpConvMerge(conv5, conv7, 512)
+    mconv0 = neuromancer.Conv(mrg0, 256,  (1,3,3), (1,1,1))
+    mconv1 = neuromancer.Conv(mconv0, 256,  (1,3,3), (1,1,1))
 
-    out   = neuromancer.Conv(out, 200, (1,1,1), (1,1,1))
-    out   = neuromancer.Conv(out,   2, (1,1,1), (1,1,1), activation_func='lin')
-    probs = neuromancer.Softmax(out)
+    # Merging low-res with mid-res features
+    mrg1   = neuromancer.UpConvMerge(conv3, mconv1, 256)
+    mconv2 = neuromancer.Conv(mrg1, 128,  (3,3,3), (1,1,1))
+    mconv3 = neuromancer.Conv(mconv2, 128,  (3,3,3), (1,1,1))
 
-    target = neuromancer.Input_like(probs, override_f=1, name='target')
-    loss_pix  = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True)
+    # Merging mid-res with high-res features
+    mrg2   = neuromancer.UpConvMerge(conv1, mconv3, 128)
+    mconv4 = neuromancer.Conv(mrg2, 64,  (3,3,3), (1,1,1))
+    mconv5 = neuromancer.Conv(mconv4, 64,  (3,3,3), (1,1,1))
+
+    barr = neuromancer.Conv(mconv5,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
+    probs = neuromancer.Softmax(barr)
+
+    target = neuromancer.Input_like(mconv5, override_f=1, name='target')
+
+    loss_pix = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 
     loss = neuromancer.AggregateLoss(loss_pix , name='loss')
     errors = neuromancer.Errors(probs, target, target_is_sparse=True)
