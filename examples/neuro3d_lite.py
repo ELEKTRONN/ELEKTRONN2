@@ -52,11 +52,11 @@ def create_model():
     out   = neuromancer.Conv(out, 40,  (3,3,3), (1,2,2))
 
     out   = neuromancer.Conv(out, 150, (2,4,4), (2,1,1))
-    out   = neuromancer.Conv(out, 200, (1,3,3), (1,1,1))
-    out   = neuromancer.Conv(out, 200, (1,3,3), (1,1,1))
+    out   = neuromancer.Conv(out, 200, (1,3,3))
+    out   = neuromancer.Conv(out, 200, (1,3,3))
 
-    out   = neuromancer.Conv(out, 200, (1,1,1), (1,1,1))
-    out   = neuromancer.Conv(out,   2, (1,1,1), (1,1,1), activation_func='lin')
+    out   = neuromancer.Conv(out, 200, (1,1,1))
+    out   = neuromancer.Conv(out,   2, (1,1,1), activation_func='lin')
     probs = neuromancer.Softmax(out)
 
     target = neuromancer.Input_like(probs, override_f=1, name='target')

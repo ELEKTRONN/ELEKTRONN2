@@ -515,7 +515,8 @@ class Conv(Perceptron):
     filter_shape: tuple
         Shape of the convolution filter kernels.
     pool_shape: tuple
-        Size/shape of pooling after the convolution.
+        Shape of max-pooling to be applied after the convolution.
+        ``None`` (default) disables pooling along all axes.
     conv_mode: str
         Possible values:
         * "valid": only apply filter to complete patches of the image.
@@ -556,7 +557,7 @@ class Conv(Perceptron):
     gradnet_mode
     """
 
-    def __init__(self, parent, n_f, filter_shape, pool_shape,
+    def __init__(self, parent, n_f, filter_shape, pool_shape=None,
                  conv_mode='valid', activation_func='relu',
                  mfp=False, batch_normalisation=False, dropout_rate=0,
                  name="conv", print_repr=True, w=None, b=None, gamma=None,
@@ -577,6 +578,9 @@ class Conv(Perceptron):
         self.axis = parent.shape.tag2index('f') #retrieve feature shape's index
         self.axis_order = None
 
+        if pool_shape is None:  # Default to no pooling
+            pool_shape = tuple([1 for _ in filter_shape])  # e.g. (1, 1, 1) for the 3D case
+        self.pool_shape = pool_shape
         self.spatial_axes = self.parent.shape.spatial_axes
         conv_dim = len(self.spatial_axes)
         x_dim    = len(self.parent.shape)
