@@ -9,7 +9,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 
 __all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc',
            'FromTensor', 'split', 'model_manager', 'GenericInput', 'ValueNode',
-           'MultMerge', 'InitialState_like']
+           'MultMerge', 'InitialState_like', 'Add']
 
 
 import sys
@@ -1441,6 +1441,38 @@ class Concat(Node):
         # assuming all other dimensions are equal
         sh = self.parent[0].shape.updateshape(self.axis, joint_axis_size)
         self.shape = sh
+
+    def _calc_comp_cost(self):
+        self.computational_cost = 0
+
+    ###############################################################################
+
+class Add(Node):
+    """
+    Add two Nodes using ``theano.tensor.add``.
+
+    Parameters
+    ----------
+    n1: Node
+        First input node.
+    n2: Node
+        Second input node.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
+    def __init__(self, n1, n2, name="add", print_repr=True):
+        super(Add, self).__init__((n1, n2), name, print_repr)
+
+        assert n1.shape.shape == n2.shape.shape
+
+    def _make_output(self):
+        self.output = T.add(self.parent[0].output, self.parent[1].output)
+
+    def _calc_shape(self):
+        self.shape = self.parent[0].shape.copy()
 
     def _calc_comp_cost(self):
         self.computational_cost = 0
