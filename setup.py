@@ -36,7 +36,7 @@ def read(fname):
 
 setup(
     name="elektronn2",
-    version="0.3.0",
+    version="0.4.0",
     packages=find_packages(),
     scripts=[
         'scripts/elektronn2-train',
