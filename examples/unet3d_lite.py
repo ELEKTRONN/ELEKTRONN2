@@ -54,35 +54,35 @@ def create_model():
     inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
 
     # Convolution, downsampling of intermediate features
-    conv0  = neuromancer.Conv(inp,  32,  (1,3,3), (1,1,1))
-    conv1  = neuromancer.Conv(conv0, 32,  (1,3,3), (1,1,1))
+    conv0  = neuromancer.Conv(inp,  32,  (1,3,3))
+    conv1  = neuromancer.Conv(conv0, 32,  (1,3,3))
     down0  = neuromancer.Pool(conv1, (1,2,2), mode='max')  # mid res
-    conv2  = neuromancer.Conv(down0, 64,  (1,3,3), (1,1,1))
-    conv3  = neuromancer.Conv(conv2, 64,  (1,3,3), (1,1,1))
+    conv2  = neuromancer.Conv(down0, 64,  (1,3,3))
+    conv3  = neuromancer.Conv(conv2, 64,  (1,3,3))
     down1  = neuromancer.Pool(conv3, (1,2,2), mode='max')  # low res
-    conv4  = neuromancer.Conv(down1, 128,  (1,3,3), (1,1,1))
-    conv5  = neuromancer.Conv(conv4, 128,  (1,3,3), (1,1,1))
+    conv4  = neuromancer.Conv(down1, 128,  (1,3,3))
+    conv5  = neuromancer.Conv(conv4, 128,  (1,3,3))
     down2  = neuromancer.Pool(conv5, (1,2,2), mode='max')  # very low res
-    conv6  = neuromancer.Conv(down2, 256,  (3,3,3), (1,1,1))
-    conv7  = neuromancer.Conv(conv6, 256,  (3,3,3), (1,1,1))
+    conv6  = neuromancer.Conv(down2, 256,  (3,3,3))
+    conv7  = neuromancer.Conv(conv6, 256,  (3,3,3))
 
     # Merging very low-res features with low-res features
     mrg0   = neuromancer.UpConvMerge(conv5, conv7, 512)
-    mconv0 = neuromancer.Conv(mrg0, 256,  (1,3,3), (1,1,1))
-    mconv1 = neuromancer.Conv(mconv0, 256,  (1,3,3), (1,1,1))
+    mconv0 = neuromancer.Conv(mrg0, 256,  (1,3,3))
+    mconv1 = neuromancer.Conv(mconv0, 256,  (1,3,3))
 
     # Merging low-res with mid-res features
     mrg1   = neuromancer.UpConvMerge(conv3, mconv1, 256)
-    mconv2 = neuromancer.Conv(mrg1, 128,  (3,3,3), (1,1,1))
-    mconv3 = neuromancer.Conv(mconv2, 128,  (3,3,3), (1,1,1))
+    mconv2 = neuromancer.Conv(mrg1, 128,  (3,3,3))
+    mconv3 = neuromancer.Conv(mconv2, 128,  (3,3,3))
 
     # Merging mid-res with high-res features
     mrg2   = neuromancer.UpConvMerge(conv1, mconv3, 128)
-    mconv4 = neuromancer.Conv(mrg2, 64,  (3,3,3), (1,1,1))
-    mconv5 = neuromancer.Conv(mconv4, 64,  (3,3,3), (1,1,1))
+    mconv4 = neuromancer.Conv(mrg2, 64,  (3,3,3))
+    mconv5 = neuromancer.Conv(mconv4, 64,  (3,3,3))
 
-    barr = neuromancer.Conv(mconv5,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
-    probs = neuromancer.Softmax(barr)
+    barr   = neuromancer.Conv(mconv5, 2, (1,1,1), activation_func='lin', name='barr')
+    probs  = neuromancer.Softmax(barr)
 
     target = neuromancer.Input_like(mconv5, override_f=1, name='target')
 

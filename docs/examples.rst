@@ -555,17 +555,17 @@ function inside the `network config file <https://github.com/ELEKTRONN/ELEKTRONN
 
   out   = neuromancer.Conv(inp, 20,  (1,6,6), (1,2,2))
   out   = neuromancer.Conv(out, 30,  (1,5,5), (1,2,2))
-  out   = neuromancer.Conv(out, 40,  (1,5,5), (1,1,1))
-  out   = neuromancer.Conv(out, 80,  (4,4,4), (2,1,1))
+  out   = neuromancer.Conv(out, 40,  (1,5,5))
+  out   = neuromancer.Conv(out, 80,  (4,4,4))
 
-  out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-  out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-  out   = neuromancer.Conv(out, 150, (2,4,4), (1,1,1))
-  out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
-  out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
+  out   = neuromancer.Conv(out, 100, (3,4,4))
+  out   = neuromancer.Conv(out, 100, (3,4,4))
+  out   = neuromancer.Conv(out, 150, (2,4,4))
+  out   = neuromancer.Conv(out, 200, (1,4,4))
+  out   = neuromancer.Conv(out, 200, (1,4,4)))
 
-  out   = neuromancer.Conv(out, 200, (1,1,1), (1,1,1))
-  out   = neuromancer.Conv(out,   2, (1,1,1), (1,1,1), activation_func='lin')
+  out   = neuromancer.Conv(out, 200, (1,1,1))
+  out   = neuromancer.Conv(out,   2, (1,1,1), activation_func='lin')
   probs = neuromancer.Softmax(out)
 
   target = neuromancer.Input_like(probs, override_f=1, name='target')
