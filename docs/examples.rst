@@ -8,10 +8,6 @@
 Examples
 ********
 
-.. note::
-  This page is currently under construction.
-  Many content updates are in the works.
-
 
 This page gives examples for different use cases of ELEKTRONN2. Besides, the
 examples are intended to give an idea of how custom network architectures
@@ -51,38 +47,40 @@ built using ELEKTRONN2.
 
 .. code-block:: python
 
-  from elektronn2 import neuromancer
+  # The neuromancer submodule contains the API to define neural network models.
+  # It is usually accessed via the alias "nm".
+  from elektronn2 import neuromancer as nm
 
   # Input shape: (batch size, number of features/channels, z, x, y)
-  image = neuromancer.Input((10, 3, 23, 183, 183), 'b,f,z,x,y', name='image')
+  image = nm.Input((10, 3, 23, 183, 183), 'b,f,z,x,y', name='image')
 
   # If no node name is given, default names and enumeration are used.
   # 3d convolution with 32 filters of size (1,6,6) and max-pool sizes (1,2,2).
   # Node constructors always receive their parent node as the first argument
   # (except for the root nodes like the 'image' node here).
-  conv0 = neuromancer.Conv(image, 32, (1,6,6), (1,2,2))
-  conv1 = neuromancer.Conv(conv0, 64, (4,6,6), (2,2,2))
-  conv2 = neuromancer.Conv(conv1, 5, (3,3,3), (1,1,1), activation_func='lin')
+  conv0 = nm.Conv(image, 32, (1,6,6), (1,2,2))
+  conv1 = nm.Conv(conv0, 64, (4,6,6), (2,2,2))
+  conv2 = nm.Conv(conv1, 5, (3,3,3), (1,1,1), activation_func='lin')
 
   # Softmax automatically infers from the input's 'f' axis
   # that the number of classes is 5 and the axis index is 1.
-  class_probs = neuromancer.Softmax(conv2)
+  class_probs = nm.Softmax(conv2)
 
   # This copies shape and strides from class_probs but the feature axis
   # is overridden to 1, the target array has only one feature on this axis,
   # the class IDs i.e. 'sparse' labels. It is also possible to use 5
   # features where each contains the probability for the corresponding class.
-  target = neuromancer.Input_like(class_probs, override_f=1, name='target', dtype='int16')
+  target = nm.Input_like(class_probs, override_f=1, name='target', dtype='int16')
 
   # Voxel-wise loss calculation
-  voxel_loss = neuromancer.MultinoulliNLL(class_probs, target, target_is_sparse=True)
-  scalar_loss = neuromancer.AggregateLoss(voxel_loss , name='loss')
+  voxel_loss = nm.MultinoulliNLL(class_probs, target, target_is_sparse=True)
+  scalar_loss = nm.AggregateLoss(voxel_loss , name='loss')
 
   # Takes class with largest predicted probability and calculates classification accuracy.
-  errors = neuromancer.Errors(class_probs, target, target_is_sparse=True)
+  errors = nm.Errors(class_probs, target, target_is_sparse=True)
 
   # Creation of nodes has been tracked and they were associated to a model object.
-  model = neuromancer.model_manager.getmodel()
+  model = nm.model_manager.getmodel()
 
   # Tell the model which nodes fulfill which roles.
   # Intermediates nodes like conv1 do not need to be explicitly registered
@@ -200,7 +198,8 @@ For efficient dense prediction, batch size is changed to 1 and MFP  is inserted.
 To do that, the ``model`` must be rebuilt/reloaded. |br|
 MFP needs a different patch size. The closest possible one is selected::
 
-  >>> model_prediction = neuromancer.model.rebuild_model(model, imposed_batch_size=1,
+  >>> from elektronn2 import neuromancer as nm
+  >>> model_prediction = nm.model.rebuild_model(model, imposed_batch_size=1,
                                                          override_mfp_to_active=True)
   patch_size (23) changed to (22) (size not possible)
   patch_size (183) changed to (182) (size not possible)
@@ -549,32 +548,32 @@ function inside the `network config file <https://github.com/ELEKTRONN/ELEKTRONN
 
 .. code-block:: python
 
-  from elektronn2 import neuromancer
+  from elektronn2 import neuromancer as nm
   in_sh = (None,1,23,185,185)
-  inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
+  inp = nm.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-  out   = neuromancer.Conv(inp, 20,  (1,6,6), (1,2,2))
-  out   = neuromancer.Conv(out, 30,  (1,5,5), (1,2,2))
-  out   = neuromancer.Conv(out, 40,  (1,5,5))
-  out   = neuromancer.Conv(out, 80,  (4,4,4))
+  out   = nm.Conv(inp, 20,  (1,6,6), (1,2,2))
+  out   = nm.Conv(out, 30,  (1,5,5), (1,2,2))
+  out   = nm.Conv(out, 40,  (1,5,5))
+  out   = nm.Conv(out, 80,  (4,4,4))
 
-  out   = neuromancer.Conv(out, 100, (3,4,4))
-  out   = neuromancer.Conv(out, 100, (3,4,4))
-  out   = neuromancer.Conv(out, 150, (2,4,4))
-  out   = neuromancer.Conv(out, 200, (1,4,4))
-  out   = neuromancer.Conv(out, 200, (1,4,4)))
+  out   = nm.Conv(out, 100, (3,4,4))
+  out   = nm.Conv(out, 100, (3,4,4))
+  out   = nm.Conv(out, 150, (2,4,4))
+  out   = nm.Conv(out, 200, (1,4,4))
+  out   = nm.Conv(out, 200, (1,4,4)))
 
-  out   = neuromancer.Conv(out, 200, (1,1,1))
-  out   = neuromancer.Conv(out,   2, (1,1,1), activation_func='lin')
-  probs = neuromancer.Softmax(out)
+  out   = nm.Conv(out, 200, (1,1,1))
+  out   = nm.Conv(out,   2, (1,1,1), activation_func='lin')
+  probs = nm.Softmax(out)
 
-  target = neuromancer.Input_like(probs, override_f=1, name='target')
-  loss_pix  = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True)
+  target = nm.Input_like(probs, override_f=1, name='target')
+  loss_pix  = nm.MultinoulliNLL(probs, target, target_is_sparse=True)
 
-  loss = neuromancer.AggregateLoss(loss_pix , name='loss')
-  errors = neuromancer.Errors(probs, target, target_is_sparse=True)
+  loss = nm.AggregateLoss(loss_pix , name='loss')
+  errors = nm.Errors(probs, target, target_is_sparse=True)
 
-  model = neuromancer.model_manager.getmodel()
+  model = nm.model_manager.getmodel()
   model.designate_nodes(
       input_node=inp,
       target_node=target,
