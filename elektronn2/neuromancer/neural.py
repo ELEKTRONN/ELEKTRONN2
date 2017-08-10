@@ -18,7 +18,7 @@ from ..config import config
 from . import computations
 from .variables import VariableWeight, ConstantParam, VariableParam
 from .graphutils import floatX, TaggedShape, as_floatX
-from .node_basic import Node, Concat
+from .node_basic import Node, Concat, Add
 
 logger = logging.getLogger('elektronn2log')
 
@@ -726,6 +726,7 @@ class Conv(Perceptron):
             elif self.conv_mode=='full':
                 k = f - 1
             elif self.conv_mode=='same':
+                assert f % 2 == 1, '"same" mode is currently only supported for uneven filter sizes.'
                 k = 0
             s = (sh[i] + k)//p
             if self.mfp:
@@ -1179,7 +1180,7 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
                     activation_func='relu', identity_init=True,
                     batch_normalisation=False, dropout_rate=0,
                     name="upconv", print_repr=True, w=None, b=None, gamma=None,
-                    mean=None, std=None, gradnet_mode=None):
+                    mean=None, std=None, gradnet_mode=None, merge_mode='concat'):
     """
     Try to automatically align and concatenate a high-res and a low-res
     convolution output of two branches of a CNN by applying UpConv and Crop to
@@ -1230,6 +1231,10 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
         (passed to new UpConv if required).
     gradnet_mode
         (passed to new UpConv if required).
+    merge_mode: str
+        How the merging should be performed. Available options:
+        'concat' (default): Merge with a ``Concat`` Node.
+        'add': Merge with an ``Add`` Node.
 
     Returns
     -------
@@ -1275,7 +1280,12 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
     if np.any(crop_hi):
         hi_res = Crop(hi_res, crop_hi, print_repr=True)
 
-    out = Concat((lo_res, hi_res), axis='f', name='merge', print_repr=True)
+    if merge_mode == 'concat':
+        out = Concat((lo_res, hi_res), axis='f', name='concat_merge', print_repr=True)
+    elif merge_mode == 'add':
+        out = Add(lo_res, hi_res, name='add_merge', print_repr=True)
+    else:
+        raise ValueError('Invalid "merge_mode". Should be "add" or "concat".')
 
     return out
 
