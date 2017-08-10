@@ -224,10 +224,8 @@ class Trainer(object):
                             save_time2 += config.prev_save_h
                             try:
                                 self.preview_slice(**exp_config.preview_kwargs)
-                            except:
-                                logger.warning("Preview Predictions failed."
-                                               "Are the preview raw data in "
-                                               "the correct format?")
+                            except Exception as e:
+                                logger.exception("Preview Predictions failed.")
                             # reset time because we only count training time
                             # not time spent for previews (making previews
                             # is not a computational payload of the actual
@@ -869,10 +867,8 @@ class TracingTrainer(Trainer):
                             save_time2 += config.prev_save_h
                             try:
                                 self.preview_slice(**exp_config.preview_kwargs)
-                            except:
-                                logger.warning("Preview Predictions failed."
-                                               "Are the preview raw data in "
-                                               "the correct format?")
+                            except Exception as e:
+                                logger.exception("Preview Predictions failed.")
                             # reset time because we only count training time
                             # not time spent for previews (making previews
                             # is not a computational payload of the actual
@@ -1169,10 +1165,8 @@ class TracingTrainerRNN(TracingTrainer):
                             save_time2 += config.prev_save_h
                             try:
                                 self.preview_slice(**exp_config.preview_kwargs)
-                            except:
-                                logger.warning("Preview Predictions failed."
-                                               "Are the preview raw data in "
-                                               "the correct format?")
+                            except Exception as e:
+                                logger.exception("Preview Predictions failed.")
                             # reset time because we only count training time
                             # not time spent for previews (making previews
                             # is not a computational payload of the actual
