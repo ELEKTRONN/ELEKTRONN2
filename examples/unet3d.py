@@ -12,7 +12,8 @@
 # can be found in examples/unet_3d_lite.py.
 
 save_path = '~/elektronn2_training/'
-preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
+# Use validation data as preview data because preview_cubes.h5 is too small
+preview_data_path = ('~/neuro_data_zxy/raw_2.h5', 'raw')
 preview_kwargs    = {
     'export_class': [1],
     'max_z_pred': 3
