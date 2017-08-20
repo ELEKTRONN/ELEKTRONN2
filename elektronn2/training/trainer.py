@@ -117,7 +117,11 @@ class Trainer(object):
 
     def _load_preview_data(self):
         if self.exp_config.preview_data_path is not None:
-            data = utils.h5load(self.exp_config.preview_data_path)
+            try:  # Tuple of path and data set key
+                path, key = self.exp_config.preview_data_path
+                data = utils.h5load(path, key)
+            except (TypeError, ValueError):  # Use default key
+                data = utils.h5load(self.exp_config.preview_data_path)
             if not (isinstance(data, list) or  isinstance(data, (tuple, list))):
                 data = [data,]
             data = [d.astype(floatX)/d.max() for d in data]
