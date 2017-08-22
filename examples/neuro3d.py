@@ -44,32 +44,32 @@ batch_size = 1
 
 
 def create_model():
-    from elektronn2 import neuromancer
+    from elektronn2 import neuromancer as nm
     in_sh = (None,1,23,185,185)
-    inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
+    inp = nm.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    out   = neuromancer.Conv(inp, 20,  (1,6,6), (1,2,2))
-    out   = neuromancer.Conv(out, 30,  (1,5,5), (1,2,2))
-    out   = neuromancer.Conv(out, 40,  (1,5,5), (1,1,1))
-    out   = neuromancer.Conv(out, 80,  (4,4,4), (2,1,1))
+    out   = nm.Conv(inp, 20,  (1,6,6), (1,2,2))
+    out   = nm.Conv(out, 30,  (1,5,5), (1,2,2))
+    out   = nm.Conv(out, 40,  (1,5,5))
+    out   = nm.Conv(out, 80,  (4,4,4), (2,1,1))
 
-    out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 100, (3,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 150, (2,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
-    out   = neuromancer.Conv(out, 200, (1,4,4), (1,1,1))
+    out   = nm.Conv(out, 100, (3,4,4))
+    out   = nm.Conv(out, 100, (3,4,4))
+    out   = nm.Conv(out, 150, (2,4,4))
+    out   = nm.Conv(out, 200, (1,4,4))
+    out   = nm.Conv(out, 200, (1,4,4))
 
-    out   = neuromancer.Conv(out, 200, (1,1,1), (1,1,1))
-    out   = neuromancer.Conv(out,   2, (1,1,1), (1,1,1), activation_func='lin')
-    probs = neuromancer.Softmax(out)
+    out   = nm.Conv(out, 200, (1,1,1))
+    out   = nm.Conv(out,   2, (1,1,1), activation_func='lin')
+    probs = nm.Softmax(out)
 
-    target = neuromancer.Input_like(probs, override_f=1, name='target')
-    loss_pix  = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True)
+    target = nm.Input_like(probs, override_f=1, name='target')
+    loss_pix  = nm.MultinoulliNLL(probs, target, target_is_sparse=True)
 
-    loss = neuromancer.AggregateLoss(loss_pix , name='loss')
-    errors = neuromancer.Errors(probs, target, target_is_sparse=True)
+    loss = nm.AggregateLoss(loss_pix , name='loss')
+    errors = nm.Errors(probs, target, target_is_sparse=True)
 
-    model = neuromancer.model_manager.getmodel()
+    model = nm.model_manager.getmodel()
     model.designate_nodes(
         input_node=inp,
         target_node=target,

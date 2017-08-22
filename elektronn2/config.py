@@ -81,6 +81,7 @@ class DefaultConfig(object):
         self.use_manual_cudnn_pool = True
         self.allow_floatX_downcast = True
         self.show_axis_order_warning = False
+        self.pad_b_warning_display = True
         self.use_ortho_init = False
         # Flag used to conditionally do something different for inspection/debugging
         self.inspection = False

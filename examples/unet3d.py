@@ -12,7 +12,8 @@
 # can be found in examples/unet_3d_lite.py.
 
 save_path = '~/elektronn2_training/'
-preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
+# Use validation data as preview data because preview_cubes.h5 is too small
+preview_data_path = ('~/neuro_data_zxy/raw_2.h5', 'raw')
 preview_kwargs    = {
     'export_class': [1],
     'max_z_pred': 3
@@ -55,50 +56,50 @@ batch_size = 1
 
 
 def create_model():
-    from elektronn2 import neuromancer
+    from elektronn2 import neuromancer as nm
 
     in_sh = (None,1,116,132,132)
-    inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
+    inp = nm.Input(in_sh, 'b,f,z,x,y', name='raw')  # high res
 
     # Convolution, downsampling of intermediate features
-    conv0  = neuromancer.Conv(inp,  32,  (3,3,3), (1,1,1))
-    conv1  = neuromancer.Conv(conv0, 64,  (3,3,3), (1,1,1))
-    down0  = neuromancer.Pool(conv1, (2,2,2), mode='max')  # mid res
-    conv2  = neuromancer.Conv(down0, 64,  (3,3,3), (1,1,1))
-    conv3  = neuromancer.Conv(conv2, 128,  (3,3,3), (1,1,1))
-    down1  = neuromancer.Pool(conv3, (2,2,2), mode='max')  # low res
-    conv4  = neuromancer.Conv(down1, 128,  (3,3,3), (1,1,1))
-    conv5  = neuromancer.Conv(conv4, 256,  (3,3,3), (1,1,1))
-    down2  = neuromancer.Pool(conv5, (2,2,2), mode='max')  # very low res
-    conv6  = neuromancer.Conv(down2, 256,  (3,3,3), (1,1,1))
-    conv7  = neuromancer.Conv(conv6, 512,  (3,3,3), (1,1,1))
+    conv0  = nm.Conv(inp,  32,  (3,3,3))
+    conv1  = nm.Conv(conv0, 64,  (3,3,3))
+    down0  = nm.Pool(conv1, (2,2,2), mode='max')  # mid res
+    conv2  = nm.Conv(down0, 64,  (3,3,3))
+    conv3  = nm.Conv(conv2, 128,  (3,3,3))
+    down1  = nm.Pool(conv3, (2,2,2), mode='max')  # low res
+    conv4  = nm.Conv(down1, 128,  (3,3,3))
+    conv5  = nm.Conv(conv4, 256,  (3,3,3))
+    down2  = nm.Pool(conv5, (2,2,2), mode='max')  # very low res
+    conv6  = nm.Conv(down2, 256,  (3,3,3))
+    conv7  = nm.Conv(conv6, 512,  (3,3,3))
 
     # Merging very low-res features with low-res features
-    mrg0   = neuromancer.UpConvMerge(conv5, conv7, 512)
-    mconv0 = neuromancer.Conv(mrg0, 256,  (3,3,3), (1,1,1))
-    mconv1 = neuromancer.Conv(mconv0, 256,  (3,3,3), (1,1,1))
+    mrg0   = nm.UpConvMerge(conv5, conv7, 512)
+    mconv0 = nm.Conv(mrg0, 256,  (3,3,3))
+    mconv1 = nm.Conv(mconv0, 256,  (3,3,3))
 
     # Merging low-res with mid-res features
-    mrg1   = neuromancer.UpConvMerge(conv3, mconv1, 256)
-    mconv2 = neuromancer.Conv(mrg1, 128,  (3,3,3), (1,1,1))
-    mconv3 = neuromancer.Conv(mconv2, 128,  (3,3,3), (1,1,1))
+    mrg1   = nm.UpConvMerge(conv3, mconv1, 256)
+    mconv2 = nm.Conv(mrg1, 128,  (3,3,3))
+    mconv3 = nm.Conv(mconv2, 128,  (3,3,3))
 
     # Merging mid-res with high-res features
-    mrg2   = neuromancer.UpConvMerge(conv1, mconv3, 128)
-    mconv4 = neuromancer.Conv(mrg2, 64,  (3,3,3), (1,1,1))
-    mconv5 = neuromancer.Conv(mconv4, 64,  (3,3,3), (1,1,1))
+    mrg2   = nm.UpConvMerge(conv1, mconv3, 128)
+    mconv4 = nm.Conv(mrg2, 64,  (3,3,3))
+    mconv5 = nm.Conv(mconv4, 64,  (3,3,3))
 
-    barr = neuromancer.Conv(mconv5,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
-    probs = neuromancer.Softmax(barr)
+    barr  = nm.Conv(mconv5, 2, (1,1,1), activation_func='lin', name='barr')
+    probs = nm.Softmax(barr)
 
-    target = neuromancer.Input_like(mconv5, override_f=1, name='target')
+    target = nm.Input_like(mconv5, override_f=1, name='target')
 
-    loss_pix = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
+    loss_pix = nm.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 
-    loss = neuromancer.AggregateLoss(loss_pix , name='loss')
-    errors = neuromancer.Errors(probs, target, target_is_sparse=True)
+    loss = nm.AggregateLoss(loss_pix , name='loss')
+    errors = nm.Errors(probs, target, target_is_sparse=True)
 
-    model = neuromancer.model_manager.getmodel()
+    model = nm.model_manager.getmodel()
     model.designate_nodes(
         input_node=inp,
         target_node=target,

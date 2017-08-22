@@ -17,7 +17,7 @@ logger = logging.getLogger('elektronn2log')
 try:
     from ._malis import malis_loss_weights, connected_components, marker_watershed
 except:
-    logger.warning("Malis binary-extension could not be imported/found")
+    logger.debug("Malis binary-extension could not be imported/found")
 
 __all__ = ['compute_V_rand_N2',
            'mknhood2d',
