@@ -24,7 +24,7 @@ logger = logging.getLogger('elektronn2log')
 
 __all__ = ['Perceptron', 'Conv', 'UpConv', 'Crop', 'LSTM',
            'FragmentsToDense', 'Pool', 'Dot', 'FaithlessMerge',
-           'GRU', 'LRN', 'AutoMerge', 'UpConvMerge']
+           'GRU', 'LRN', 'AutoMerge', 'UpConvMerge', 'Pad']
 
 ################################################################################
 
@@ -527,7 +527,7 @@ class Conv(Perceptron):
         Activation function name.
     mfp: bool
         Whether to apply Max-Fragment-Pooling in this Layer.
-    batch_normalisation: str or None
+    batch_normalisation: str or False
         Batch normalisation mode.
         Can be False (inactive), "train" or "fadeout".
     dropout_rate: float
@@ -924,7 +924,7 @@ class UpConv(Conv):
         Activation function name.
     identity_init: bool
         Initialise weights to result in pixel repetition upsampling
-    batch_normalisation: str or None
+    batch_normalisation: str or False
         Batch normalisation mode.
         Can be False (inactive), "train" or "fadeout".
     dropout_rate: float
@@ -1130,7 +1130,7 @@ class Crop(Node):
     print_repr: bool
         Whether to print the node representation upon initialisation.
     """  # TODO: Write an example
-    def __init__(self, parent, crop, name="crop", print_repr=False):
+    def __init__(self, parent, crop, name="crop", print_repr=True):
 
         super(Crop, self).__init__(parent, name, print_repr)
         self.crop=crop
@@ -1163,6 +1163,95 @@ class Crop(Node):
             if i in self.parent.shape.spatial_axes:
                 off = self.crop[k]
                 sh = sh.updateshape(i,s-2*off)
+                k += 1
+
+        self.shape = sh
+
+    def _calc_comp_cost(self):
+        """
+        Calculate and set self.computational_cost.
+
+        For this Node type this is hard-coded to 0.
+        """
+        self.computational_cost = 0
+
+
+# TODO: Implement for axis orders != ['b', 'f', 'z', 'x', 'y']
+# TODO: Support batch_size != 1
+class Pad(Node):
+    """
+    Pads the spatial axes of its parent's output.
+
+    Parameters
+    ----------
+    parent: Node
+        The input node whose output should be padded.
+    pad: tuple or list of ints
+        The padding length from either side for each spatial axis
+    value: float
+        Value of the padding elements (default: 0.0)
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """  # TODO: Write an example
+    def __init__(self, parent, pad, value=0.0, name='pad', print_repr=True):
+
+        super(Pad, self).__init__(parent, name, print_repr)
+
+        self.pad = pad
+        self.value = value
+
+        if parent.shape.tags != ['b', 'f', 'z', 'x', 'y']:
+            raise NotImplementedError(
+                'Padding is currently only implemented for "b,f,z,x,y" axis order.'
+                '\nParent has axes {}'.format(parent.shape.tags)
+            )
+
+    def _make_output(self):
+        """
+        Computation of Theano output.
+        """
+        paddedshape = []
+        k = 0
+        for i,s in enumerate(self.parent.shape):
+            if i in self.parent.shape.spatial_axes:
+                pad = self.pad[k]
+                paddedshape.append(s + 2 * pad)
+                k += 1
+            else:
+                if s is None:
+                    s = 1
+                    if config.pad_b_warning_display:
+                        logger.warning('Pad: Assumed b=1. This breaks if batch_size != 1.')
+                        config.pad_b_warning_display = False
+                paddedshape.append(s)
+        paddedshape = tuple(paddedshape)
+
+        padded_empty = T.zeros(paddedshape, self.parent.output.dtype) + self.value
+        pz, px, py = self.pad
+        padded = T.set_subtensor(
+            padded_empty[
+                :, :,
+                pz:-pz,
+                px:-px,
+                py:-py
+            ],
+            self.parent.output
+        )
+
+        self.output = padded
+
+    def _calc_shape(self):
+        """
+        Calculate and set self.shape.
+        """
+        sh = self.parent.shape.copy()
+        k = 0
+        for i,s in enumerate(self.parent.shape):
+            if i in self.parent.shape.spatial_axes:
+                off = self.pad[k]
+                sh = sh.updateshape(i,s+2*off)
                 k += 1
 
         self.shape = sh
@@ -1225,7 +1314,7 @@ def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
         (passed to new UpConv if required).
     u_identity_init: bool
         (passed to new UpConv if required).
-    u_batch_normalisation: bool
+    u_batch_normalisation: str or False
         (passed to new UpConv if required).
     u_dropout_rate: float
         (passed to new UpConv if required).
@@ -1292,14 +1381,14 @@ def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
             crop_hi.append(0)
 
     if np.any(crop_lo):
-        lo_res = Crop(lo_res, crop_lo, print_repr=True)
+        lo_res = Crop(lo_res, crop_lo, print_repr=print_repr)
     if np.any(crop_hi):
-        hi_res = Crop(hi_res, crop_hi, print_repr=True)
+        hi_res = Crop(hi_res, crop_hi, print_repr=print_repr)
 
     if merge_mode == 'concat':
-        out = Concat((lo_res, hi_res), axis='f', name=name, print_repr=True)
+        out = Concat((lo_res, hi_res), axis='f', name=name, print_repr=print_repr)
     elif merge_mode == 'add':
-        out = Add(lo_res, hi_res, name=name, print_repr=True)
+        out = Add(lo_res, hi_res, name=name, print_repr=print_repr)
     else:
         raise ValueError('Invalid "merge_mode". Should be "add" or "concat".')
 
