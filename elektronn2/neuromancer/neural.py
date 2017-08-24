@@ -1265,13 +1265,9 @@ class Pad(Node):
         self.computational_cost = 0
 
 
-def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
-              disable_upconv=False, name='merge', print_repr=True,
-              # "u_" Parameters for a possible UpConv constructor:
-              u_activation_func='relu', u_identity_init=True,
-              u_batch_normalisation=False, u_dropout_rate=0, u_name='upconv',
-              u_w=None, u_b=None, u_gamma=None, u_mean=None, u_std=None,
-              u_gradnet_mode=None):
+def AutoMerge(hi_res, lo_res, upconv_n_f=None, merge_mode='concat',
+              disable_upconv=False, upconv_kwargs=None,
+              name='merge', print_repr=True):
     """
     Merge two network branches by automatic cropping and upconvolutions.
 
@@ -1298,40 +1294,21 @@ def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
         Parent Node with high resolution output.
     lo_res: Node
         Parent Node with low resolution output.
+    upconv_n_f: int
+        Number of filters for the aligning UpConv.
     merge_mode: str
         How the merging should be performed. Available options:
         'concat' (default): Merge with a ``Concat`` Node.
         'add': Merge with an ``Add`` Node.
+    disable_upconv: bool
+        If True, no automatic upconvolutions are performed to match strides.
+    upconv_kwargs: dict
+        Additional keyword arguments that are passed to the
+        UpConv constructor if upconvolution is applied.
     name: str
         Name of the final merge node.
     print_repr: bool
         Whether to print the node representation upon initialisation.
-    disable_upconv: bool
-        If True, no automatic upconvolutions are performed to match strides.
-    u_hi_res_n_f: int
-        Number of filters for the aligning UpConv.
-    u_activation_func: str
-        (passed to new UpConv if required).
-    u_identity_init: bool
-        (passed to new UpConv if required).
-    u_batch_normalisation: str or False
-        (passed to new UpConv if required).
-    u_dropout_rate: float
-        (passed to new UpConv if required).
-    u_name: str
-        Name of the intermediate UpConv node if required.
-    u_w
-        (passed to new UpConv if required).
-    u_b
-        (passed to new UpConv if required).
-    u_gamma
-        (passed to new UpConv if required).
-    u_mean
-        (passed to new UpConv if required).
-    u_std
-        (passed to new UpConv if required).
-    u_gradnet_mode
-        (passed to new UpConv if required).
 
     Returns
     -------
@@ -1342,7 +1319,6 @@ def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
     ###TODO exchange UpConv and Crop to save computation in some cases
     # TODO: Automatically determine which one is hi or lo res.
     # TODO: Make concept of resolutions optional (This op can also be just used for auto-cropping)
-    # TODO: Bundle "u_" parameters for UpConv to a single dict to clean up the signature?
 
     sh_hi = hi_res.shape
     sh_lo = lo_res.shape
@@ -1351,17 +1327,19 @@ def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
 
     unpool = sh_lo.strides // sh_hi.strides
     if np.any(unpool > 1) and not disable_upconv:
-        if u_hi_res_n_f is None:
+        if upconv_n_f is None:
             raise ValueError('AutoMerge is trying to insert an UpConv node, but'
-                             'u_hi_res_n_f is not defined. Please set it to the'
+                             'upconv_n_f is not defined. Please set it to the'
                              'desired number of features to be used for UpConv.')
-        lo_res = UpConv(lo_res, u_hi_res_n_f, unpool,
-                        activation_func=u_activation_func, identity_init=u_identity_init,
-                        batch_normalisation=u_batch_normalisation, dropout_rate=u_dropout_rate,
-                        name=u_name, print_repr=print_repr, w=u_w, b=u_b, gamma=u_gamma,
-                        mean=u_mean, std=u_std, gradnet_mode=u_gradnet_mode)
+        if upconv_kwargs is None:
+            upconv_kwargs = {}
+        lo_res = UpConv(lo_res, upconv_n_f, unpool, **upconv_kwargs)
+        logger.info(
+            'AutoMerge of {} and {}: Inserted UpConv with pool_shape {}'.format(
+                hi_res.name, lo_res.name, unpool
+        ))
 
-    # No both have same stride
+    # Now both have same stride
     # Shapes may have changed
     sh_hi = hi_res.shape.spatial_shape
     sh_lo = lo_res.shape.spatial_shape
