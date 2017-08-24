@@ -1265,17 +1265,28 @@ class Pad(Node):
         self.computational_cost = 0
 
 
-def AutoMerge(hi_res, lo_res, upconv_n_f=None, merge_mode='concat',
+def AutoMerge(parent1, parent2, upconv_n_f=None, merge_mode='concat',
               disable_upconv=False, upconv_kwargs=None,
               name='merge', print_repr=True):
     """
-    Merge two network branches by automatic cropping and upconvolutions.
+    Merges two network branches by automatic cropping and upconvolutions.
 
-    Try to automatically align and merge a high-res and a low-res
+    (Wrapper for
+    :py:class:`UpConv <elektronn2.neuromancer.neural.UpConv>`,
+    :py:class:`Crop <elektronn2.neuromancer.neural.Crop>`,
+    :py:class:`Concat <elektronn2.neuromancer.neural.Concat>` and
+    :py:class:`Add <elektronn2.neuromancer.neural.Add>`.)
+
+    Tries to automatically align and merge a high-res and a low-res
     (convolution) output of two branches of a CNN by applying UpConv and Crop to
     make their shapes and strides compatible.
     UpConv is used if the low-res Node's strides are at least twice as large
     as the strides of the high-res Node in any dimension.
+
+    The parents are automatically identified as high-res and low-res by their strides.
+    If both parents have the same strides, the concept of high-res and low-res is
+    ignored and this function just crops the larger parent's output until the
+    parents' spatial shapes match and then merges them.
 
     This function can be used to simplify creation of e.g. architectures similar to
     U-Net (see https://arxiv.org/abs/1505.04597) or skip-connections.
@@ -1290,21 +1301,21 @@ def AutoMerge(hi_res, lo_res, upconv_n_f=None, merge_mode='concat',
 
     Parameters
     ----------
-    hi_res: Node
-        Parent Node with high resolution output.
-    lo_res: Node
-        Parent Node with low resolution output.
+    parent1: Node
+        First parent to be merged.
+    parent2: Node
+        Second parent to be merged.
     upconv_n_f: int
-        Number of filters for the aligning UpConv.
+        Number of filters for the aligning ``UpConv`` for the low-res parent.
     merge_mode: str
         How the merging should be performed. Available options:
         'concat' (default): Merge with a ``Concat`` Node.
         'add': Merge with an ``Add`` Node.
     disable_upconv: bool
-        If True, no automatic upconvolutions are performed to match strides.
+        If ``True``, no automatic upconvolutions are performed to match strides.
     upconv_kwargs: dict
         Additional keyword arguments that are passed to the
-        UpConv constructor if upconvolution is applied.
+        ``UpConv`` constructor if upconvolution is applied.
     name: str
         Name of the final merge node.
     print_repr: bool
@@ -1317,20 +1328,27 @@ def AutoMerge(hi_res, lo_res, upconv_n_f=None, merge_mode='concat',
         that merges the aligned high-res and low-res outputs.
     """
     ###TODO exchange UpConv and Crop to save computation in some cases
-    # TODO: Automatically determine which one is hi or lo res.
-    # TODO: Make concept of resolutions optional (This op can also be just used for auto-cropping)
 
+    assert len(parent1.shape)==len(parent2.shape)
+    assert parent1.shape.spatial_axes == parent2.shape.spatial_axes
+
+    if any(parent2.shape.strides // parent1.shape.strides < 1):
+        lo_res, hi_res = parent1, parent2
+    else:
+        hi_res, lo_res = parent1, parent2
     sh_hi = hi_res.shape
     sh_lo = lo_res.shape
-    assert len(sh_hi)==len(sh_lo)
-    assert sh_hi.spatial_axes == sh_lo.spatial_axes
-
     unpool = sh_lo.strides // sh_hi.strides
     if np.any(unpool > 1) and not disable_upconv:
         if upconv_n_f is None:
             raise ValueError('AutoMerge is trying to insert an UpConv node, but'
                              'upconv_n_f is not defined. Please set it to the'
                              'desired number of features to be used for UpConv.')
+        logger.info(
+            'AutoMerge assignend parent roles:\n'
+            '- {}: is lo_res (strides {})\n- {}: is hi_res (strides {})'.format(
+                lo_res.name, lo_res.shape.strides, hi_res.name, hi_res.shape.strides
+        ))
         if upconv_kwargs is None:
             upconv_kwargs = {}
         lo_res = UpConv(lo_res, upconv_n_f, unpool, **upconv_kwargs)
