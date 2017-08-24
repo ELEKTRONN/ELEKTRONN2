@@ -1274,8 +1274,8 @@ def AutoMerge(parent1, parent2, upconv_n_f=None, merge_mode='concat',
     (Wrapper for
     :py:class:`UpConv <elektronn2.neuromancer.neural.UpConv>`,
     :py:class:`Crop <elektronn2.neuromancer.neural.Crop>`,
-    :py:class:`Concat <elektronn2.neuromancer.neural.Concat>` and
-    :py:class:`Add <elektronn2.neuromancer.neural.Add>`.)
+    :py:class:`Concat <elektronn2.neuromancer.node_basic.Concat>` and
+    :py:class:`Add <elektronn2.neuromancer.node_basic.Add>`.)
 
     Tries to automatically align and merge a high-res and a low-res
     (convolution) output of two branches of a CNN by applying UpConv and Crop to
