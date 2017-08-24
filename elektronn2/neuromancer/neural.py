@@ -1280,8 +1280,8 @@ def AutoMerge(parent1, parent2, upconv_n_f=None, merge_mode='concat',
     Tries to automatically align and merge a high-res and a low-res
     (convolution) output of two branches of a CNN by applying UpConv and Crop to
     make their shapes and strides compatible.
-    UpConv is used if the low-res Node's strides are at least twice as large
-    as the strides of the high-res Node in any dimension.
+    UpConv is used if the low-res parent's strides are at least twice as large
+    as the strides of the high-res parent in any dimension.
 
     The parents are automatically identified as high-res and low-res by their strides.
     If both parents have the same strides, the concept of high-res and low-res is
@@ -1293,7 +1293,7 @@ def AutoMerge(parent1, parent2, upconv_n_f=None, merge_mode='concat',
 
     If a ValueError that the shapes cannot be aligned is thrown,
     you can try changing the filter shapes and pooling factors of the
-    (grand-)parent Nodes or add/remove Convolutions and Crops in the preceding
+    (grand-)parent nodes or add/remove Convolutions and Crops in the preceding
     branches until the error disappears (of course you should try to keep
     those changes as minimal as possible).
 
@@ -1309,8 +1309,8 @@ def AutoMerge(parent1, parent2, upconv_n_f=None, merge_mode='concat',
         Number of filters for the aligning ``UpConv`` for the low-res parent.
     merge_mode: str
         How the merging should be performed. Available options:
-        'concat' (default): Merge with a ``Concat`` Node.
-        'add': Merge with an ``Add`` Node.
+        'concat' (default): Merge with a ``Concat`` node.
+        'add': Merge with an ``Add`` node.
     disable_upconv: bool
         If ``True``, no automatic upconvolutions are performed to match strides.
     upconv_kwargs: dict
@@ -1626,7 +1626,7 @@ class FaithlessMerge(Node):
         """
         Calculate and set self.computational_cost.
 
-        For this Node type this is hard-coded to 0.
+        For this node type this is hard-coded to 0.
         """
         self.computational_cost = 0
 

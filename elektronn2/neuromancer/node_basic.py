@@ -157,7 +157,7 @@ model_manager = ModelContainer()
 
 def choose_name(proposal, names):
     """
-    Choose an appropriate unique name for a Node.
+    Choose an appropriate unique name for a node.
 
     If the proposed name is not already taken, it is directly returned.
     If it is taken and it does not end with a number, a "1" is appended to it.
@@ -167,14 +167,14 @@ def choose_name(proposal, names):
     Parameters
     ----------
     proposal: str
-        Proposed name for the Node.
+        Proposed name for the node.
     names: str
         Names that were already given to other nodes in this Model.
 
     Returns
     -------
     str
-        Appropriate and unique name for the Node.
+        Appropriate and unique name for the node.
 
     Examples
     --------
@@ -232,15 +232,15 @@ class MetaNode(type):
     @staticmethod
     def init_register(old_init):
         """
-        Wrap the Node class constructor with with model management routines.
+        Wrap the ``Node`` class constructor with with model management routines.
 
-        This makes sure that every Node object that is created is registered
+        This makes sure that every ``Node`` object that is created is registered
         within the current network model.
 
         Parameters
         ----------
         old_init: function
-            Original constructor of the Node
+            Original constructor of the ``Node``
 
         Returns
         -------
@@ -313,7 +313,7 @@ class Node(with_metaclass(MetaNode, object)):
     parent: Node or list[Node]
         The input node(s).
     name: str
-        Given name of the Node, may be an empty string.
+        Given name of the ``Node``, may be an empty string.
     print_repr: bool
         Whether to print the node representation upon initialisation.
 
@@ -1013,7 +1013,7 @@ class Node(with_metaclass(MetaNode, object)):
 
     def test_run(self, on_shape_mismatch='warn', debug_outputs=False):
         """
-        Test execution of this Node with random (but correctly shaped) data.
+        Test execution of this node with random (but correctly shaped) data.
 
         Parameters
         ----------
@@ -1181,7 +1181,7 @@ class Node(with_metaclass(MetaNode, object)):
 
 class Input(Node):
     """
-    Input Node
+    Input node
 
     Parameters
     ----------
@@ -1273,7 +1273,7 @@ def Input_like(ref, dtype=None, name='input',
 
 class GenericInput(Node):
     """
-    Input Node for arbitrary oject.
+    Input node for arbitrary oject.
 
     Parameters
     ----------
@@ -1302,7 +1302,7 @@ class GenericInput(Node):
 
 class FromTensor(Node):
     """
-    Dummy Node to be used in the split-function.
+    Dummy node to be used in the split-function.
 
     Parameters
     ----------
@@ -1449,7 +1449,7 @@ class Concat(Node):
 
 class Add(Node):
     """
-    Add two Nodes using ``theano.tensor.add``.
+    Add two nodes using ``theano.tensor.add``.
 
     Parameters
     ----------
@@ -1546,7 +1546,7 @@ class ApplyFunc(Node):
 
 class ValueNode(Node):
     """
-    (Optionally) trainable Value Node
+    (Optionally) trainable value node
 
     Parameters
     ----------
