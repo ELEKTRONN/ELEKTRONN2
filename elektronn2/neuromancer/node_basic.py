@@ -8,8 +8,8 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 
 
 __all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc',
-           'FromTensor', 'split', 'model_manager', 'GenericInput', 'ValueNode',
-           'MultMerge', 'InitialState_like', 'Add']
+           'FromTensor', 'split', 'multi_dim_split', 'model_manager',
+           'GenericInput', 'ValueNode', 'MultMerge', 'InitialState_like', 'Add']
 
 
 import sys
@@ -1397,6 +1397,23 @@ def split(node, axis='f', index=None, n_out=None, strip_singleton_dims=False, na
 
     return tuple(out_nodes)
 
+
+def multi_dim_split(node, axes, n_outs=None, indices=None):
+    out_nodes = [node]
+    if n_outs is None:
+        n_outs = [None] * len(axes)
+    else:
+        assert len(axes) == len(n_outs)
+    if indices is None:
+        indices = [None] * len(axes)
+    else:
+        assert len(axes) == len(indices)
+    for a, i, n in zip(axes, indices, n_outs):
+        new_out_nodes = []
+        for node in out_nodes:
+            new_out_nodes += split(node, axis=a, index=i, n_out=n)
+        out_nodes = list(new_out_nodes)
+    return out_nodes
 
 ###############################################################################
 

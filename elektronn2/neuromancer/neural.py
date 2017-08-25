@@ -298,7 +298,8 @@ class Perceptron(NeuralLayer):
     std
         (For batch normalisation) Initialises std parameter.
     gradnet_mode
-    """  # TODO: Write docs on batch normalisation modes.
+    """
+    # TODO: Write docs on batch normalisation modes.
     # TODO: gradnet_mode seems to be unused. Should it be removed?
 
     def __init__(self, parent, n_f, activation_func='relu',

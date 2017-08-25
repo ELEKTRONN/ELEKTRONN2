@@ -144,8 +144,12 @@ class Model(graphmanager.GraphManager):
                 st = np.array(self.prediction_node.shape.strides)
                 out_sh = st * (sh-1) + 1
                 diff = np.subtract(in_sh, out_sh)
+                # if np.any(np.mod(diff, 2)):
+                #     raise ValueError("FOV is not centered. In_sh=%s, "
+                #     "out_sh*strides=%s, diff=%s"
+                #                      %(in_sh, out_sh, diff))
                 if np.any(np.mod(diff, 2)):
-                    raise ValueError("FOV is not centered. In_sh=%s, "
+                    logger.warning("FOV is not centered. In_sh=%s, "
                     "out_sh*strides=%s, diff=%s"
                                      %(in_sh, out_sh, diff))
                 self.prediction_node.shape._fov = diff # Hack
