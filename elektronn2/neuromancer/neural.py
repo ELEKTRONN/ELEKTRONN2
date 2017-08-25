@@ -519,10 +519,13 @@ class Conv(Perceptron):
         ``None`` (default) disables pooling along all axes.
     conv_mode: str
         Possible values:
-        * "valid": only apply filter to complete patches of the image.
+        * "valid": Only apply filter to complete patches of the image.
           Generates output of shape: image_shape -filter_shape + 1.
-        * "full" zero-pads image to multiple of filter shape to generate
+        * "full": Zero-pads image to multiple of filter shape to generate
           output of shape: image_shape + filter_shape - 1.
+        * "same": Zero-pads input image so that the output shape
+          is equal to the input shape
+          (Only supported for odd filter sizes).
     activation_func: str
         Activation function name.
     mfp: bool
