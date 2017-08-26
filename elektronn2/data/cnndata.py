@@ -606,6 +606,36 @@ multi target regression (e.g. image reconstruction of rgb img):
 """
 
 
+class BatchCreatorImageDecorr(BatchCreatorImage):
+    def __init__(self, input_node, target_node, **kwargs):
+        super(BatchCreatorImageDecorr, self).__init__(input_node,
+                                                      target_node, **kwargs)
+
+    def getbatch(self, **kwargs):
+        try:
+            if kwargs["ret_ll_mask"]:
+                raise NotImplementedError
+        except KeyError:
+            pass
+        ret = super(BatchCreatorImageDecorr, self).get_batch(**kwargs)
+        assert not np.any(np.divide(ret[0], 2)), "Raw data cube has to " \
+                                                 "have even shape."
+        pred_sh = target_node.shape.spatial_shape  # z, x, y
+        decorr_cubes = []
+        center = np.array(np.divide(ret[0].shape, 2))
+        cent_plus = center + np.array(pred_sh, dtype=np.int)
+        cent_min = center - np.array(pred_sh, dtype=np.int)
+        decorr_cubes.append(ret[0][:cent_plus[0], :cent_plus[1], :cent_plus[2]])
+        decorr_cubes.append(ret[0][cent_min[0]:, cent_min[1]:, cent_min[2]:])
+        decorr_cubes.append(ret[0][:cent_plus[0], cent_min[1]:, cent_min[2]:])
+        decorr_cubes.append(ret[0][cent_min[0]:, :cent_plus[1], cent_min[2]:])
+        decorr_cubes.append(ret[0][cent_min[0]:, cent_min[1]:, :cent_plus[2]])
+        decorr_cubes.append(ret[0][cent_min[0]:, :cent_plus[1], :cent_plus[2]])
+        decorr_cubes.append(ret[0][:cent_plus[0], cent_min[1]:, :cent_plus[2]])
+        decorr_cubes.append(ret[0][:cent_plus[0], :cent_plus[1], cent_min[2]:])
+        return decorr_cubes + ret[1:]
+
+
 ##############################################################################################################
 class DummySkel(object):
     def __init__(self):
