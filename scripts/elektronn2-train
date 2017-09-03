@@ -87,14 +87,15 @@ elif func=='tracernn':
     T = trainer.TracingTrainerRNN(exp_config)
 else:
     raise ValueError("Unrecognised training function %s" %func)
-
-T.debug_getcnnbatch()
 try:
     from elektronn2.utils.d3viz import visualise_model
     visualise_model(T.model, '1-model-graph')
 except Exception as e:
     traceback.print_exc()
     print("Could not plot model graph")
+
+T.debug_getcnnbatch()
+
 
 T.run()
 os.mknod("0-EVAL-needed")

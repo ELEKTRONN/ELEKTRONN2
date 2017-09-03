@@ -164,6 +164,15 @@ class Trainer(object):
             is_regression = False
         pp_err  = 'err' if is_regression else '%'
 
+        if "adversarial" in exp_config.network_arch.keys():
+            training_focus = 0
+            adv_params = []
+            seg_params = []
+            for param in self.model.trainable_params:
+                if "adv" in param.__repr__():
+                    adv_params.append(param)
+                else:
+                    seg_params.append(param)
         # --------------------------------------------------------------------------------------------------------
         if config.background_processes:
             n_proc = max(2, int(config.background_processes))
@@ -183,6 +192,18 @@ class Trainer(object):
 
                     if exp_config.class_weights is not None:
                         batch = batch + (exp_config.class_weights,)
+
+                    if "adversarial" in exp_config.network_arch.keys():
+                        new_focus = (i // exp_config.network_arch["adversarial"]["permut_steps"]) % 2 # 0: train segmentor; 1: train adversarial
+                        if new_focus != training_focus:
+                            training_focus = new_focus
+                            self.model.nodes["loss_adversarial"].mixing_weights = exp_config.network_arch["adversarial"]["mixing_weights"][training_focus]
+                            self.model.nodes["nll_adversarial"].class_weights = exp_config.network_arch["adversarial"]["class_weights"][training_focus]
+                            if training_focus:
+                                self.model.trainable_params = adv_params
+                            else:
+                                self.model.trainable_params = seg_params
+
 
                     #self.debug_store.append(batch[1])
                     #-----------------------------------------------------------------------------------------------------
