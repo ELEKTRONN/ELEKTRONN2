@@ -49,7 +49,7 @@ optimiser = 'SGD'
 dr = 0.01  # dropout
 act = 'relu'
 optimiser_params = {
-    'lr': 0.0005,
+    'lr': 0.0008,
     'mom': 0.9,
     'wd': 0.5e-4
 }
