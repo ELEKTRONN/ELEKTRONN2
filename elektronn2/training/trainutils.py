@@ -616,9 +616,9 @@ class ExperimentConfig(object):
                 if k not in ['class_weights', 'lazy_labels',
                              'gradnet_schedule', 'dropout_schedule',
                              'lr_schedule', 'wd_schedule', 'mom_schedule',
-                             'schedules', 'preview_kwargs',
+                             'schedules', 'preview_kwargs', 'trainee_path',
                              'preview_data_path', 'model_load_args',
-                             'sequence_training']:
+                             'sequence_training', 'network_arch']:
                     raise ValueError("'%s' must not be 'None'" % (k,))
 
     def make_dir(self):
