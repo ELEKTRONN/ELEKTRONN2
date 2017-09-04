@@ -3,13 +3,14 @@
 # All rights reserved
 import os
 import numpy as np
+from syconnfs.handler.basics import get_filepaths_from_dir
 save_path = '~/elektronn2_training/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
     'export_class': [1],
     'max_z_pred': 3
 }
-trainee_path = os.path.expanduser("~/devel/ELEKTRONN2/examples/unet3d_lite.py")
+trainee_path = os.path.expanduser("~/devel/ELEKTRONN2/examples/unet3d_litelite.py")
 trainee_dict = dict()
 exec (compile(open(trainee_path).read(), trainee_path, 'exec'), {},
       trainee_dict)
@@ -25,26 +26,29 @@ initial_prev_h = 1.0  # hours: time after which the first preview is made
 prev_save_h = 1.0  # hours: time interval between planned previews.
 data_class = trainee_dict["data_class"]
 background_processes = 2
+h5_fnames = get_filepaths_from_dir('/wholebrain/scratch/j0126/barrier_gt_phil/', ending=".h5")
 data_init_kwargs = {
-    'd_path' : '~/neuro_data_zxy/',
-    'l_path': '~/neuro_data_zxy/',
-    'd_files': [('raw_%i.h5' %i, 'raw') for i in range(3)],
-    'l_files': [('barrier_int16_%i.h5' %i, 'lab') for i in range(3)],
+    'zxy': False,
+    'make_l_unique' : True,
+    'd_path' : '/wholebrain/scratch/j0126/barrier_gt_phil/',
+    'l_path': '/wholebrain/scratch/j0126/barrier_gt_phil/',
+    'd_files': [(os.path.split(fname)[1], 'em_raw') for fname in h5_fnames],
+    'l_files': [(os.path.split(fname)[1], 'labels') for fname in h5_fnames],
     'aniso_factor': 2,
     'valid_cubes': [2],
 }
 data_batch_args = {
     'grey_augment_channels': [0],
-    'warp': 0.15,
+    'warp': 0.1,
     'warp_args': {
         'sample_aniso': True,
         'perspective': True
     }
 }
-n_steps = 150000
-max_runtime = 24 * 3600  # in seconds
-history_freq = 200
-monitor_batch_size = 10
+n_steps = 1500000
+max_runtime = 4 * 24 * 3600  # in seconds
+history_freq = 800
+monitor_batch_size = 5
 optimiser = 'SGD'
 dr = 0.01  # dropout
 act = 'relu'
