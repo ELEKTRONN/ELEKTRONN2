@@ -64,7 +64,8 @@ def create_model():
     conv5  = nm.Conv(conv4, 35,  (1,3,3))
     down2  = nm.Pool(conv5, (1,2,2), mode='max')  # very low res
     conv6  = nm.Conv(down2, 42,  (3,3,3))
-    conv7  = nm.Conv(conv6, 42,  (3,3,3))
+    down2b = nm.Pool(conv6, (1, 2, 2), mode='max')  # very low res, even lower
+    conv7  = nm.Conv(down2b, 42,  (3,3,3))
 
     # Merging very low-res features with low-res features
     mrg0   = nm.UpConvMerge(conv5, conv7, 45)

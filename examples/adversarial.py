@@ -9,11 +9,11 @@ preview_kwargs    = {
     'export_class': [1],
     'max_z_pred': 3
 }
-trainee_path = os.path.expanduser("~/devel/ELEKTRONN2/examples/unet3d_litelite.py")
+trainee_path = os.path.expanduser("~/devel/ELEKTRONN2/examples/unet3d_lite.py")
 trainee_dict = dict()
 exec (compile(open(trainee_path).read(), trainee_path, 'exec'), {},
       trainee_dict)
-alpha = 0.5 # factor for adversarial loss term
+alpha = 0.2 # factor for adversarial loss term
 adv_class_w = [[0, 1], [1, 1]]
 mixing_w = [[alpha, 1], [1, 0]]
 # permut_steps: number of steps after which training is switched
@@ -35,7 +35,7 @@ data_init_kwargs = {
 }
 data_batch_args = {
     'grey_augment_channels': [0],
-    'warp': 0.1,
+    'warp': 0.15,
     'warp_args': {
         'sample_aniso': True,
         'perspective': True
@@ -44,17 +44,17 @@ data_batch_args = {
 n_steps = 150000
 max_runtime = 24 * 3600  # in seconds
 history_freq = 200
-monitor_batch_size = 5
+monitor_batch_size = 10
 optimiser = 'SGD'
 dr = 0.01  # dropout
 act = 'relu'
 optimiser_params = {
-    'lr': 0.0012,
+    'lr': 0.0005,
     'mom': 0.9,
     'wd': 0.5e-4
 }
 schedules = {
-    'lr': {'dec': 0.99},  # decay (multiply) lr by this factor every 1000 steps
+    'lr': {'dec': 0.995},  # decay (multiply) lr by this factor every 1000 steps
 }
 batch_size = trainee_dict["batch_size"]
 
