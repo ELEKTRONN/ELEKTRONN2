@@ -42,45 +42,47 @@ optimiser_params = {
     'wd': 0.5e-4
 }
 schedules = {
-    'lr': {'dec': 0.995}, # decay (multiply) lr by this factor every 1000 steps
+    'lr': {'dec': 0.99}, # decay (multiply) lr by this factor every 1000 steps
 }
 batch_size = 1
 
 
 def create_model():
+    dr = 0.0
+    act = 'relu'
     from elektronn2 import neuromancer as nm
 
     in_sh = (None,1,22,140,140)
     inp = nm.Input(in_sh, 'b,f,z,x,y', name='raw')  # high res
 
     # Convolution, downsampling of intermediate features
-    conv0  = nm.Conv(inp,  20,  (1,3,3))
-    conv1  = nm.Conv(conv0, 20,  (1,3,3))
+    conv0  = nm.Conv(inp,  25,  (1,3,3), dropout_rate=dr, activation_func=act)
+    conv1  = nm.Conv(conv0, 25,  (1,3,3), dropout_rate=dr, activation_func=act)
     down0  = nm.Pool(conv1, (1,2,2), mode='max')  # mid res
-    conv2  = nm.Conv(down0, 30,  (1,3,3))
-    conv3  = nm.Conv(conv2, 30,  (1,3,3))
+    conv2  = nm.Conv(down0, 35,  (1,3,3), dropout_rate=dr, activation_func=act)
+    conv3  = nm.Conv(conv2, 35,  (1,3,3), dropout_rate=dr, activation_func=act)
     down1  = nm.Pool(conv3, (1,2,2), mode='max')  # low res
-    conv4  = nm.Conv(down1, 35,  (1,3,3))
-    conv5  = nm.Conv(conv4, 35,  (1,3,3))
+    conv4  = nm.Conv(down1, 35,  (1,3,3), dropout_rate=dr, activation_func=act)
+    conv5  = nm.Conv(conv4, 35,  (1,3,3), dropout_rate=dr, activation_func=act)
     down2  = nm.Pool(conv5, (1,2,2), mode='max')  # very low res
-    conv6  = nm.Conv(down2, 42,  (3,3,3))
+    conv6  = nm.Conv(down2, 42,  (3,3,3), dropout_rate=dr, activation_func=act)
     down2b = nm.Pool(conv6, (1, 2, 2), mode='max')  # very low res, even lower
-    conv7  = nm.Conv(down2b, 42,  (3,3,3))
+    conv7  = nm.Conv(down2b, 42,  (3,3,3), dropout_rate=dr, activation_func=act)
 
     # Merging very low-res features with low-res features
     mrg0   = nm.UpConvMerge(conv5, conv7, 45)
-    mconv0 = nm.Conv(mrg0, 42,  (1,3,3))
-    mconv1 = nm.Conv(mconv0, 42,  (1,3,3))
+    mconv0 = nm.Conv(mrg0, 42,  (1,3,3), dropout_rate=dr, activation_func=act)
+    mconv1 = nm.Conv(mconv0, 42,  (1,3,3), dropout_rate=dr, activation_func=act)
 
     # Merging low-res with mid-res features
     mrg1   = nm.UpConvMerge(conv3, mconv1, 42)
-    mconv2 = nm.Conv(mrg1, 35,  (3,3,3))
-    mconv3 = nm.Conv(mconv2, 35,  (3,3,3))
+    mconv2 = nm.Conv(mrg1, 35,  (3,3,3), dropout_rate=dr, activation_func=act)
+    mconv3 = nm.Conv(mconv2, 35,  (3,3,3), dropout_rate=dr, activation_func=act)
 
     # Merging mid-res with high-res features
     mrg2   = nm.UpConvMerge(conv1, mconv3, 30)
-    mconv4 = nm.Conv(mrg2, 20,  (3,3,3))
-    mconv5 = nm.Conv(mconv4, 20,  (3,3,3))
+    mconv4 = nm.Conv(mrg2, 20,  (3,3,3), dropout_rate=dr, activation_func=act)
+    mconv5 = nm.Conv(mconv4, 20,  (3,3,3), dropout_rate=dr, activation_func=act)
 
     barr   = nm.Conv(mconv5, 2, (1,1,1), activation_func='lin', name='barr')
     probs  = nm.Softmax(barr)

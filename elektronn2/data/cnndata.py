@@ -108,7 +108,7 @@ class BatchCreatorImage(object):
     def __init__(self, input_node, target_node=None, d_path=None, l_path=None,
                  d_files=None, l_files=None, cube_prios=None, valid_cubes=None,
                  border_mode='crop', aniso_factor=2, target_vec_ix=None,
-                 target_discrete_ix=None, h5stream=False, zxy=True, make_l_unique=False):
+                 target_discrete_ix=None, h5stream=False, zxy=True):
 
         assert (d_path and l_path and d_files and l_files)
         if len(d_files)!=len(l_files):
@@ -116,7 +116,6 @@ class BatchCreatorImage(object):
         d_path = os.path.expanduser(d_path)
         l_path = os.path.expanduser(l_path)
         self.zxy = zxy
-        self.make_l_unique = make_l_unique
         self.h5stream = h5stream
         self.d_path = d_path
         self.l_path = l_path
@@ -575,8 +574,6 @@ class BatchCreatorImage(object):
                                      "maximum allowed value: %g. You may try "
                                      "to renumber targets." %(self.t_dtype,
                                                              self.t_dtype, m, M))
-            if self.make_l_unique:
-                t[t != 0] = 1
             if not self.h5stream:
                 d = np.ascontiguousarray(d, dtype=np.float32)
                 t = np.ascontiguousarray(t, dtype=self.t_dtype)

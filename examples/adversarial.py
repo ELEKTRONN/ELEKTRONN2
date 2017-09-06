@@ -4,7 +4,7 @@
 import os
 import numpy as np
 from syconnfs.handler.basics import get_filepaths_from_dir
-save_path = '~/elektronn2_training/'
+save_path = '~/elektronn2_training/adversarial/'
 preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
 preview_kwargs    = {
     'export_class': [1],
@@ -18,12 +18,12 @@ exec (compile(open(trainee_path).read(), trainee_path, 'exec'), {},
 # TODO: define #steps for each network individually
 p = [.5, .5]  # probability to present ground truth to adversarial network; first entry while training trainee; second entry while training adversarial
 adv_class_w = [[0, 1], [1, 1]]  # class weights for adversarial loss term, 0: trainee output 1: ground truth; first entry while training trainee network, i.e. here onyl the class 1 (ground truth)
-mixing_w = [[0.5, 1], [1, 0]]  # mixing weights for adversarial and trainee loss; instead of training -lambda l_bce(a(x, s(x)), 0), we use +lambda l_bce(a(x, s(x)), 1) -> stronger gradient (see Goodfellow et al. 2014)
+mixing_w = [[1, 1], [1, 0]]  # mixing weights for adversarial and trainee loss; instead of training -lambda l_bce(a(x, s(x)), 0), we use +lambda l_bce(a(x, s(x)), 1) -> stronger gradient (see Goodfellow et al. 2014)
 # permut_steps: number of steps after which training is switched
 # (0-9: segmentor, 10-19: adversarial, 20:29: segmentor, ...)
 # mixing weights
-network_arch = {"adversarial": {"permut_steps": 10, 'mixing_weights': mixing_w,
-    'class_weights': adv_class_w, "target_p": p, "lr_fact": 0.1}}
+network_arch = {"adversarial": {"permut_steps": 5, 'mixing_weights': mixing_w,
+    'class_weights': adv_class_w, "target_p": p, "lr_fact": 1}}
 initial_prev_h = 1.0  # hours: time after which the first preview is made
 prev_save_h = 1.0  # hours: time interval between planned previews.
 data_class = trainee_dict["data_class"]
@@ -31,7 +31,6 @@ background_processes = 2
 h5_fnames = get_filepaths_from_dir('/wholebrain/scratch/j0126/barrier_gt_phil/', ending="rawbarr-zyx.h5")
 data_init_kwargs = {
     'zxy': True,
-    'make_l_unique' : False,
     'd_path' : '/wholebrain/scratch/j0126/barrier_gt_phil/',
     'l_path': '/wholebrain/scratch/j0126/barrier_gt_phil/',
     'd_files': [(os.path.split(fname)[1], 'raW') for fname in h5_fnames],
@@ -41,7 +40,7 @@ data_init_kwargs = {
 }
 data_batch_args = {
     'grey_augment_channels': [0],
-    'warp': 0.1,
+    'warp': 0.15,
     'warp_args': {
         'sample_aniso': True,
         'perspective': True
@@ -52,13 +51,13 @@ max_runtime = 4 * 24 * 3600  # in seconds
 history_freq = 400
 monitor_batch_size = 5
 optimiser = 'Adam'
-dr = 0.01  # dropout
+dr = 0.0  # dropout
 act = 'relu'
 optimiser_params = {
-    'lr': 0.0001,
+    'lr': 0.001,
     'mom': 0.9,
     'wd': 0.5e-4,
-    'beta2': 0.999
+    # 'beta2': 0.999
 }
 schedules = {
     'lr': {'dec': 0.995},  # decay (multiply) lr by this factor every 1000 steps
@@ -127,7 +126,7 @@ def create_model():
         loss_node=loss,
         prediction_node=trainee.prediction_node,
         prediction_ext=trainee.prediction_ext,
-        debug_outputs=[adv_loss, trainee_loss, adv_target]
+        debug_outputs=[adv_loss, trainee_loss]
     )
     return model
 

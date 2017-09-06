@@ -9,7 +9,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 
 __all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc', 'FlipNode',
            'FromTensor', 'split', 'model_manager', 'GenericInput', 'ValueNode',
-           'MultMerge', 'InitialState_like', 'Add', 'advmerge', 'AdvMerge', 'AdvTarget']
+           'MultMerge', 'InitialState_like', 'Add', 'AdvMerge', 'AdvTarget']
 
 
 import sys
@@ -1448,12 +1448,13 @@ class AdvMerge(Node):
     """
     Adversarial merge. Merging inputs by randomly choosing elements
     exclusively from one parent node along axis 'b'. Thereby applying argmax
-    to n1, assuming this contains one channel for each output class.
+    to n1, assuming this contains two channels, one for each output class.
 
     Parameters
     ----------
     parent_nodes: list of Node
-        Inputs to be concatenated.
+        Inputs nodes: Trainee output (index 0), ground truth node (index 1),
+        index node
     name: str
         Node name.
     print_repr: bool
@@ -1472,8 +1473,8 @@ class AdvMerge(Node):
         gt_chosen_tmp = T.addbroadcast(gt_chosen.output, *axes)
         par0 = T.argmax(n1.output, keepdims=True,
                         axis=n1.shape.tag2index('f')).astype(
-            dtype=theano.config.floatX) * gt_chosen_tmp
-        par1 = n2.output * (1. - gt_chosen_tmp)
+            dtype=theano.config.floatX) * (1. - gt_chosen_tmp)
+        par1 = n2.output * gt_chosen_tmp
         self.output = par0 + par1
 
     def _calc_shape(self):
