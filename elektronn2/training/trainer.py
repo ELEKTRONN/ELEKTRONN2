@@ -165,7 +165,7 @@ class Trainer(object):
         pp_err  = 'err' if is_regression else '%'
 
         if "adversarial" in exp_config.network_arch.keys():
-            training_focus = 0
+            training_focus = 0  # 0: train trainee network; 1: train adversarial
             adv_params = []
             seg_params = []
             for param in self.model.trainable_params:
@@ -181,6 +181,8 @@ class Trainer(object):
         try:
             i = -1
             t0 = time.time()
+            if "adversarial" in exp_config.network_arch.keys():
+                self.model.lr = self.model.lr * exp_config.network_arch["adversarial"]["lr_fact"]  # in order to overcome an increased LR by factor 'lr_fact', see procedure in while loop
             while i < exp_config.n_steps:
                 print('{:05d}'.format(i), end='\r')
                 sys.stdout.flush()
@@ -194,9 +196,12 @@ class Trainer(object):
                         batch = batch + (exp_config.class_weights,)
 
                     if "adversarial" in exp_config.network_arch.keys():
-                        new_focus = (i // exp_config.network_arch["adversarial"]["permut_steps"]) % 2 # 0: train segmentor; 1: train adversarial
+                        new_focus = (i // exp_config.network_arch["adversarial"]["permut_steps"]) % 2 # 0: train trainee network; 1: train adversarial
                         if new_focus != training_focus:
                             training_focus = new_focus
+                            self.model.nodes["advtarget"].p = exp_config.network_arch["adversarial"]["target_p"][training_focus]
+                            self.model.nodes["flip"].do_flip = 1 - training_focus  #  do the flip if training trainee network
+                            self.model.lr = self.model.lr * exp_config.network_arch["adversarial"]["lr_fact"]**((-1)**(1-training_focus))
                             self.model.nodes["loss_adversarial"].mixing_weights = exp_config.network_arch["adversarial"]["mixing_weights"][training_focus]
                             self.model.nodes["nll_adversarial"].class_weights = exp_config.network_arch["adversarial"]["class_weights"][training_focus]
                             if training_focus:

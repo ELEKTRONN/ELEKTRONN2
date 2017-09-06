@@ -42,7 +42,7 @@ optimiser_params = {
     'wd': 0.5e-4
 }
 schedules = {
-    'lr': {'dec': 0.99}, # decay (multiply) lr by this factor every 1000 steps
+    'lr': {'dec': 0.995}, # decay (multiply) lr by this factor every 1000 steps
 }
 batch_size = 1
 
