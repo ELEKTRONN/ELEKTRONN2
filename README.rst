@@ -6,6 +6,8 @@
   :target: https://github.com/conda-forge/elektronn2-feedstock
 .. image:: https://img.shields.io/conda/pn/conda-forge/elektronn2.svg
   :target: https://anaconda.org/conda-forge/elektronn2
+.. image:: https://img.shields.io/aur/version/python-elektronn2.svg
+  :target: https://aur.archlinux.org/packages/python-elektronn2/
 
 ****************
 About ELEKTRONN2
