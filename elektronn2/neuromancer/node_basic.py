@@ -34,7 +34,7 @@ from theano import printing
 from future.utils import raise_with_traceback
 from future.utils import with_metaclass
 
-from .variables import VariableWeight, ConstantParam
+from .variables import VariableWeight, ConstantParam, VariableParam
 from .. import utils
 from . import graphutils
 
@@ -1399,8 +1399,11 @@ def split(node, axis='f', index=None, n_out=None, strip_singleton_dims=False, na
 
 
 class FlipNode(Node):
-    def __init__(self, parent_node, do_flip=True, name="flip", print_repr=True):
+    def __init__(self, parent_node, do_flip=False, name="flip", print_repr=True):
         super(FlipNode, self).__init__(parent_node, name, print_repr)
+        do_flip = VariableWeight(value=do_flip, name="do_flip", dtype=floatX,
+                               apply_train=False, apply_reg=False)
+        self.params["do_flip"] = do_flip
         self.do_flip = do_flip
 
     def _make_output(self):
@@ -1420,6 +1423,9 @@ class FlipNode(Node):
 class AdvTarget(Node):
     def __init__(self, parent_nodes, name="advtarget", print_repr=True, p=0.5):
         super(AdvTarget, self).__init__(parent_nodes, name, print_repr)
+        p = VariableWeight(value=p, name="p", dtype=floatX,
+                               apply_train=False, apply_reg=False)
+        self.params["p"] = p
         self.p = p
 
     def _make_output(self):
@@ -1434,10 +1440,10 @@ class AdvTarget(Node):
         self.output = gt_chosen_tmp
 
     def _calc_shape(self):
-        sh = self.parent[0].shape.delaxis(self.parent[0].shape.tag2index('z'))
+        sh = self.parent[0].shape.updateshape(self.parent[0].shape.tag2index('f'), 1)
         sh = sh.delaxis(sh.tag2index('y'))
         sh = sh.delaxis(sh.tag2index('x'))
-        sh = sh.updateshape(sh.tag2index('f'), 1)
+        sh = sh.delaxis(sh.tag2index('z'))
         self.shape = sh
 
     def _calc_comp_cost(self):

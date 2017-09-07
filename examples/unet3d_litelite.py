@@ -91,7 +91,7 @@ def create_model():
 
     loss_pix = nm.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 
-    loss = nm.AggregateLoss(loss_pix , name='loss')
+    loss = nm.AggregateLoss(loss_pix , name='loss_barr')
     errors = nm.Errors(probs, target, target_is_sparse=True)
 
     model = nm.model_manager.getmodel()
