@@ -663,7 +663,7 @@ class ScanN(Node):
     WARNING: this node may only be used in conjunction with ``scansplit``
     because its ``output`` and ``shape`` attributes are lists which
     will confuse normal nodes. The split wraps the outputs in individual
-    Nodes (FromTensor).
+    nodes (FromTensor).
 
     Parameters
     ----------

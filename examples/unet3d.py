@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
 
+# Implements the "3D U-Net" by Özgün Çiçek et al.
+# (https://arxiv.org/abs/1606.06650). Notable differences:
+# - Optimiser changes (Adam instead of SGD, changed lr etc.)
+# - Enhanced image augmentation pipeline
+# - No batch normalization
+# - 2 output channels instead of 3 (because of neuro_data_zxy)
+#
+# Note that this network has high memory requirements and is
+# very slow to train. A similar, but more light-weight model
+# can be found in examples/unet_3d_lite.py.
+
 save_path = '~/elektronn2_training/'
-preview_data_path = '~/neuro_data_zxy/preview_cubes.h5'
+# Use validation data as preview data because preview_cubes.h5 is too small
+preview_data_path = ('~/neuro_data_zxy/raw_2.h5', 'raw')
 preview_kwargs    = {
     'export_class': [1],
     'max_z_pred': 3
@@ -45,26 +57,44 @@ batch_size = 1
 
 def create_model():
     from elektronn2 import neuromancer as nm
-    in_sh = (None,1,23,185,185)
-    inp = nm.Input(in_sh, 'b,f,z,x,y', name='raw')
 
-    out   = nm.Conv(inp, 20,  (1,6,6), (1,2,2))
-    out   = nm.Conv(out, 30,  (1,5,5), (1,2,2))
-    out   = nm.Conv(out, 40,  (1,5,5))
-    out   = nm.Conv(out, 80,  (4,4,4), (2,1,1))
+    in_sh = (None,1,116,132,132)
+    inp = nm.Input(in_sh, 'b,f,z,x,y', name='raw')  # high res
 
-    out   = nm.Conv(out, 100, (3,4,4))
-    out   = nm.Conv(out, 100, (3,4,4))
-    out   = nm.Conv(out, 150, (2,4,4))
-    out   = nm.Conv(out, 200, (1,4,4))
-    out   = nm.Conv(out, 200, (1,4,4))
+    # Convolution, downsampling of intermediate features
+    conv0  = nm.Conv(inp,  32,  (3,3,3))
+    conv1  = nm.Conv(conv0, 64,  (3,3,3))
+    down0  = nm.Pool(conv1, (2,2,2), mode='max')  # mid res
+    conv2  = nm.Conv(down0, 64,  (3,3,3))
+    conv3  = nm.Conv(conv2, 128,  (3,3,3))
+    down1  = nm.Pool(conv3, (2,2,2), mode='max')  # low res
+    conv4  = nm.Conv(down1, 128,  (3,3,3))
+    conv5  = nm.Conv(conv4, 256,  (3,3,3))
+    down2  = nm.Pool(conv5, (2,2,2), mode='max')  # very low res
+    conv6  = nm.Conv(down2, 256,  (3,3,3))
+    conv7  = nm.Conv(conv6, 512,  (3,3,3))
 
-    out   = nm.Conv(out, 200, (1,1,1))
-    out   = nm.Conv(out,   2, (1,1,1), activation_func='lin')
-    probs = nm.Softmax(out)
+    # Merging very low-res features with low-res features
+    mrg0   = nm.UpConvMerge(conv5, conv7, 512)
+    mconv0 = nm.Conv(mrg0, 256,  (3,3,3))
+    mconv1 = nm.Conv(mconv0, 256,  (3,3,3))
 
-    target = nm.Input_like(probs, override_f=1, name='target')
-    loss_pix  = nm.MultinoulliNLL(probs, target, target_is_sparse=True)
+    # Merging low-res with mid-res features
+    mrg1   = nm.UpConvMerge(conv3, mconv1, 256)
+    mconv2 = nm.Conv(mrg1, 128,  (3,3,3))
+    mconv3 = nm.Conv(mconv2, 128,  (3,3,3))
+
+    # Merging mid-res with high-res features
+    mrg2   = nm.UpConvMerge(conv1, mconv3, 128)
+    mconv4 = nm.Conv(mrg2, 64,  (3,3,3))
+    mconv5 = nm.Conv(mconv4, 64,  (3,3,3))
+
+    barr  = nm.Conv(mconv5, 2, (1,1,1), activation_func='lin', name='barr')
+    probs = nm.Softmax(barr)
+
+    target = nm.Input_like(mconv5, override_f=1, name='target')
+
+    loss_pix = nm.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 
     loss = nm.AggregateLoss(loss_pix , name='loss')
     errors = nm.Errors(probs, target, target_is_sparse=True)

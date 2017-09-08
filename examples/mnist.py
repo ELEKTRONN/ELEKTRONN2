@@ -23,27 +23,29 @@ optimiser_params = {
 }
 batch_size = 20
 
+# TODO: Make preview predictions work? Not sure if it is worth the effort
+#       with the custom MNISTData data_class, which can only handle MNIST...
+
 def create_model():
-    from elektronn2 import neuromancer
+    from elektronn2 import neuromancer as nm
 
-    act = 'relu'
     in_sh = (None,1,26,26)
-    inp = neuromancer.Input(in_sh, 'b,f,y,x', name='raw')
+    inp = nm.Input(in_sh, 'b,f,y,x', name='raw')
 
-    out = neuromancer.Conv(inp, 12, (3,3), (2,2), activation_func=act, batch_normalisation='train')
-    out = neuromancer.Conv(out, 36, (3,3), (2,2), activation_func=act, batch_normalisation='train')
-    out = neuromancer.Conv(out, 64, (3,3), (1,1), activation_func=act, batch_normalisation='train')
-    out = neuromancer.Perceptron(out, 200, flatten=True)
-    out = neuromancer.Perceptron(out, 10, activation_func='lin')
-    out = neuromancer.Softmax(out)
-    target = neuromancer.Input_like(out, override_f=1, name='target')
-    loss  = neuromancer.MultinoulliNLL(out, target, name='nll_', target_is_sparse=True)
+    out = nm.Conv(inp, 12, (3,3), (2,2), batch_normalisation='train')
+    out = nm.Conv(out, 36, (3,3), (2,2), batch_normalisation='train')
+    out = nm.Conv(out, 64, (3,3), (1,1), batch_normalisation='train')
+    out = nm.Perceptron(out, 200, flatten=True)
+    out = nm.Perceptron(out, 10, activation_func='lin')
+    out = nm.Softmax(out)
+    target = nm.Input_like(out, override_f=1, name='target')
+    loss  = nm.MultinoulliNLL(out, target, name='nll_', target_is_sparse=True)
     # Objective
-    loss = neuromancer.AggregateLoss(loss)
+    loss = nm.AggregateLoss(loss)
     # Monitoring / Debug outputs
-    errors = neuromancer.Errors(out, target, target_is_sparse=True)
+    errors = nm.Errors(out, target, target_is_sparse=True)
 
-    model = neuromancer.model_manager.getmodel()
+    model = nm.model_manager.getmodel()
     model.designate_nodes(
         input_node=inp,
         target_node=target,
@@ -71,7 +73,11 @@ if __name__ == "__main__":
 
     try:
         from elektronn2.utils.d3viz import visualise_model
-        vispath = '/tmp/' + __file__.split('.')[-2] + '_model-graph'
+        import getpass
+
+        user_name = getpass.getuser()
+        filename_noext = __file__.split('.')[-2]
+        vispath = '/tmp/{}_{}_model-graph'.format(user_name, filename_noext)
         visualise_model(model, vispath)
         print('Visualisation files are saved at {}'.format(
             vispath + '.{png,html}'))

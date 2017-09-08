@@ -1,6 +1,13 @@
 .. image:: https://readthedocs.org/projects/elektronn2/badge/?version=latest
   :target: http://elektronn2.readthedocs.io/en/latest/?badge=latest
-  :alt: Documentation Status
+.. image:: https://img.shields.io/pypi/v/elektronn2.svg
+  :target: https://pypi.org/project/elektronn2/
+.. image:: https://img.shields.io/conda/vn/conda-forge/elektronn2.svg
+  :target: https://github.com/conda-forge/elektronn2-feedstock
+.. image:: https://img.shields.io/conda/pn/conda-forge/elektronn2.svg
+  :target: https://anaconda.org/conda-forge/elektronn2
+.. image:: https://img.shields.io/aur/version/python-elektronn2.svg
+  :target: https://aur.archlinux.org/packages/python-elektronn2/
 
 ****************
 About ELEKTRONN2
@@ -91,7 +98,7 @@ Installation
 ------------
 
 See the installation instructions at
-https://elektronn2.readthedocs.io/en/latest/elektronn2.html#installation.
+https://elektronn2.readthedocs.io/en/latest/installation.html.
 
 
 .. _design:

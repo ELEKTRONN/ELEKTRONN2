@@ -36,7 +36,7 @@ def read(fname):
 
 setup(
     name="elektronn2",
-    version="0.1.0",
+    version="0.5.0",
     packages=find_packages(),
     scripts=[
         'scripts/elektronn2-train',
@@ -48,7 +48,7 @@ setup(
         'scipy>=0.14',
         'matplotlib>=1.4',
         'h5py>=2.2',
-        'theano>=0.7,<0.10',  # ELEKTRONN2 relies on the old Theano backend that has been removed now
+        'theano>=0.8,<0.10',  # ELEKTRONN2 relies on the old Theano backend that has been removed now
         'future>=0.15',
         'tqdm>=4.5',
         'colorlog>=2.7',
@@ -59,7 +59,7 @@ setup(
         'scikit-learn',
         'psutil>=5.0.1',
         'scikit-image>=0.12.3',
-        'numba>=0.25'
+        'numba>=0.25',
     ],
     extras_require={
         'knossos': ['knossos_utils'],

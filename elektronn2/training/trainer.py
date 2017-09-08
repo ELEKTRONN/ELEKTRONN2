@@ -117,7 +117,11 @@ class Trainer(object):
 
     def _load_preview_data(self):
         if self.exp_config.preview_data_path is not None:
-            data = utils.h5load(self.exp_config.preview_data_path)
+            try:  # Tuple of path and data set key
+                path, key = self.exp_config.preview_data_path
+                data = utils.h5load(path, key)
+            except (TypeError, ValueError):  # Use default key
+                data = utils.h5load(self.exp_config.preview_data_path)
             if not (isinstance(data, list) or  isinstance(data, (tuple, list))):
                 data = [data,]
             data = [d.astype(floatX)/d.max() for d in data]
@@ -224,10 +228,8 @@ class Trainer(object):
                             save_time2 += config.prev_save_h
                             try:
                                 self.preview_slice(**exp_config.preview_kwargs)
-                            except:
-                                logger.warning("Preview Predictions failed."
-                                               "Are the preview raw data in "
-                                               "the correct format?")
+                            except Exception as e:
+                                logger.exception("Preview Predictions failed.")
                             # reset time because we only count training time
                             # not time spent for previews (making previews
                             # is not a computational payload of the actual
@@ -689,13 +691,13 @@ class TracingTrainer(Trainer):
 
 
         if self.model.ndim==3 and extended:
-            dest = '/tmp/%s-'%user_name
+            dest = '/tmp/%s_' % user_name
             data, target = batch[0], batch[1]
             target[np.isclose(target, -666)] = 0
             i = self.data.offsets[0]  # z offset
             with FileLock('plotting'):
                 for j in range(data.shape[2]):
-                    plt.imsave('/tmp/img-%i.png' % j, data[0, 0, j], cmap='gray')
+                    plt.imsave('/tmp/%s_img-%i.png' % (user_name, j), data[0, 0, j], cmap='gray')
                     if j - i >= 0 and j - i < target.shape[2]:
                         plt.imsave(dest+'img-%i-br.png'%j, target[0, 4, j - i],cmap='gray')
                         plt.imsave(dest+'img-%i-z.png'%j, target[0,0,j-i], cmap='gray')
@@ -869,10 +871,8 @@ class TracingTrainer(Trainer):
                             save_time2 += config.prev_save_h
                             try:
                                 self.preview_slice(**exp_config.preview_kwargs)
-                            except:
-                                logger.warning("Preview Predictions failed."
-                                               "Are the preview raw data in "
-                                               "the correct format?")
+                            except Exception as e:
+                                logger.exception("Preview Predictions failed.")
                             # reset time because we only count training time
                             # not time spent for previews (making previews
                             # is not a computational payload of the actual
@@ -1169,10 +1169,8 @@ class TracingTrainerRNN(TracingTrainer):
                             save_time2 += config.prev_save_h
                             try:
                                 self.preview_slice(**exp_config.preview_kwargs)
-                            except:
-                                logger.warning("Preview Predictions failed."
-                                               "Are the preview raw data in "
-                                               "the correct format?")
+                            except Exception as e:
+                                logger.exception("Preview Predictions failed.")
                             # reset time because we only count training time
                             # not time spent for previews (making previews
                             # is not a computational payload of the actual

@@ -813,8 +813,8 @@ def rebuild_rnn(model):
     desig_descr = dict(model._desig_descr) # copy because we destroy
     desig_descr['input_node'] = input_name
     utils.picklesave((descriptors, desig_descr),
-                     '/tmp/%s-tempmodel.pkl'%user_name)
-    new_model = modelload('/tmp/%s-tempmodel.pkl' %user_name)
+                     '/tmp/%s_tempmodel.pkl'%user_name)
+    new_model = modelload('/tmp/%s_tempmodel.pkl' %user_name)
     return new_model
 
 
@@ -839,8 +839,8 @@ def rebuild_decoder(model, state_name, state_child_name):
     # Works only if a stuff from desig_descr is removed
 
     utils.picklesave((descriptors, desig_descr),
-                     '/tmp/%s-tempmodel.pkl'%user_name)
-    new_model = modelload('/tmp/%s-tempmodel.pkl' %user_name)
+                     '/tmp/%s_tempmodel.pkl'%user_name)
+    new_model = modelload('/tmp/%s_tempmodel.pkl' %user_name)
     return new_model
 
 
@@ -858,8 +858,8 @@ def rebuild_model(model, override_mfp_to_active=False,
         (see elektronn2.neuromancer.graphmanager.GraphManager.restore()).
     :return: Rebuilt Model.
     """
-    model.save('/tmp/%s-tempmodel.pkl'%user_name)
-    new_model = modelload('/tmp/%s-tempmodel.pkl' %user_name,
+    model.save('/tmp/%s_tempmodel.pkl'%user_name)
+    new_model = modelload('/tmp/%s_tempmodel.pkl' %user_name,
                           override_mfp_to_active=override_mfp_to_active,
                           imposed_patch_size=imposed_patch_size,
                           name=name, **model_load_kwargs)

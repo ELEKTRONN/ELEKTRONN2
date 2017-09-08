@@ -53,11 +53,12 @@ def apply_except_axis(x, axis, func):
     return y
 
 
+# TODO: Support arbitrary callables for activation_func arg
 def apply_activation(x, activation_func, b1=None):
     """
     Return an activation function callable matching the name
     Allowed names: 'relu', 'tanh','prelu', 'sigmoid', 'maxout <i>',
-    'lin','abs','soft+'.
+    'lin','abs','soft+', 'elu', 'selu'.
 
     Parameters
     ----------
@@ -78,17 +79,24 @@ def apply_activation(x, activation_func, b1=None):
     if activation_func=='tanh': # range = [-1,1]
         func = T.tanh
     elif activation_func=='relu': # rectified linear unit ,range = [0,inf]
-        def relu(y):
-            return (0.5 * (y + abs(y)))
-        func = relu
-
+        func = T.nnet.relu
     elif activation_func=='prelu': # parameterised relu
-        def prelu(y, alpha):
-            pos = ((y + abs(y)) / 2.0)
-            neg = alpha * ((y - abs(y)) / 2.0)
-            return pos + neg
-        func = prelu
+        # T.nnet.relu also implements prelu (with extra "alpha" parameter)
+        func = T.nnet.relu
+    elif activation_func=='elu':  # exponential linear unit
+        func = T.nnet.elu
+    elif activation_func=='selu':  # scaled exponential linear unit (for SNNs)
+        def selu(y):
+            """
+            SELU for Self-Normalizing Networks (https://arxiv.org/abs/1706.02515)
 
+            T.nnet.selu() is only available in Theano 0.10+, so we implement
+            it ourselves.
+            """
+            alpha = 1.6732632423543772848170429916717
+            scale = 1.0507009873554804934193349852946
+            return scale * T.nnet.elu(x, alpha)
+        func = selu
     elif activation_func=='abs': # abs unit ,range = [0,inf]
         func = T.abs_
     elif activation_func in ['sig', 'logistic', 'sigmoid']: # range = [0,1]
@@ -311,9 +319,11 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
 
     if border_mode=='same':
         assert w_shape is not None
-        assert np.all(np.remainder(w_shape[-conv_dim:], 2)==1), "For conv same kernels must be uneven"
-        border_mode='full'
-        crop_full = True
+        if not np.all(np.remainder(w_shape[-conv_dim:], 2) == 1):
+            raise ValueError('For "same"-mode convolution, filter shapes '
+                             'must be odd in all dimensions.')
+        border_mode='half'
+        crop_full = False
     else:
         crop_full = False
 
@@ -417,7 +427,7 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
                 y = conv3d(x, w, x_shape, w_shape, border_mode) # (b, z, f, x, y)
                 y = y.dimshuffle(0,2,1,3,4)
 
-    if crop_full:
+    if crop_full:  # Unreachable code. Remove this if it stays unneeded.
         cropper = []
         off = np.divide(w_shape[-conv_dim:], 2).astype(np.int)
         k = 0

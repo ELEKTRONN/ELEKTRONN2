@@ -18,13 +18,13 @@ from ..config import config
 from . import computations
 from .variables import VariableWeight, ConstantParam, VariableParam
 from .graphutils import floatX, TaggedShape, as_floatX
-from .node_basic import Node, Concat
+from .node_basic import Node, Concat, Add
 
 logger = logging.getLogger('elektronn2log')
 
 __all__ = ['Perceptron', 'Conv', 'UpConv', 'Crop', 'LSTM',
            'FragmentsToDense', 'Pool', 'Dot', 'FaithlessMerge',
-           'GRU', 'LRN', 'ImageAlign', 'UpConvMerge']
+           'GRU', 'LRN', 'AutoMerge', 'UpConvMerge', 'Pad']
 
 ################################################################################
 
@@ -515,18 +515,22 @@ class Conv(Perceptron):
     filter_shape: tuple
         Shape of the convolution filter kernels.
     pool_shape: tuple
-        Size/shape of pooling after the convolution.
+        Shape of max-pooling to be applied after the convolution.
+        ``None`` (default) disables pooling along all axes.
     conv_mode: str
         Possible values:
-        * "valid": only apply filter to complete patches of the image.
+        * "valid": Only apply filter to complete patches of the image.
           Generates output of shape: image_shape -filter_shape + 1.
-        * "full" zero-pads image to multiple of filter shape to generate
+        * "full": Zero-pads image to multiple of filter shape to generate
           output of shape: image_shape + filter_shape - 1.
+        * "same": Zero-pads input image so that the output shape
+          is equal to the input shape
+          (Only supported for odd filter sizes).
     activation_func: str
         Activation function name.
     mfp: bool
         Whether to apply Max-Fragment-Pooling in this Layer.
-    batch_normalisation: str or None
+    batch_normalisation: str or False
         Batch normalisation mode.
         Can be False (inactive), "train" or "fadeout".
     dropout_rate: float
@@ -554,13 +558,16 @@ class Conv(Perceptron):
     std
         (For batch normalisation) Initialises std parameter.
     gradnet_mode
+    invalidate_fov: bool
+        Overrides the computed ``fov`` with an invalid value to
+        force later recalculation (experimental).
     """
 
-    def __init__(self, parent, n_f, filter_shape, pool_shape,
+    def __init__(self, parent, n_f, filter_shape, pool_shape=None,
                  conv_mode='valid', activation_func='relu',
                  mfp=False, batch_normalisation=False, dropout_rate=0,
                  name="conv", print_repr=True, w=None, b=None, gamma=None,
-                 mean=None, std=None, gradnet_mode=None):
+                 mean=None, std=None, gradnet_mode=None, invalidate_fov=False):
         super(Perceptron, self).__init__(parent, name, print_repr)
 
         self.n_f  = n_f
@@ -576,7 +583,11 @@ class Conv(Perceptron):
         self.mfp_offsets = parent.shape.mfp_offsets
         self.axis = parent.shape.tag2index('f') #retrieve feature shape's index
         self.axis_order = None
+        self.invalidate_fov = invalidate_fov
 
+        if pool_shape is None:  # Default to no pooling
+            pool_shape = tuple([1 for _ in filter_shape])  # e.g. (1, 1, 1) for the 3D case
+        self.pool_shape = pool_shape
         self.spatial_axes = self.parent.shape.spatial_axes
         conv_dim = len(self.spatial_axes)
         x_dim    = len(self.parent.shape)
@@ -722,6 +733,7 @@ class Conv(Perceptron):
             elif self.conv_mode=='full':
                 k = f - 1
             elif self.conv_mode=='same':
+                assert f % 2 == 1, '"same" mode is currently only supported for uneven filter sizes.'
                 k = 0
             s = (sh[i] + k)//p
             if self.mfp:
@@ -737,7 +749,7 @@ class Conv(Perceptron):
                                      "kernel of size %i."\
                                      %(sh.tags[i], sh[i], p, f))
             sh = sh.updateshape(i, s)
-            if sh.fov[j]>0:
+            if sh.fov[j]>0 and not self.invalidate_fov:
                 fov = sh.fov[j] + (f+p-2) * sh.strides[j]
             else:
                 fov = -1
@@ -919,7 +931,7 @@ class UpConv(Conv):
         Activation function name.
     identity_init: bool
         Initialise weights to result in pixel repetition upsampling
-    batch_normalisation: str or None
+    batch_normalisation: str or False
         Batch normalisation mode.
         Can be False (inactive), "train" or "fadeout".
     dropout_rate: float
@@ -1066,8 +1078,15 @@ class UpConv(Conv):
         self.strides = np.divide(self.strides,self.pool_shape)
         sh = self.parent.shape
         for j,(i,f,p) in enumerate(zip(self.spatial_axes, self.filter_shape, self.pool_shape)):
-            s = 1 - f if self.conv_mode=='valid' else f -1
-            s = (sh[i] * p) + p - 1 + s # unpool with margin then apply conv
+            if self.conv_mode == 'valid':
+                k = 1 - f
+            elif self.conv_mode == 'full':
+                k = f - 1
+            elif self.conv_mode == 'same':
+                k = 0
+            else:
+                raise ValueError('{}: Invalid conv_mode {}'.format(self.name, self.conv_mode))
+            s = (sh[i] * p) + p - 1 + k # unpool with margin then apply conv
             sh = sh.updateshape(i, s)
             # Unpooling creates asymmetric FOV (left/right is different for
             # some neurons), therefore we flag the FOV as exceptional with '-1'
@@ -1125,7 +1144,7 @@ class Crop(Node):
     print_repr: bool
         Whether to print the node representation upon initialisation.
     """  # TODO: Write an example
-    def __init__(self, parent, crop, name="crop", print_repr=False):
+    def __init__(self, parent, crop, name="crop", print_repr=True):
 
         super(Crop, self).__init__(parent, name, print_repr)
         self.crop=crop
@@ -1171,24 +1190,124 @@ class Crop(Node):
         self.computational_cost = 0
 
 
-def ImageAlign(hi_res, lo_res, hig_res_n_f,
-                    activation_func='relu', identity_init=True,
-                    batch_normalisation=False, dropout_rate=0,
-                    name="upconv", print_repr=True, w=None, b=None, gamma=None,
-                    mean=None, std=None, gradnet_mode=None):
+# TODO: Implement for axis orders != ['b', 'f', 'z', 'x', 'y']
+# TODO: Support batch_size != 1
+class Pad(Node):
     """
-    Try to automatically align and concatenate a high-res and a low-res
-    convolution output of two branches of a CNN by applying UpConv and Crop to
+    Pads the spatial axes of its parent's output.
+
+    Parameters
+    ----------
+    parent: Node
+        The input node whose output should be padded.
+    pad: tuple or list of ints
+        The padding length from either side for each spatial axis
+    value: float
+        Value of the padding elements (default: 0.0)
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """  # TODO: Write an example
+    def __init__(self, parent, pad, value=0.0, name='pad', print_repr=True):
+
+        super(Pad, self).__init__(parent, name, print_repr)
+
+        self.pad = pad
+        self.value = value
+
+        if parent.shape.tags != ['b', 'f', 'z', 'x', 'y']:
+            raise NotImplementedError(
+                'Padding is currently only implemented for "b,f,z,x,y" axis order.'
+                '\nParent has axes {}'.format(parent.shape.tags)
+            )
+
+    def _make_output(self):
+        """
+        Computation of Theano output.
+        """
+        paddedshape = []
+        k = 0
+        for i,s in enumerate(self.parent.shape):
+            if i in self.parent.shape.spatial_axes:
+                pad = self.pad[k]
+                paddedshape.append(s + 2 * pad)
+                k += 1
+            else:
+                if s is None:
+                    s = 1
+                    if config.pad_b_warning_display:
+                        logger.warning('Pad: Assumed b=1. This breaks if batch_size != 1.')
+                        config.pad_b_warning_display = False
+                paddedshape.append(s)
+        paddedshape = tuple(paddedshape)
+
+        padded_empty = T.zeros(paddedshape, self.parent.output.dtype) + self.value
+        pz, px, py = self.pad
+        padded = T.set_subtensor(
+            padded_empty[
+                :, :,
+                pz:-pz,
+                px:-px,
+                py:-py
+            ],
+            self.parent.output
+        )
+
+        self.output = padded
+
+    def _calc_shape(self):
+        """
+        Calculate and set self.shape.
+        """
+        sh = self.parent.shape.copy()
+        k = 0
+        for i,s in enumerate(self.parent.shape):
+            if i in self.parent.shape.spatial_axes:
+                off = self.pad[k]
+                sh = sh.updateshape(i,s+2*off)
+                k += 1
+
+        self.shape = sh
+
+    def _calc_comp_cost(self):
+        """
+        Calculate and set self.computational_cost.
+
+        For this Node type this is hard-coded to 0.
+        """
+        self.computational_cost = 0
+
+
+def AutoMerge(parent1, parent2, upconv_n_f=None, merge_mode='concat',
+              disable_upconv=False, upconv_kwargs=None,
+              name='merge', print_repr=True):
+    """
+    Merges two network branches by automatic cropping and upconvolutions.
+
+    (Wrapper for
+    :py:class:`UpConv <elektronn2.neuromancer.neural.UpConv>`,
+    :py:class:`Crop <elektronn2.neuromancer.neural.Crop>`,
+    :py:class:`Concat <elektronn2.neuromancer.node_basic.Concat>` and
+    :py:class:`Add <elektronn2.neuromancer.node_basic.Add>`.)
+
+    Tries to automatically align and merge a high-res and a low-res
+    (convolution) output of two branches of a CNN by applying UpConv and Crop to
     make their shapes and strides compatible.
-    UpConv is used if the low-res Node's strides are at least twice as large
-    as the strides of the high-res Node in any dimension.
+    UpConv is used if the low-res parent's strides are at least twice as large
+    as the strides of the high-res parent in any dimension.
+
+    The parents are automatically identified as high-res and low-res by their strides.
+    If both parents have the same strides, the concept of high-res and low-res is
+    ignored and this function just crops the larger parent's output until the
+    parents' spatial shapes match and then merges them.
 
     This function can be used to simplify creation of e.g. architectures similar to
-    U-Net (see https://arxiv.org/abs/1505.04597).
+    U-Net (see https://arxiv.org/abs/1505.04597) or skip-connections.
 
     If a ValueError that the shapes cannot be aligned is thrown,
     you can try changing the filter shapes and pooling factors of the
-    (grand-)parent Nodes or add/remove Convolutions and Crops in the preceding
+    (grand-)parent nodes or add/remove Convolutions and Crops in the preceding
     branches until the error disappears (of course you should try to keep
     those changes as minimal as possible).
 
@@ -1196,58 +1315,63 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
 
     Parameters
     ----------
-    hi_res: Node
-        Parent Node with high resolution output.
-    lo_res: Node
-        Parent Node with low resolution output.
-    hig_res_n_f: int
-        Number of filters for the aligning UpConv.
-    activation_func: str
-        (passed to new UpConv if required).
-    identity_init: bool
-        (passed to new UpConv if required).
-    batch_normalisation: bool
-        (passed to new UpConv if required).
-    dropout_rate: float
-        (passed to new UpConv if required).
+    parent1: Node
+        First parent to be merged.
+    parent2: Node
+        Second parent to be merged.
+    upconv_n_f: int
+        Number of filters for the aligning ``UpConv`` for the low-res parent.
+    merge_mode: str
+        How the merging should be performed. Available options:
+        'concat' (default): Merge with a ``Concat`` node.
+        'add': Merge with an ``Add`` node.
+    disable_upconv: bool
+        If ``True``, no automatic upconvolutions are performed to match strides.
+    upconv_kwargs: dict
+        Additional keyword arguments that are passed to the
+        ``UpConv`` constructor if upconvolution is applied.
     name: str
-        Name of the intermediate UpConv node if required.
+        Name of the final merge node.
     print_repr: bool
         Whether to print the node representation upon initialisation.
-    w
-        (passed to new UpConv if required).
-    b
-        (passed to new UpConv if required).
-    gamma
-        (passed to new UpConv if required).
-    mean
-        (passed to new UpConv if required).
-    std
-        (passed to new UpConv if required).
-    gradnet_mode
-        (passed to new UpConv if required).
 
     Returns
     -------
-    Concat
-        Concat Node that merges the aligned high-res and low-res outputs.
+    Concat or Add
+        ``Concat`` or ``Add`` node (depending on ``merge_mode``)
+        that merges the aligned high-res and low-res outputs.
     """
     ###TODO exchange UpConv and Crop to save computation in some cases
 
+    assert len(parent1.shape)==len(parent2.shape)
+    assert parent1.shape.spatial_axes == parent2.shape.spatial_axes
+
+    if any(parent2.shape.strides // parent1.shape.strides < 1):
+        lo_res, hi_res = parent1, parent2
+    else:
+        hi_res, lo_res = parent1, parent2
     sh_hi = hi_res.shape
     sh_lo = lo_res.shape
-    assert len(sh_hi)==len(sh_lo)
-    assert sh_hi.spatial_axes == sh_lo.spatial_axes
-
     unpool = sh_lo.strides // sh_hi.strides
-    if np.any(unpool>1):
-        lo_res = UpConv(lo_res, hig_res_n_f, unpool,
-               activation_func=activation_func, identity_init=identity_init,
-               batch_normalisation=batch_normalisation, dropout_rate=dropout_rate,
-               name=name, print_repr=print_repr, w=w, b=b, gamma=gamma,
-               mean=mean, std=std, gradnet_mode=gradnet_mode)
+    if np.any(unpool > 1) and not disable_upconv:
+        if upconv_n_f is None:
+            raise ValueError('AutoMerge is trying to insert an UpConv node, but'
+                             'upconv_n_f is not defined. Please set it to the'
+                             'desired number of features to be used for UpConv.')
+        logger.info(
+            'AutoMerge assignend parent roles:\n'
+            '- {}: is lo_res (strides {})\n- {}: is hi_res (strides {})'.format(
+                lo_res.name, lo_res.shape.strides, hi_res.name, hi_res.shape.strides
+        ))
+        if upconv_kwargs is None:
+            upconv_kwargs = {}
+        lo_res = UpConv(lo_res, upconv_n_f, unpool, **upconv_kwargs)
+        logger.info(
+            'AutoMerge of {} and {}: Inserted UpConv with pool_shape {}'.format(
+                hi_res.name, lo_res.name, unpool
+        ))
 
-    # No both have same stride
+    # Now both have same stride
     # Shapes may have changed
     sh_hi = hi_res.shape.spatial_shape
     sh_lo = lo_res.shape.spatial_shape
@@ -1267,15 +1391,20 @@ def ImageAlign(hi_res, lo_res, hig_res_n_f,
             crop_hi.append(0)
 
     if np.any(crop_lo):
-        lo_res = Crop(lo_res, crop_lo, print_repr=True)
+        lo_res = Crop(lo_res, crop_lo, print_repr=print_repr)
     if np.any(crop_hi):
-        hi_res = Crop(hi_res, crop_hi, print_repr=True)
+        hi_res = Crop(hi_res, crop_hi, print_repr=print_repr)
 
-    out = Concat((lo_res, hi_res), axis='f', name='merge', print_repr=True)
+    if merge_mode == 'concat':
+        out = Concat((lo_res, hi_res), axis='f', name=name, print_repr=print_repr)
+    elif merge_mode == 'add':
+        out = Add(lo_res, hi_res, name=name, print_repr=print_repr)
+    else:
+        raise ValueError('Invalid "merge_mode". Should be "add" or "concat".')
 
     return out
 
-UpConvMerge = ImageAlign
+UpConvMerge = AutoMerge
 
 class Pool(Node):
     """
@@ -1511,7 +1640,7 @@ class FaithlessMerge(Node):
         """
         Calculate and set self.computational_cost.
 
-        For this Node type this is hard-coded to 0.
+        For this node type this is hard-coded to 0.
         """
         self.computational_cost = 0
 

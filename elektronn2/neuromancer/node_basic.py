@@ -9,7 +9,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 
 __all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc',
            'FromTensor', 'split', 'model_manager', 'GenericInput', 'ValueNode',
-           'MultMerge', 'InitialState_like']
+           'MultMerge', 'InitialState_like', 'Add']
 
 
 import sys
@@ -20,6 +20,7 @@ import time
 import functools
 import uuid
 import gc
+import getpass
 from collections import OrderedDict
 from functools import reduce
 
@@ -43,6 +44,8 @@ if sys.version_info.major >= 3:
 logger = logging.getLogger('elektronn2log')
 
 floatX = theano.config.floatX
+
+user_name = getpass.getuser()
 
 ###############################################################################
 
@@ -154,7 +157,7 @@ model_manager = ModelContainer()
 
 def choose_name(proposal, names):
     """
-    Choose an appropriate unique name for a Node.
+    Choose an appropriate unique name for a node.
 
     If the proposed name is not already taken, it is directly returned.
     If it is taken and it does not end with a number, a "1" is appended to it.
@@ -164,14 +167,14 @@ def choose_name(proposal, names):
     Parameters
     ----------
     proposal: str
-        Proposed name for the Node.
+        Proposed name for the node.
     names: str
         Names that were already given to other nodes in this Model.
 
     Returns
     -------
     str
-        Appropriate and unique name for the Node.
+        Appropriate and unique name for the node.
 
     Examples
     --------
@@ -229,15 +232,15 @@ class MetaNode(type):
     @staticmethod
     def init_register(old_init):
         """
-        Wrap the Node class constructor with with model management routines.
+        Wrap the ``Node`` class constructor with with model management routines.
 
-        This makes sure that every Node object that is created is registered
+        This makes sure that every ``Node`` object that is created is registered
         within the current network model.
 
         Parameters
         ----------
         old_init: function
-            Original constructor of the Node
+            Original constructor of the ``Node``
 
         Returns
         -------
@@ -310,7 +313,7 @@ class Node(with_metaclass(MetaNode, object)):
     parent: Node or list[Node]
         The input node(s).
     name: str
-        Given name of the Node, may be an empty string.
+        Given name of the ``Node``, may be an empty string.
     print_repr: bool
         Whether to print the node representation upon initialisation.
 
@@ -874,6 +877,8 @@ class Node(with_metaclass(MetaNode, object)):
             Predictions.
         """
 
+        # TODO: Fix "negative dimensions are not allowed" errors with raw_img.shape < patch size
+
         # determine normalisation depending on int or float type
         if self.shape.ndim<2:
             logger.error("'predict_dense' works only for nodes with 2 or 3 "
@@ -908,7 +913,7 @@ class Node(with_metaclass(MetaNode, object)):
         strip_z = False
         if raw_img.ndim==3:
             strip_z = True
-            raw_img = raw_img[:,None] # add singleton z-channel
+            raw_img = raw_img[:,None] # add singleton z-channel  # TODO: Correct order?
 
         n_lab      = self.shape['f']
         cnn_out_sh = self.shape.spatial_shape
@@ -1011,7 +1016,7 @@ class Node(with_metaclass(MetaNode, object)):
 
     def test_run(self, on_shape_mismatch='warn', debug_outputs=False):
         """
-        Test execution of this Node with random (but correctly shaped) data.
+        Test execution of this node with random (but correctly shaped) data.
 
         Parameters
         ----------
@@ -1064,7 +1069,7 @@ class Node(with_metaclass(MetaNode, object)):
         """
         Plot the execution graph of this Node's Theano function to a file.
 
-        If "outfile" is not specified, the plot is saved in "/tmp/<NAME>.png"
+        If "outfile" is not specified, the plot is saved in "/tmp/<user>_<name>.png"
 
         Parameters
         ----------
@@ -1077,7 +1082,7 @@ class Node(with_metaclass(MetaNode, object)):
             theano.printing.pydotprint().
         """
         if outfile is None:
-            outfile ='/tmp/%s.png'%self.name
+            outfile ='/tmp/{}_{}.png'.format(user_name, self.name)
         kwargs['outfile'] = outfile
         if 'var_with_name_simple' not in kwargs:
             kwargs['var_with_name_simple'] = True
@@ -1179,7 +1184,7 @@ class Node(with_metaclass(MetaNode, object)):
 
 class Input(Node):
     """
-    Input Node
+    Input node
 
     Parameters
     ----------
@@ -1271,7 +1276,7 @@ def Input_like(ref, dtype=None, name='input',
 
 class GenericInput(Node):
     """
-    Input Node for arbitrary oject.
+    Input node for arbitrary oject.
 
     Parameters
     ----------
@@ -1300,7 +1305,7 @@ class GenericInput(Node):
 
 class FromTensor(Node):
     """
-    Dummy Node to be used in the split-function.
+    Dummy node to be used in the split-function.
 
     Parameters
     ----------
@@ -1445,6 +1450,38 @@ class Concat(Node):
 
     ###############################################################################
 
+class Add(Node):
+    """
+    Add two nodes using ``theano.tensor.add``.
+
+    Parameters
+    ----------
+    n1: Node
+        First input node.
+    n2: Node
+        Second input node.
+    name: str
+        Node name.
+    print_repr: bool
+        Whether to print the node representation upon initialisation.
+    """
+
+    def __init__(self, n1, n2, name="add", print_repr=True):
+        super(Add, self).__init__((n1, n2), name, print_repr)
+
+        assert n1.shape.shape == n2.shape.shape
+
+    def _make_output(self):
+        self.output = T.add(self.parent[0].output, self.parent[1].output)
+
+    def _calc_shape(self):
+        self.shape = self.parent[0].shape.copy()
+
+    def _calc_comp_cost(self):
+        self.computational_cost = 0
+
+    ###############################################################################
+
 class MultMerge(Node):
     """
     Node to concatenate the inputs. The inputs must have the same shape,
@@ -1512,7 +1549,7 @@ class ApplyFunc(Node):
 
 class ValueNode(Node):
     """
-    (Optionally) trainable Value Node
+    (Optionally) trainable value node
 
     Parameters
     ----------
