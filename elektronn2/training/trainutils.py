@@ -481,7 +481,10 @@ class ExperimentConfig(object):
         self.dropout_schedule = None
         self.gradnet_schedule = None
         self.schedules = dict()
+        # generic network architecture storage
         self.network_arch = dict()
+        # adversarial variables
+        self.trainee_path = None
 
         self.class_weights = None
         self.lazy_labels = None
@@ -613,9 +616,9 @@ class ExperimentConfig(object):
                 if k not in ['class_weights', 'lazy_labels',
                              'gradnet_schedule', 'dropout_schedule',
                              'lr_schedule', 'wd_schedule', 'mom_schedule',
-                             'schedules', 'preview_kwargs',
+                             'schedules', 'preview_kwargs', 'trainee_path',
                              'preview_data_path', 'model_load_args',
-                             'sequence_training']:
+                             'sequence_training', 'network_arch']:
                     raise ValueError("'%s' must not be 'None'" % (k,))
 
     def make_dir(self):
@@ -638,6 +641,11 @@ class ExperimentConfig(object):
         name = os.path.split(self.exp_file)[1]  # e.g. Experiment1_conf.py
         shutil.copy(self.exp_file, os.path.join(self.save_path, '0-' + name))
         os.chmod(os.path.join(self.save_path, '0-' + name), 0o755)
+        if "adversarial" in self.network_arch.keys():
+            name = os.path.split(self.trainee_path)[1]  # e.g. Experiment1_conf.py
+            shutil.copy(self.trainee_path,
+                        os.path.join(self.save_path, '0-' + name))
+            os.chmod(os.path.join(self.save_path, '0-' + name), 0o755)
 
         if self.host_script_file:
             name = os.path.split(self.host_script_file)[1]

@@ -7,9 +7,9 @@ from __future__ import absolute_import, division, print_function
 from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
 
 
-__all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc',
+__all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc', 'FlipNode',
            'FromTensor', 'split', 'model_manager', 'GenericInput', 'ValueNode',
-           'MultMerge', 'InitialState_like', 'Add', 'advmerge']
+           'MultMerge', 'InitialState_like', 'Add', 'AdvMerge', 'AdvTarget']
 
 
 import sys
@@ -34,7 +34,7 @@ from theano import printing
 from future.utils import raise_with_traceback
 from future.utils import with_metaclass
 
-from .variables import VariableWeight, ConstantParam
+from .variables import VariableWeight, ConstantParam, VariableParam
 from .. import utils
 from . import graphutils
 
@@ -1398,45 +1398,97 @@ def split(node, axis='f', index=None, n_out=None, strip_singleton_dims=False, na
     return tuple(out_nodes)
 
 
-##############################################################################
+class FlipNode(Node):
+    def __init__(self, parent_node, do_flip=False, name="flip", print_repr=True):
+        super(FlipNode, self).__init__(parent_node, name, print_repr)
+        do_flip = VariableWeight(value=do_flip, name="do_flip", dtype=floatX,
+                               apply_train=False, apply_reg=False)
+        self.params["do_flip"] = do_flip
+        self.do_flip = do_flip
 
-def advmerge(n1, n2, p=0.5):
+    def _make_output(self):
+        if self.do_flip:
+            out = 1 - self.parent.output
+        else:
+            out = self.parent.output
+        self.output = out
+
+    def _calc_shape(self):
+        sh = self.parent.shape.copy()
+
+    def _calc_comp_cost(self):
+        self.computational_cost = 1
+
+
+class AdvTarget(Node):
+    def __init__(self, parent_nodes, name="advtarget", print_repr=True, p=0.5):
+        super(AdvTarget, self).__init__(parent_nodes, name, print_repr)
+        p = VariableWeight(value=p, name="p", dtype=floatX,
+                               apply_train=False, apply_reg=False)
+        self.params["p"] = p
+        self.p = p
+
+    def _make_output(self):
+        n1, n2 = self.parent
+        assert n1.shape.spatial_shape == n2.shape.spatial_shape
+        rng = T.shared_randomstreams.RandomStreams(int(time.time()))
+        self.size = [1, ] * n1.output.ndim
+        axes = list(range(n1.output.ndim))
+        gt_chosen = rng.binomial(size=self.size, n=1, p=self.p,
+                                 dtype=theano.config.floatX)
+        gt_chosen_tmp = T.addbroadcast(gt_chosen, *axes)
+        self.output = gt_chosen_tmp
+
+    def _calc_shape(self):
+        sh = self.parent[0].shape.updateshape(self.parent[0].shape.tag2index('f'), 1)
+        sh = sh.delaxis(sh.tag2index('y'))
+        sh = sh.delaxis(sh.tag2index('x'))
+        sh = sh.delaxis(sh.tag2index('z'))
+        self.shape = sh
+
+    def _calc_comp_cost(self):
+        self.computational_cost = 0
+
+
+class AdvMerge(Node):
     """
-    Adversarial merge. Merging inputs by randomly choosing elements 
+    Adversarial merge. Merging inputs by randomly choosing elements
     exclusively from one parent node along axis 'b'. Thereby applying argmax
-    to n1, assuming this contains one channel for each output class.
+    to n1, assuming this contains two channels, one for each output class.
 
     Parameters
     ----------
-    n1: Node
-        First input node; trainee output.
-    n2: Node
-        Second input node; ground truth.
+    parent_nodes: list of Node
+        Inputs nodes: Trainee output (index 0), ground truth node (index 1),
+        index node
     name: str
         Node name.
     print_repr: bool
         Whether to print the node representation upon initialisation.
     """
-    assert n1.shape.spatial_shape==n2.shape.spatial_shape
 
-    rng = T.shared_randomstreams.RandomStreams(int(time.time()))
-    size = [1,] * n1.output.ndim
-    axes = list(range(n1.output.ndim))
+    def __init__(self, parent_nodes, name="advmerge", print_repr=True):
+        super(AdvMerge, self).__init__(parent_nodes, name, print_repr)
+        self.axis = "f"
 
-    gt_chosen = rng.binomial(size=size, n=1, p=p,
-                             dtype=theano.config.floatX)
-    gt_chosen_tmp = T.addbroadcast(gt_chosen, *axes)
 
-    par0 = T.argmax(n1.output, keepdims=True, axis=n1.shape.tag2index('f')).astype(dtype=theano.config.floatX) * gt_chosen_tmp
-    par1 = n2.output * (1. - gt_chosen_tmp)
-    sub_sh = n1.shape.updateshape(n1.shape.tag2index('f'), 1)
-    out_node1 = FromTensor(par0 + par1,sub_sh, n1, name="advmerge1")
-    sub_sh2 = n1.shape.delaxis(n1.shape.tag2index('z'))
-    sub_sh2 = sub_sh2.delaxis(sub_sh2.tag2index('y'))
-    sub_sh2 = sub_sh2.delaxis(sub_sh2.tag2index('x'))
-    sub_sh2 = sub_sh2.updateshape(sub_sh2.tag2index('f'), 1)
-    out_node2 = FromTensor(gt_chosen_tmp, sub_sh2, n1, name="advmerge2")
-    return tuple([out_node1, out_node2])
+    def _make_output(self):
+        n1, n2, gt_chosen = self.parent
+        assert n1.shape.spatial_shape == n2.shape.spatial_shape
+        axes = list(range(n1.output.ndim))
+        gt_chosen_tmp = T.addbroadcast(gt_chosen.output, *axes)
+        par0 = T.argmax(n1.output, keepdims=True,
+                        axis=n1.shape.tag2index('f')).astype(
+            dtype=theano.config.floatX) * (1. - gt_chosen_tmp)
+        par1 = n2.output * gt_chosen_tmp
+        self.output = par0 + par1
+
+    def _calc_shape(self):
+        sh = self.parent[0].shape.updateshape(self.parent[0].shape.tag2index('f'), 1)
+        self.shape = sh
+
+    def _calc_comp_cost(self):
+        self.computational_cost = 0
 
 
 
