@@ -34,89 +34,86 @@ schedules = {'lr': {'dec': 0.99}, }
 batch_size = 1
 dr = 0.01
 
-
 def create_model():
     from elektronn2 import neuromancer
-    import numpy as np
 
-    in_sh = (None,1,22,140,140)
+    in_sh = (None, 1, 20, 144, 144)
     # For quickly trying out input shapes via CLI args, uncomment:
     #import sys; a = int(sys.argv[1]); b = int(sys.argv[2]); in_sh = (None,1,a,b,b)
-    inp = neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw')
-    inputs_split = neuromancer.multi_dim_split(inp, axes=["z", "y", "x"], n_outs=[2, 2, 2])
+    inputs_split = []
+    for i in range(8):
+        inputs_split.append(neuromancer.Input(in_sh, 'b,f,z,x,y', name='raw%d' % i))
 
-    # x1
+    # cube 1
     out0  = neuromancer.Conv(inputs_split[0],  20,  (1,3,3), (1,1,1))
-    out1  = neuromancer.Conv(out0, 20,  (1,3,3), (1,2,2))
+    out1  = neuromancer.Conv(out0, 20,  (1,3,3), (1,1,1))
     out2 = neuromancer.Pool(out1, (1, 2, 2))
 
-    out3  = neuromancer.Conv(out2, 30,  (1,3,3), (1,1,1))
-    out4  = neuromancer.Conv(out3, 30,  (1,3,3), (1,1,1))
+    out3  = neuromancer.Conv(out2, 30,  (2,3,3), (1,1,1))
+    out4  = neuromancer.Conv(out3, 30,  (2,3,3), (1,1,1))
     out5 = neuromancer.Pool(out4, (1, 2, 2))
 
-    out6  = neuromancer.Conv(out5, 40,  (1,3,3), (1,1,1))
-    out7  = neuromancer.Conv(out6, 40,  (1,3,3), (1,1,1))
+    out6  = neuromancer.Conv(out5, 40,  (2,3,3), (1,1,1))
+    out7  = neuromancer.Conv(out6, 40,  (2,3,3), (1,1,1))
 
     up3 = neuromancer.UpConvMerge(out4, out7, 60)
-    up4 = neuromancer.Conv(up3, 50,  (1,3,3), (1,1,1))
-    up5 = neuromancer.Conv(up4, 50,  (1,3,3), (1,1,1))
+    up4 = neuromancer.Conv(up3, 50,  (2,3,3), (1,1,1))
+    up5 = neuromancer.Conv(up4, 50,  (2,3,3), (1,1,1))
 
     up6 = neuromancer.UpConvMerge(out1, up5, 40)
     up7 = neuromancer.Conv(up6, 40,  (2,3,3), (1,1,1))
     up8 = neuromancer.Conv(up7, 40,  (2,3,3), (1,1,1))
-    barr_x1 = neuromancer.Conv(up8,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
+    barr_1 = neuromancer.Conv(up8,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr')
 
-    # x2-x8
+    # cubes 2-8
     def partial_unet(inp_sp):
-        out0_b  = neuromancer.Conv(inp_sp,  20,  (1,3,3), (1,1,1), w=out0.w, b=out0.b)
-        out1_b  = neuromancer.Conv(out0_b, 20,  (1,3,3), (1,1,1), w=out1.w, b=out1.b)
+        out0_b = neuromancer.Conv(inp_sp,  20,  (1,3,3), (1,1,1), w=out0.w, b=out0.b)
+        out1_b = neuromancer.Conv(out0_b, 20,  (1,3,3), (1,1,1), w=out1.w, b=out1.b)
         out2_b = neuromancer.Pool(out1_b, (1, 2, 2))
-        out3_b  = neuromancer.Conv(out2_b, 30,  (1,3,3), (1,1,1), w=out3.w, b=out3.b)
-        out4_b  = neuromancer.Conv(out3_b, 30,  (1,3,3), (1,1,1), w=out4.w, b=out4.b)
+        out3_b = neuromancer.Conv(out2_b, 30,  (2,3,3), (1,1,1), w=out3.w, b=out3.b)
+        out4_b = neuromancer.Conv(out3_b, 30,  (2,3,3), (1,1,1), w=out4.w, b=out4.b)
         out5_b = neuromancer.Pool(out4_b, (1, 2, 2))
-        out6_b  = neuromancer.Conv(out5_b, 40,  (1,3,3), (1,1,1), w=out6.w, b=out6.b)
-        out7_b  = neuromancer.Conv(out6_b, 40,  (1,3,3), (1,1,1), w=out7.w, b=out7.b)
+        out6_b = neuromancer.Conv(out5_b, 40,  (2,3,3), (1,1,1), w=out6.w, b=out6.b)
+        out7_b = neuromancer.Conv(out6_b, 40,  (2,3,3), (1,1,1), w=out7.w, b=out7.b)
         up3_b = neuromancer.UpConvMerge(out4_b, out7_b, 60)
-        up4_b = neuromancer.Conv(up3_b, 50,  (1,3,3), (1,1,1), w=up4.w, b=up4.b)
-        up5_b = neuromancer.Conv(up4_b, 50,  (1,3,3), (1,1,1), w=up5.w, b=up5.b)
+        up4_b = neuromancer.Conv(up3_b, 50,  (2,3,3), (1,1,1), w=up4.w, b=up4.b)
+        up5_b = neuromancer.Conv(up4_b, 50,  (2,3,3), (1,1,1), w=up5.w, b=up5.b)
         up6_b = neuromancer.UpConvMerge(out1_b, up5_b, 40)
         up7_b = neuromancer.Conv(up6_b, 40,  (2,3,3), (1,1,1), w=up7.w, b=up7.b)
         up8_b = neuromancer.Conv(up7_b, 40,  (2,3,3), (1,1,1), w=up8.w, b=up8.b)
-        barr_sp = neuromancer.Conv(up8_b,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr', w=barr_x1.w, b=barr_x1.b)
+        barr_sp = neuromancer.Conv(up8_b,  2, (1,1,1), (1,1,1),
+                                   activation_func='lin', name='barr',
+                                   w=barr_1.w, b=barr_1.b)
         return barr_sp
 
-    barr_x2 = partial_unet(inputs_split[1])
-    barr_x3 = partial_unet(inputs_split[2])
-    barr_x4 = partial_unet(inputs_split[3])
-    barr_x5 = partial_unet(inputs_split[4])
-    barr_x6 = partial_unet(inputs_split[5])
-    barr_x7 = partial_unet(inputs_split[6])
-    barr_x8 = partial_unet(inputs_split[7])
+    target = neuromancer.Input_like(barr_1, override_f=1, name='target')
+    barrs = [barr_1]
 
-    # merge again
-    barr_x_conc1 = neuromancer.Concat([barr_x1, barr_x2], axis='x')
-    barr_x_conc2 = neuromancer.Concat([barr_x3, barr_x4], axis='x')
-    barr_x_conc3 = neuromancer.Concat([barr_x5, barr_x6], axis='x')
-    barr_x_conc4 = neuromancer.Concat([barr_x7, barr_x8], axis='x')
-    barr_y_conc1 = neuromancer.Concat([barr_x_conc1, barr_x_conc2], axis='y')
-    barr_y_conc2 = neuromancer.Concat([barr_x_conc3, barr_x_conc4], axis='y')
-    barr = neuromancer.Concat([barr_y_conc1, barr_y_conc2], axis='z')
-    target = neuromancer.Input_like(barr, override_f=1, name='target')
+    for i in range(1, 8):
+        barrs.append(partial_unet(inputs_split[i]))
+    barrs_conc = neuromancer.Concat(barrs, axis='f')
+    ensemble_res = neuromancer.Conv(barrs_conc, 30, (1,1,1), (1,1,1))
+    ensemble_res = neuromancer.Conv(ensemble_res, 2, (1,1,1), (1,1,1),
+                                    activation_func="lin")
+    probs = [neuromancer.Softmax(ensemble_res, name="softmax_ensemble")]
+    losses_pix = [neuromancer.MultinoulliNLL(probs[0], target, target_is_sparse=True,
+                                             name="nll_ensemble")]
+    # for i in range(8):
+    #     probs.append(neuromancer.Softmax(barrs[i], name="softmax%d" % i))
+    #     losses_pix.append(neuromancer.MultinoulliNLL(probs[i], target,
+    #                       target_is_sparse=True, name='nll_barr%d' % i))
 
-    probs = neuromancer.Softmax(barr)
-    loss_pix = neuromancer.MultinoulliNLL(probs, target, target_is_sparse=True,
-                                          name='nll_barr')
-
-    loss = neuromancer.AggregateLoss(loss_pix, name='loss')
-    errors = neuromancer.Errors(probs, target, target_is_sparse=True)
+    loss = neuromancer.AggregateLoss(losses_pix, name='loss')
+    # hack, error will only be evaluated on the first cube
+    errors = neuromancer.Errors(probs[0], target, target_is_sparse=True)
 
     model = neuromancer.model_manager.getmodel()
     model.designate_nodes(
-        input_node=inp,
+        input_node=inputs_split[0],
         target_node=target,
         loss_node=loss,
-        prediction_node=probs,
-        prediction_ext=[loss, errors, probs]
+        prediction_node=probs[0],
+        prediction_ext=[loss, errors, probs[0]]
     )
     return model
 
@@ -148,4 +145,3 @@ if __name__ == '__main__':
         traceback.print_exc()
         print('Test run failed.\nIn case your GPU ran out of memory, the '
               'principal setup might still be working')
-
