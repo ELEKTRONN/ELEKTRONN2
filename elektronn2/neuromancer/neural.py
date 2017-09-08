@@ -520,10 +520,13 @@ class Conv(Perceptron):
         ``None`` (default) disables pooling along all axes.
     conv_mode: str
         Possible values:
-        * "valid": only apply filter to complete patches of the image.
+        * "valid": Only apply filter to complete patches of the image.
           Generates output of shape: image_shape -filter_shape + 1.
-        * "full" zero-pads image to multiple of filter shape to generate
+        * "full": Zero-pads image to multiple of filter shape to generate
           output of shape: image_shape + filter_shape - 1.
+        * "same": Zero-pads input image so that the output shape
+          is equal to the input shape
+          (Only supported for odd filter sizes).
     activation_func: str
         Activation function name.
     mfp: bool
@@ -556,13 +559,16 @@ class Conv(Perceptron):
     std
         (For batch normalisation) Initialises std parameter.
     gradnet_mode
+    invalidate_fov: bool
+        Overrides the computed ``fov`` with an invalid value to
+        force later recalculation (experimental).
     """
 
     def __init__(self, parent, n_f, filter_shape, pool_shape=None,
                  conv_mode='valid', activation_func='relu',
                  mfp=False, batch_normalisation=False, dropout_rate=0,
                  name="conv", print_repr=True, w=None, b=None, gamma=None,
-                 mean=None, std=None, gradnet_mode=None):
+                 mean=None, std=None, gradnet_mode=None, invalidate_fov=False):
         super(Perceptron, self).__init__(parent, name, print_repr)
 
         self.n_f  = n_f
@@ -578,6 +584,7 @@ class Conv(Perceptron):
         self.mfp_offsets = parent.shape.mfp_offsets
         self.axis = parent.shape.tag2index('f') #retrieve feature shape's index
         self.axis_order = None
+        self.invalidate_fov = invalidate_fov
 
         if pool_shape is None:  # Default to no pooling
             pool_shape = tuple([1 for _ in filter_shape])  # e.g. (1, 1, 1) for the 3D case
@@ -743,7 +750,7 @@ class Conv(Perceptron):
                                      "kernel of size %i."\
                                      %(sh.tags[i], sh[i], p, f))
             sh = sh.updateshape(i, s)
-            if sh.fov[j]>0:
+            if sh.fov[j]>0 and not self.invalidate_fov:
                 fov = sh.fov[j] + (f+p-2) * sh.strides[j]
             else:
                 fov = -1
@@ -1072,8 +1079,15 @@ class UpConv(Conv):
         self.strides = np.divide(self.strides,self.pool_shape)
         sh = self.parent.shape
         for j,(i,f,p) in enumerate(zip(self.spatial_axes, self.filter_shape, self.pool_shape)):
-            s = 1 - f if self.conv_mode=='valid' else f -1
-            s = (sh[i] * p) + p - 1 + s # unpool with margin then apply conv
+            if self.conv_mode == 'valid':
+                k = 1 - f
+            elif self.conv_mode == 'full':
+                k = f - 1
+            elif self.conv_mode == 'same':
+                k = 0
+            else:
+                raise ValueError('{}: Invalid conv_mode {}'.format(self.name, self.conv_mode))
+            s = (sh[i] * p) + p - 1 + k # unpool with margin then apply conv
             sh = sh.updateshape(i, s)
             # Unpooling creates asymmetric FOV (left/right is different for
             # some neurons), therefore we flag the FOV as exceptional with '-1'

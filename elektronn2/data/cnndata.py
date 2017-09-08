@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import getpass
-
+from syconnfs.handler.prediction import xyz2zxy
 try:
     from importlib import reload
 except ImportError:
@@ -108,14 +108,14 @@ class BatchCreatorImage(object):
     def __init__(self, input_node, target_node=None, d_path=None, l_path=None,
                  d_files=None, l_files=None, cube_prios=None, valid_cubes=None,
                  border_mode='crop', aniso_factor=2, target_vec_ix=None,
-                 target_discrete_ix=None, h5stream=False):
+                 target_discrete_ix=None, h5stream=False, zxy=True):
 
         assert (d_path and l_path and d_files and l_files)
         if len(d_files)!=len(l_files):
             raise ValueError("d_files and l_files must be lists of same length!")
         d_path = os.path.expanduser(d_path)
         l_path = os.path.expanduser(l_path)
-
+        self.zxy = zxy
         self.h5stream = h5stream
         self.d_path = d_path
         self.l_path = l_path
@@ -530,10 +530,14 @@ class BatchCreatorImage(object):
 
             try:
                 ll_mask_1 = utils.h5load(os.path.join(self.l_path, l_f), 'll_mask')
+                if not self.zxy:
+                    ll_mask_1 = xyz2zxy(ll_mask_1)
                 extras.append(ll_mask_1)
             except KeyError:
                 extras.append(None)
-
+            if not self.zxy:
+                d = xyz2zxy(d)
+                t = xyz2zxy(t)
             if self.mode == 'img-scalar':
                 assert t.ndim == 1, "Scalar targets must be 1d"
 
@@ -556,9 +560,8 @@ class BatchCreatorImage(object):
             self.n_labelled_pixel += t[0].size
 
             # determine normalisation depending on int or float type
-            if d.dtype in [np.int, np.int8, np.int16, np.int32, np.uint32,
-                           np.uint, np.uint8, np.uint16, np.uint32, np.uint32]:
-                m = 255
+            if d.dtype.kind in ('u', 'i'):
+                m = 255.
                 d = np.ascontiguousarray(d, dtype=np.float32) / m
 
             if (np.dtype(self.t_dtype) is not np.dtype(t.dtype)) and \
@@ -1066,6 +1069,4 @@ class GridData(AgentData):
             return img, target_grid
         except transformations.WarpingOOBError:
             return self.getbatch(**get_batch_kwargs)
-
-
 

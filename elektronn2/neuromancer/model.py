@@ -253,10 +253,17 @@ class Model(graphmanager.GraphManager):
     def predict_ext(self, *args, **kwargs):
         return self._prediction_ext_func(*args, **kwargs)
 
-    def predict_dense(self, raw_img, as_uint8=False, pad_raw=False):
-        return self.prediction_node.predict_dense(raw_img,
+    def predict_dense(self, raw_img, as_uint8=False, pad_raw=False,
+                      deactivate_do=True):
+        if deactivate_do:
+            original_do_rates = self.dropout_rates
+            self.dropout_rates = ([0.0, ] * len(original_do_rates))
+        res = self.prediction_node.predict_dense(raw_img,
                                                   as_uint8=as_uint8,
                                                   pad_raw=pad_raw)
+        if deactivate_do:
+            self.dropout_rates = original_do_rates
+        return res
 
     def paramstats(self):
         print("Parameter statistics")
