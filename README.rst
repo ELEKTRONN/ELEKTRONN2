@@ -2,8 +2,12 @@
   :target: http://elektronn2.readthedocs.io/en/latest/?badge=latest
 .. image:: https://img.shields.io/pypi/v/elektronn2.svg
   :target: https://pypi.org/project/elektronn2/
-.. image:: https://anaconda.org/conda-forge/elektronn2/badges/version.svg
+.. image:: https://img.shields.io/conda/vn/conda-forge/elektronn2.svg
+  :target: https://github.com/conda-forge/elektronn2-feedstock
+.. image:: https://img.shields.io/conda/pn/conda-forge/elektronn2.svg
   :target: https://anaconda.org/conda-forge/elektronn2
+.. image:: https://img.shields.io/aur/version/python-elektronn2.svg
+  :target: https://aur.archlinux.org/packages/python-elektronn2/
 
 ****************
 About ELEKTRONN2
