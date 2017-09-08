@@ -7,7 +7,7 @@ from __future__ import absolute_import, division, print_function
 from builtins import filter, hex, input, int, map, next, oct, pow, range, super, zip
 
 
-__all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc', 'DecorrSplit',
+__all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc', 'decorr_split',
            'FromTensor', 'split', 'multi_dim_split', 'model_manager',
            'MultMerge', 'InitialState_like', 'Add', 'AdvMerge', 'AdvTarget',
            'FlipNode', 'GenericInput', 'ValueNode',]
@@ -1417,9 +1417,9 @@ def multi_dim_split(node, axes, n_outs=None, indices=None):
     return out_nodes
 
 
-class CropOneSided(Node):
+def crop_onesided(n, crop, above):
     """
-    This node type crops the output of its parent.
+    Crop node.
 
     Parameters
     ----------
@@ -1428,59 +1428,30 @@ class CropOneSided(Node):
     crop: tuple or list of ints
         Crop each spatial axis one sided.
     above: tuple or list of bool
-        If crop should be applied above (else crop below)
+        If cropping should be applied above (1, True) or below (0, False) crop
     name: str
         Node name.
     print_repr: bool
         Whether to print the node representation upon initialisation.
-    """  # TODO: Write an example
-    def __init__(self, parent, crop, above, name="croponesided", print_repr=True):
-
-        super(CropOneSided, self).__init__(parent, name, print_repr)
-        self.crop=crop
-
-    def _make_output(self):
-        """
-        Computation of Theano output.
-        """
-        # It is assumed that all other dimensions are matching
-        cropper = []
-        k = 0
-        for i,s in enumerate(self.parent.shape):
-            if i in self.parent.shape.spatial_axes:
-                off = self.crop[k]
-                cropper.append(slice(off, s))
-                k += 1
+    """
+    # TODO: Write an example
+    cropper = []
+    k = 0
+    for i,s in enumerate(n.shape):
+        if i in n.shape.spatial_axes:
+            off = crop[k]
+            if above[k]:
+                cropper.append(slice(0, off))
             else:
-                cropper.append(slice(None))
-
-        cropper = tuple(cropper)
-        self.output = self.parent.output[cropper]
-
-    def _calc_shape(self):
-        """
-        Calculate and set self.shape.
-        """
-        sh = self.parent.shape.copy()
-        k = 0
-        for i,s in enumerate(self.parent.shape):
-            if i in self.parent.shape.spatial_axes:
-                off = self.crop[k]
-                sh = sh.updateshape(i,s-off)
-                k += 1
-
-        self.shape = sh
-
-    def _calc_comp_cost(self):
-        """
-        Calculate and set self.computational_cost.
-
-        For this Node type this is hard-coded to 0.
-        """
-        self.computational_cost = 0
+                cropper.append(slice(off, s))
+            k += 1
+        else:
+            cropper.append(slice(None))
+    cropper = tuple(cropper)
+    return n.output[cropper]
 
 
-def DecorrSplit(inp_n, cube_sh, name="decorr_split"):
+def decorr_split(inp_n, cube_sh, name="decorr_split"):
     """
     Split cube into subcubes with overlap of target_shape // 2.
 
@@ -1496,23 +1467,24 @@ def DecorrSplit(inp_n, cube_sh, name="decorr_split"):
     """
     center = np.array(np.divide(inp_n.shape.spatial_shape, 2), dtype=np.int32)
     cube_sh = np.array(cube_sh, dtype=np.int32)
-    diff = cube_sh - cube_sh
+    diff = cube_sh - center
     assert np.all(diff >= 0)
     cent_plus = center + diff
     cent_min = center - diff
-    sub_sh = inp_n.shape.updateshape("x", cube_sh[1])
-    sub_sh = sub_sh.shape.updateshape("y", cube_sh[2])
-    sub_sh = sub_sh.shape.updateshape("z", cube_sh[0])
+    sub_sh = inp_n.shape.copy()
+    sub_sh = sub_sh.updateshape("x", cube_sh[1])
+    sub_sh = sub_sh.updateshape("y", cube_sh[2])
+    sub_sh = sub_sh.updateshape("z", cube_sh[0])
     decorr_cubes = []
-    decorr_cubes.append(CropOneSided(inp_n, (cent_plus[0], cent_plus[1], cent_plus[2]), (1, 1, 1)))
-    decorr_cubes.append(CropOneSided(inp_n, (cent_min[0], cent_min[1], cent_min[2]), (0, 0, 0)))
-    decorr_cubes.append(CropOneSided(inp_n, (cent_plus[0], cent_min[1], cent_min[2]), (1, 0, 0)))
-    decorr_cubes.append(CropOneSided(inp_n, (cent_min[0], cent_plus[1], cent_min[2]), (0, 1, 0)))
-    decorr_cubes.append(CropOneSided(inp_n, (cent_min[0], cent_min[1], cent_plus[2]), (0, 0, 1)))
-    decorr_cubes.append(CropOneSided(inp_n, (cent_min[0], cent_plus[1], cent_plus[2]), (0, 1, 1)))
-    decorr_cubes.append(CropOneSided(inp_n, (cent_plus[0], cent_min[1], cent_plus[2]), (1, 0, 1)))
-    decorr_cubes.append(CropOneSided(inp_n, (cent_plus[0], cent_plus[1], cent_min[2]), (1, 1, 0)))
-    return [FromTensor(c, sub_sh, inp_n, name=name+"%d" % ix) for ix, c in enumerate(decorr_cubes)]
+    decorr_cubes.append(crop_onesided(inp_n, (cent_plus[0], cent_plus[1], cent_plus[2]), (1, 1, 1)))
+    decorr_cubes.append(crop_onesided(inp_n, (cent_min[0], cent_min[1], cent_min[2]), (0, 0, 0)))
+    decorr_cubes.append(crop_onesided(inp_n, (cent_plus[0], cent_min[1], cent_min[2]), (1, 0, 0)))
+    decorr_cubes.append(crop_onesided(inp_n, (cent_min[0], cent_plus[1], cent_min[2]), (0, 1, 0)))
+    decorr_cubes.append(crop_onesided(inp_n, (cent_min[0], cent_min[1], cent_plus[2]), (0, 0, 1)))
+    decorr_cubes.append(crop_onesided(inp_n, (cent_min[0], cent_plus[1], cent_plus[2]), (0, 1, 1)))
+    decorr_cubes.append(crop_onesided(inp_n, (cent_plus[0], cent_min[1], cent_plus[2]), (1, 0, 1)))
+    decorr_cubes.append(crop_onesided(inp_n, (cent_plus[0], cent_plus[1], cent_min[2]), (1, 1, 0)))
+    return tuple([FromTensor(c, sub_sh, inp_n, name=name+"%d" % ix, print_repr=True) for ix, c in enumerate(decorr_cubes)])
 
 
 class FlipNode(Node):
