@@ -18,12 +18,12 @@ exec (compile(open(trainee_path).read(), trainee_path, 'exec'), {},
 # TODO: define #steps for each network individually
 p = [.5, .5]  # probability to present ground truth to adversarial network; first entry while training trainee; second entry while training adversarial
 adv_class_w = np.array([[0, 1], [1, 1]], dtype=np.float32)  # class weights for adversarial loss term, 0: trainee output 1: ground truth; first entry while training trainee network, i.e. here onyl the class 1 (ground truth)
-mixing_w = np.array([[.1, 1], [1, 0]], dtype=np.float32)  # mixing weights for adversarial and trainee loss;TODO: instead of training -lambda l_bce(a(x, s(x)), 0), we use +lambda l_bce(a(x, s(x)), 1) -> stronger gradient (see Goodfellow et al. 2014)
+mixing_w = np.array([[0.1, 1], [2, 0]], dtype=np.float32)  # mixing weights for adversarial and trainee loss;TODO: instead of training -lambda l_bce(a(x, s(x)), 0), we use +lambda l_bce(a(x, s(x)), 1) -> stronger gradient (see Goodfellow et al. 2014)
 # permut_steps: number of steps after which training is switched
 # (0-9: segmentor, 10-19: adversarial, 20:29: segmentor, ...)
 # mixing weights
 network_arch = {"adversarial": {"permut_steps": 500, 'mixing_weights': mixing_w,
-    'class_weights': adv_class_w, "target_p": p, "lr_fact": 1}}
+    'class_weights': adv_class_w, "target_p": p, "lr": 0.005}}
 initial_prev_h = 1.0  # hours: time after which the first preview is made
 prev_save_h = 1.0  # hours: time interval between planned previews.
 data_class = trainee_dict["data_class"]
@@ -48,16 +48,16 @@ data_batch_args = {
 }
 n_steps = 1500000
 max_runtime = 4 * 24 * 3600  # in seconds
-history_freq = 800
+history_freq = 400
 monitor_batch_size = 5
-optimiser = 'Adam'
+optimiser = 'SGD'
 dr = 0.0  # dropout
 act = 'relu'
 optimiser_params = {
-    'lr': 0.001,
+    'lr': 0.0005,
     'mom': 0.9,
     'wd': 0.5e-4,
-    'beta2': 0.999
+    # 'beta2': 0.99
 }
 schedules = {
     'lr': {'dec': 0.995},  # decay (multiply) lr by this factor every 1000 steps
@@ -77,8 +77,8 @@ def create_model():
     # raw data
     diff = np.array(inp.shape.spatial_shape, dtype=np.int32)-np.array(trainee_out.shape.spatial_shape, dtype=np.int32)
     assert not np.any(diff % 2)
-    raw_inp = nm.Crop(inp, list((diff // 2)))
-    conc_inp = nm.Concat([raw_inp, adv_input])
+    raw_inp = nm.Crop(inp, tuple(diff // 2))
+    conc_inp = nm.Concat([raw_inp, adv_input], axis="f")
     conv0  = nm.Conv(conc_inp,  15,  (2,3,3), activation_func=act, dropout_rate=dr, name="conv_adv")
     conv1  = nm.Conv(conv0, 20,  (2,3,3), activation_func=act, dropout_rate=dr, name="conv_adv")
     down0  = nm.Pool(conv1, (1,2,2), mode='max')  # mid res
@@ -116,18 +116,18 @@ def create_model():
     # flip node: flips target if training the trainee network, in order to have stronger gradients (see above, or 'Generative adversarial nets' from Goodfellow et al. 2014)
     # goal: maximize probability of adv. net that it predicts an output of the trainee network as ground truth map
     flipped_adv_target = nm.FlipNode(adv_target)
-    adv_loss = nm.MultinoulliNLL(adv_out, flipped_adv_target, target_is_sparse=True, name='nll_adversarial', class_weights=adv_class_w[0])
-    adv_loss = nm.AggregateLoss([adv_loss], name='loss_adversarial', mixing_weights=None)
-    loss = nm.AggregateLoss([adv_loss, trainee_loss] , mixing_weights=mixing_w[0], name='loss_total')
-
+    adv_loss = nm.MultinoulliNLL(adv_out, flipped_adv_target, target_is_sparse=True, name='nll_adversarial', class_weights=adv_class_w[1])
+    adv_loss = nm.AggregateLoss(adv_loss, name='loss_adversarial', mixing_weights=None)
+    loss = nm.AggregateLoss([adv_loss, trainee_loss], name='loss_total', mixing_weights=mixing_w[1])
+    err_adv = nm.Errors(adv_out, flipped_adv_target, target_is_sparse=True, name="err_adversarial")
     model = nm.model_manager.getmodel()
     model.designate_nodes(
         input_node=inp,
         target_node=trainee.target_node,
         loss_node=loss,
         prediction_node=trainee.prediction_node,
-        prediction_ext=trainee.prediction_ext,
-        debug_outputs=[adv_loss, trainee_loss]
+        prediction_ext=trainee.prediction_ext, arch="adversarial",
+        debug_outputs=[adv_loss, trainee_loss, err_adv, flipped_adv_target, adv_target]
     )
     return model
 

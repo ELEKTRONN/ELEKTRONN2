@@ -28,14 +28,14 @@ data_batch_args = {
     'warp_args': {'sample_aniso': True, 'perspective': True
     }
 }
-n_steps = 1e6
-max_runtime = 2 * 24 * 3600  # in seconds
+n_steps = 1.5e6
+max_runtime = 4 * 24 * 3600  # in seconds
 history_freq = 1200
 monitor_batch_size = 5
-optimiser = 'Adam'
-optimiser_params = {'lr': 0.005, 'mom': 0.9, 'beta2': 0.99,
+optimiser = 'SGD'
+optimiser_params = {'lr': 0.005, 'mom': 0.9, #'beta2': 0.99,
                     'wd': 0.5e-3}
-schedules = {'lr': {'dec': 0.99}, }
+schedules = {'lr': {'dec': 0.995}, }
 batch_size = 1
 dr = 0.0
 
@@ -80,7 +80,29 @@ def create_model():
 
     # split input into cubes with little overlap (overlap = target size / 2)
     inputs_split = neuromancer.decorr_split(inp, part_inp_sh_spatial)
-    barrs = []
+
+    # cube 1
+    out0  = neuromancer.Conv(inputs_split[0],  20,  (1,3,3), (1,1,1))
+    out1  = neuromancer.Conv(out0, 20,  (1,3,3), (1,1,1))
+    out2 = neuromancer.Pool(out1, (1, 2, 2))
+
+    out3  = neuromancer.Conv(out2, 30,  (2,3,3), (1,1,1))
+    out4  = neuromancer.Conv(out3, 30,  (2,3,3), (1,1,1))
+    out5 = neuromancer.Pool(out4, (1, 2, 2))
+
+    out6  = neuromancer.Conv(out5, 40,  (2,3,3), (1,1,1))
+    out7  = neuromancer.Conv(out6, 40,  (2,3,3), (1,1,1))
+
+    up3 = neuromancer.UpConvMerge(out4, out7, 60)
+    up4 = neuromancer.Conv(up3, 50,  (2,3,3), (1,1,1))
+    up5 = neuromancer.Conv(up4, 50,  (2,3,3), (1,1,1))
+
+    up6 = neuromancer.UpConvMerge(out1, up5, 40)
+    up7 = neuromancer.Conv(up6, 40,  (2,3,3), (1,1,1))
+    up8 = neuromancer.Conv(up7, 40,  (2,3,3), (1,1,1))
+    barr_c0 = neuromancer.Conv(up8,  2, (1,1,1), (1,1,1), activation_func='lin',
+                              name='barr_c')
+    barrs = [barr_c0]
 
     # define network with shared weights
     def partial_unet(inp_sp):
@@ -98,14 +120,14 @@ def create_model():
         up6_b = neuromancer.UpConvMerge(out1_b, up5_b, 40)
         up7_b = neuromancer.Conv(up6_b, 40,  (2,3,3), (1,1,1), w=up7.w, b=up7.b)
         up8_b = neuromancer.Conv(up7_b, 40,  (2,3,3), (1,1,1), w=up8.w, b=up8.b)
-        barr_sp = neuromancer.Conv(up8_b,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr', w=dummy_out.w, b=dummy_out.b)
+        barr_sp = neuromancer.Conv(up8_b,  2, (1,1,1), (1,1,1), activation_func='lin', name='barr_c', w=barr_c0.w, b=barr_c0.b)
         return barr_sp
 
-    # cubes 1-8
-    for i in range(0, 8):
+    # cubes 2-8
+    for i in range(1, 8):
         partial_res = partial_unet(inputs_split[i])
-        part_probs = neuromancer.Softmax(partial_res, name="softmax_part")
-        barrs.append(part_probs)
+        # part_probs = neuromancer.Softmax(partial_res, name="softmax_part")
+        barrs.append(partial_res)
     barrs_conc = neuromancer.Concat(barrs, axis='f')
     ensemble_res = neuromancer.Conv(barrs_conc, 30, (1,1,1), (1,1,1))
     ensemble_res = neuromancer.Conv(ensemble_res, 20, (1,1,1), (1,1,1))

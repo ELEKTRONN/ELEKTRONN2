@@ -87,7 +87,7 @@ def create_model():
     barr   = nm.Conv(mconv5, 2, (1,1,1), activation_func='lin', name='barr')
     probs  = nm.Softmax(barr)
 
-    target = nm.Input_like(mconv5, override_f=1, name='target')
+    target = nm.Input_like(probs, override_f=1, name='target')
 
     loss_pix = nm.MultinoulliNLL(probs, target, target_is_sparse=True, name='nll_barr')
 

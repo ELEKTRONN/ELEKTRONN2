@@ -1491,19 +1491,18 @@ class FlipNode(Node):
     def __init__(self, parent_node, do_flip=False, name="flip", print_repr=True):
         super(FlipNode, self).__init__(parent_node, name, print_repr)
         do_flip = VariableWeight(value=do_flip, name="do_flip", dtype=floatX,
-                               apply_train=False, apply_reg=False)
+                               apply_train=False)
         self.params["do_flip"] = do_flip
         self.do_flip = do_flip
 
     def _make_output(self):
-        if self.do_flip:
-            out = 1 - self.parent.output
-        else:
-            out = self.parent.output
+        out = T.switch(T.lt(self.do_flip, 1), self.parent.output,
+                       1 - self.parent.output)
         self.output = out
 
     def _calc_shape(self):
         sh = self.parent.shape.copy()
+        self.shape = sh
 
     def _calc_comp_cost(self):
         self.computational_cost = 1
@@ -1513,7 +1512,7 @@ class AdvTarget(Node):
     def __init__(self, parent_nodes, name="advtarget", print_repr=True, p=0.5):
         super(AdvTarget, self).__init__(parent_nodes, name, print_repr)
         p = VariableWeight(value=p, name="p", dtype=floatX,
-                               apply_train=False, apply_reg=False)
+                               apply_train=False)
         self.params["p"] = p
         self.p = p
 

@@ -95,7 +95,7 @@ class Model(graphmanager.GraphManager):
     def designate_nodes(self, input_node='input', target_node=None,
                         loss_node=None, prediction_node=None,
                         prediction_ext=None, error_node=None,
-                         debug_outputs=None):
+                         debug_outputs=None, arch=None):
         """
         Register input, target and other special Nodes in the Model.
 
@@ -144,14 +144,14 @@ class Model(graphmanager.GraphManager):
                 st = np.array(self.prediction_node.shape.strides)
                 out_sh = st * (sh-1) + 1
                 diff = np.subtract(in_sh, out_sh)
-                # if np.any(np.mod(diff, 2)):
-                #     raise ValueError("FOV is not centered. In_sh=%s, "
-                #     "out_sh*strides=%s, diff=%s"
-                #                      %(in_sh, out_sh, diff))
                 if np.any(np.mod(diff, 2)):
-                    logger.warning("FOV is not centered. In_sh=%s, "
+                    raise ValueError("FOV is not centered. In_sh=%s, "
                     "out_sh*strides=%s, diff=%s"
                                      %(in_sh, out_sh, diff))
+                # if np.any(np.mod(diff, 2)):
+                #     logger.warning("FOV is not centered. In_sh=%s, "
+                #     "out_sh*strides=%s, diff=%s"
+                #                      %(in_sh, out_sh, diff))
                 self.prediction_node.shape._fov = diff # Hack
                 self.target_node.shape._fov = diff     # Hack
 
@@ -183,24 +183,71 @@ class Model(graphmanager.GraphManager):
             self.nontrainable_params = self.loss_node.all_nontrainable_params
             extra_updates          = self.loss_node.all_extra_updates
 
-            self._grad = T.grad(self.loss_node.output, self.trainable_params,
-                                disconnected_inputs="warn")
-            self._grad_inp = self.loss_node.input_tensors
-            self._grad_func = graphutils.make_func(self._grad_inp, self._grad,
-                                                name='Gradient Func')
-
             debug_outputs = [n.output for n in self.debug_outputs]
 
             # Init *all* optimisers
-            opt_init = (self._grad_inp, self.loss_node.output, self._grad,
-                        self.trainable_params, extra_updates, debug_outputs)
+            if arch == "adversarial":
+                # split adv. network and non-adv. network
+                adv_trainables = []
+                trainee_trainables = []
+                for p in self.trainable_params:
+                    if "adv" in p.__repr__():
+                        adv_trainables.append(p)
+                    else:
+                        trainee_trainables.append(p)
+                # trainee network
+                self._grad = T.grad(self.loss_node.output,
+                                    trainee_trainables,
+                                    disconnected_inputs="warn")
+                self._grad_inp = self.loss_node.input_tensors
+                self._grad_func = graphutils.make_func(self._grad_inp,
+                                                       self._grad,
+                                                       name='Gradient Func')
+
+                opt_init = (self._grad_inp, self.loss_node.output, self._grad,
+                            trainee_trainables, extra_updates, debug_outputs)
+
+                # TODO: self.optimisers should automatically register all subclasses of Optimiser
+                self.optimisers = dict(SGD=optimiser.SGD(*opt_init),
+                                       AdaGrad=optimiser.AdaGrad(*opt_init),
+                                       AdaDelta=optimiser.AdaDelta(*opt_init),
+                                       Adam=optimiser.Adam(*opt_init), )
+
+                # adversarial network
+                self._grad = T.grad(self.loss_node.output,
+                                    adv_trainables,
+                                    disconnected_inputs="warn")
+                self._grad_inp = self.loss_node.input_tensors
+                self._grad_func = graphutils.make_func(self._grad_inp,
+                                                       self._grad,
+                                                       name='Gradient Func')
+                opt_init = (self._grad_inp, self.loss_node.output, self._grad,
+                            adv_trainables, extra_updates, debug_outputs)
+
+                # TODO: self.optimisers should automatically register all subclasses of Optimiser
+                self.optimisers.update(dict(SGD_adv=optimiser.SGD(*opt_init),
+                                       AdaGrad_adv=optimiser.AdaGrad(*opt_init),
+                                       AdaDelta_adv=optimiser.AdaDelta(*opt_init),
+                                       Adam_adv=optimiser.Adam(*opt_init), ))
+            else:
+                self._grad = T.grad(self.loss_node.output,
+                                    self.trainable_params,
+                                    disconnected_inputs="warn")
+                self._grad_inp = self.loss_node.input_tensors
+                self._grad_func = graphutils.make_func(self._grad_inp,
+                                                       self._grad,
+                                                       name='Gradient Func')
+
+                opt_init = (self._grad_inp, self.loss_node.output, self._grad,
+                            self.trainable_params, extra_updates, debug_outputs)
 
 
-            # TODO: self.optimisers should automatically register all subclasses of Optimiser
-            self.optimisers = dict(SGD=optimiser.SGD(*opt_init),
-                                   AdaGrad=optimiser.AdaGrad(*opt_init),
-                                   AdaDelta=optimiser.AdaDelta(*opt_init),
-                                   Adam=optimiser.Adam(*opt_init))
+                # TODO: self.optimisers should automatically register all subclasses of Optimiser
+                self.optimisers = dict(SGD=optimiser.SGD(*opt_init),
+                                       AdaGrad=optimiser.AdaGrad(*opt_init),
+                                       AdaDelta=optimiser.AdaDelta(*opt_init),
+                                       Adam=optimiser.Adam(*opt_init),)
+
 
             n_param = self.loss_node.all_params_count
             n_comp  = self.loss_node.all_computational_cost

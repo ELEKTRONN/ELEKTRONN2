@@ -165,21 +165,24 @@ class Trainer(object):
         pp_err  = 'err' if is_regression else '%'
 
         if "adversarial" in exp_config.network_arch.keys():
-            training_focus = 0  # 0: train trainee network; 1: train adversarial
+            training_focus = 1  # 0: train trainee network; 1: train adversarial
             all_train_params = list(self.model.trainable_params)
-            # adv_nodes = []
-            # adv_nodes_dor = []
-            # trainee_nodes = []
-            # trainee_nodes_dor = []
-            # for n_k, node in self.model.nodes.items():
-            #     if "adv" in n_k:
-            #         if hasattr(node, "dropout_rate"):
-            #             adv_nodes.append(node)
-            #             adv_nodes_dor.append(node.dropout_rate)
-            #     else:
-            #         if hasattr(node, "dropout_rate"):
-            #             trainee_nodes.append(node)
-            #             trainee_nodes_dor.append(node.dropout_rate)
+            models_lr = {1: exp_config.network_arch["adversarial"]["lr"], 0: np.float32(self.model.lr)}
+            curr_optimizer = {0: exp_config.optimiser, 1: exp_config.optimiser + "_adv"}
+            exp_config.optimiser = curr_optimizer[training_focus]
+            for p in self.model.trainable_params:
+                if int("adv" in p.__repr__()) == training_focus:
+                    p.apply_train = True
+                else:
+                    p.apply_train = False
+            # for p in all_train_params:
+            #     try:
+            #         p_k = p.__repr__().split("(")[0][1:]
+            #         _ = \
+            #             self.model.loss_node.all_trainable_params[
+            #                 p_k]
+            #     except KeyError:
+            #         self.model.trainable_params.remove(p)
         # --------------------------------------------------------------------------------------------------------
         if config.background_processes:
             n_proc = max(2, int(config.background_processes))
@@ -213,38 +216,33 @@ class Trainer(object):
 
                     # adversarial stuff
                     if "adversarial" in exp_config.network_arch.keys():
-                        new_focus = (i // exp_config.network_arch["adversarial"]["permut_steps"]) % 2 # 0: train trainee network; 1: train adversarial
+                        new_focus = 1 - ((i // exp_config.network_arch["adversarial"]["permut_steps"]) % 2) # 0: train trainee network; 1: train adversarial, but start with adv network first
                         if (new_focus != training_focus) or (i == 0):
                             print(i, new_focus, training_focus)
+                            # store old LR
+                            models_lr[training_focus] = np.float32(self.model.lr)
                             training_focus = new_focus
-                            if i != 0:
-                                self.model.lr = self.model.lr * exp_config.network_arch["adversarial"]["lr_fact"]**((-1)**(1-training_focus))
+                            exp_config.optimiser = curr_optimizer[training_focus]
                             self.model.nodes["nll_adversarial"].class_weights.set_value(exp_config.network_arch["adversarial"]["class_weights"][training_focus])
                             self.model.nodes["loss_total"].params['mixing_weights'].set_value(exp_config.network_arch["adversarial"]["mixing_weights"][training_focus])
                             self.model.nodes["advtarget"].params["p"].set_value(np.array(exp_config.network_arch["adversarial"]["target_p"][training_focus], dtype=floatX))
-                            self.model.nodes["flip"].params["do_flip"].set_value(np.array(1 - training_focus, dtype=floatX))  #  do the flip if training trainee network
-                            # if training_focus:  # if training adversarial network, set trainee network dropout rate to 1 and restore original rate for adversarial network
-                            #     for n_ix in xrange(len(adv_nodes)):
-                            #         adv_nodes[n_ix].dropout_rate = adv_nodes_dor[n_ix]
-                            #     for n_ix in xrange(len(trainee_nodes)):
-                            #         trainee_nodes[n_ix].dropout_rate = 1
-                            # else:
-                            #     for n_ix in xrange(len(trainee_nodes)):
-                            #         trainee_nodes[n_ix].dropout_rate = trainee_nodes_dor[n_ix]
-                            #     for n_ix in xrange(len(adv_nodes)):
-                            #         adv_nodes[n_ix].dropout_rate = 1
+                            self.model.nodes["flip"].params["do_flip"].set_value(1 - training_focus)  #  do the flip if training trainee network
+                            self.model.lr = models_lr[training_focus]  #  do the flip if training trainee network
+                            self.model.trainable_params = list(
+                                all_train_params)
                             for p in self.model.trainable_params:
                                 if int("adv" in p.__repr__()) == training_focus:
                                     p.apply_train = True
                                 else:
                                     p.apply_train = False
-                            self.model.trainable_params = list(all_train_params)
-                            for p in all_train_params:
-                                try:
-                                    p_k = p.__repr__().split("(")[0][1:]
-                                    _ = self.model.loss_node.all_trainable_params[p_k]
-                                except KeyError:
-                                    self.model.trainable_params.remove(p)
+                            # for p in all_train_params:
+                            #     try:
+                            #         p_k = p.__repr__().split("(")[0][1:]
+                            #         _ = \
+                            #         self.model.loss_node.all_trainable_params[
+                            #             p_k]
+                            #     except KeyError:
+                            #         self.model.trainable_params.remove(p)
 
 
                     # check for divergence
