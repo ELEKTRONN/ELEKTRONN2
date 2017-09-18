@@ -951,14 +951,14 @@ class Node(with_metaclass(MetaNode, object)):
         z_tiles = int(np.ceil(float(pred_sh[0])/prob_sh[0]))
         x_tiles = int(np.ceil(float(pred_sh[1])/prob_sh[1]))
         y_tiles = int(np.ceil(float(pred_sh[2])/prob_sh[2]))
-        total_nb_tiles = np.product([x_tiles, y_tiles, z_tiles])
+        total_nb_tiles = int(np.product([x_tiles, y_tiles, z_tiles]))
         if self._output_func.func is None:
             self._output_func.compile()
 
         logger.info("Predicting img %s in %i Blocks: (%i, %i, %i)" \
                     %(raw_img.shape, total_nb_tiles, z_tiles, x_tiles, y_tiles))
         self() # This compiles the function
-        pbar = tqdm.tqdm(total=total_nb_tiles, ncols=80, leave=False)
+        pbar = tqdm.tqdm(total=np.prod(pred_sh), ncols=80, leave=False, unit='Vx', unit_scale=True, dynamic_ncols=False)
         for z_t in range(z_tiles):
             for x_t in range(x_tiles):
                 for y_t in range(y_tiles):
@@ -997,7 +997,10 @@ class Node(with_metaclass(MetaNode, object)):
                     x_t*prob_sh[1]:(x_t+1)*prob_sh[1],
                     y_t*prob_sh[2]:(y_t+1)*prob_sh[2]] = prob
 
-                    pbar.update()
+
+                    # print ("shape", prob.shape)
+                    current_buffer = np.prod(prob_sh)
+                    pbar.update(current_buffer)
 
         pbar.close()
         dtime = time.time() - time_start
