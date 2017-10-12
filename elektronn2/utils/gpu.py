@@ -20,7 +20,7 @@ def initgpu(gpu):
     import theano.sandbox.cuda
 
     if theano.sandbox.cuda.cuda_available:
-        if isinstance(gpu, str) and gpu.lower() == 'auto':
+        if isinstance(gpu, str) and gpu.lower() == 'auto':  # 'auto' is unsupported now. TODO: Remove
             gpu = int(get_free_gpu())
             print("Automatically assigned free GPU %i" % (gpu,))
 
@@ -64,7 +64,7 @@ def _get_number_gpus():
     return nb_gpus
 
 
-def get_free_gpu(wait=0, nb_gpus=-1):
+def get_free_gpu(wait=0, nb_gpus=-1):  # Not working as intended.
     import theano.sandbox.cuda
 
     if not theano.sandbox.cuda.cuda_available:
