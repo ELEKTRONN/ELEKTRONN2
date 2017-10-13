@@ -731,3 +731,22 @@ if __name__ =='__main__':
     #f0 = scroll_plot(img_new[0])
     i, t = center_cubes(img_new, targ_new)
     f1 = scroll_plot([i[0], t[0]])
+
+
+def xyz2zxy(vol):
+    """
+    Swaps axes to ELEKTRONN convention ([X, Y, Z] -> [Z, X, Y]). If additional
+    channel axis is provided: [X, Y, Z, CH] -> [Z, X, Y, CH]
+
+    Parameters
+    ----------
+    vol : np.array [X, Y, Z]
+
+    Returns
+    -------
+    np.array [Z, X, Y]
+    """
+    assert vol.ndim >= 3
+    vol = vol.swapaxes(1, 0)  # y x z
+    vol = vol.swapaxes(0, 2)  # z x y
+    return vol
