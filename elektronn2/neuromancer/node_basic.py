@@ -1436,7 +1436,12 @@ class Concat(Node):
     def _make_output(self):
         # It is assumed that all other dimensions are matching
         inputs = [inp.output for inp in self.parent]
-        self.output = T.concatenate(inputs, axis=self.axis)
+        try:
+            self.output = T.concatenate(inputs, axis=self.axis)
+        except TypeError as e :
+            print('WARNING: A possible pickle file error. Passing axis as 1' + '\n'+ str(e))
+            self.output = T.concatenate(inputs, axis=1)
+
 
     def _calc_shape(self):
         joint_axis_size = reduce(lambda x,y: x+y.shape[self.axis],
