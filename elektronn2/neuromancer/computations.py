@@ -239,14 +239,31 @@ def upconv(x, w, stride, x_shape=None, w_shape=None, axis_order='dnn'):
     elif conv_dim==3:
         if not dnn_avail or axis_order!='dnn':
             raise ValueError("Need dnn and dnn axis order")
+        dil = (1, 1, 1)
         kerns = theano.gpuarray.basic_ops.gpu_contiguous(w)
         image = theano.gpuarray.basic_ops.gpu_contiguous(x)
-        k = kerns.shape[1]
+
+        # We can use Shape_i and bypass the infer_shape here as this is on
+        # the input of node and it will always be present.
+
+        ## wrong shapes... probably cuda <-> theano axes ordering
+        # desc_op = desc.owner.op
+        # ishape = [theano.compile.ops.shape_i_op(i)(image) for i in range(image.ndim)]
+        # kshape = [theano.compile.ops.shape_i_op(i)(kerns) for i in range(kerns.ndim)]
+        # out_shp = T.nnet.abstract_conv.get_conv_output_shape(ishape, kshape,
+        #           desc_op.border_mode, desc_op.subsample, filter_dilation=dil)
+        # out_shp = T.nnet.abstract_conv.assert_conv_shape(out_shp)
+
         img_sh = list(image.shape)
-        out_sh = img_sh[:1] + [k,] + [st*sh for st, sh in zip(stride, img_sh[2:])]
-        out = theano.gpuarray.dnn.gpu_alloc_empty(*out_sh)
+        k = list(kerns.shape)
+        out_shp = img_sh[:1] + k[1:2] + [st*sh for st, sh in zip(stride, img_sh[2:])]
+        out = theano.gpuarray.dnn.GpuAllocEmpty(theano.config.floatX,
+                                                context_name)(*out_shp)
         desc = theano.gpuarray.dnn.GpuDnnConvDesc(border_mode='valid', subsample=stride,
-                                  conv_mode='cross')(out.shape, kerns.shape)
+                                  conv_mode='cross', dilation=dil)(kerns.shape)
+        # out = theano.gpuarray.baisc_ops.gpu_alloc_empty(*out_sh)
+        # desc = theano.gpuarray.dnn.GpuDnnConvDesc(border_mode='valid', subsample=stride,
+        #                           conv_mode='cross', dilation=(1, 1, 1))(out.shape, kerns.shape)
         y = theano.gpuarray.dnn.GpuDnnConvGradI()(kerns, image, out, desc)
 
     return y
@@ -320,9 +337,11 @@ def conv(x, w, axis_order=None, conv_dim=None, x_shape=None, w_shape=None,
 
     if border_mode=='same':
         assert w_shape is not None
-        assert np.all(np.remainder(w_shape[-conv_dim:], 2)==1), "For conv same kernels must be uneven"
-        border_mode='full'
-        crop_full = True
+        if not np.all(np.remainder(w_shape[-conv_dim:], 2) == 1):
+            raise ValueError('For "same"-mode convolution, filter shapes '
+                             'must be odd in all dimensions.')
+        border_mode='half'
+        crop_full = False
     else:
         crop_full = False
 

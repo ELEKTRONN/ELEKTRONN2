@@ -519,10 +519,13 @@ class Conv(Perceptron):
         ``None`` (default) disables pooling along all axes.
     conv_mode: str
         Possible values:
-        * "valid": only apply filter to complete patches of the image.
+        * "valid": Only apply filter to complete patches of the image.
           Generates output of shape: image_shape -filter_shape + 1.
-        * "full" zero-pads image to multiple of filter shape to generate
+        * "full": Zero-pads image to multiple of filter shape to generate
           output of shape: image_shape + filter_shape - 1.
+        * "same": Zero-pads input image so that the output shape
+          is equal to the input shape
+          (Only supported for odd filter sizes).
     activation_func: str
         Activation function name.
     mfp: bool
@@ -555,13 +558,16 @@ class Conv(Perceptron):
     std
         (For batch normalisation) Initialises std parameter.
     gradnet_mode
+    invalidate_fov: bool
+        Overrides the computed ``fov`` with an invalid value to
+        force later recalculation (experimental).
     """
 
     def __init__(self, parent, n_f, filter_shape, pool_shape=None,
                  conv_mode='valid', activation_func='relu',
                  mfp=False, batch_normalisation=False, dropout_rate=0,
                  name="conv", print_repr=True, w=None, b=None, gamma=None,
-                 mean=None, std=None, gradnet_mode=None):
+                 mean=None, std=None, gradnet_mode=None, invalidate_fov=False):
         super(Perceptron, self).__init__(parent, name, print_repr)
 
         self.n_f  = n_f
@@ -577,6 +583,7 @@ class Conv(Perceptron):
         self.mfp_offsets = parent.shape.mfp_offsets
         self.axis = parent.shape.tag2index('f') #retrieve feature shape's index
         self.axis_order = None
+        self.invalidate_fov = invalidate_fov
 
         if pool_shape is None:  # Default to no pooling
             pool_shape = tuple([1 for _ in filter_shape])  # e.g. (1, 1, 1) for the 3D case
@@ -742,7 +749,7 @@ class Conv(Perceptron):
                                      "kernel of size %i."\
                                      %(sh.tags[i], sh[i], p, f))
             sh = sh.updateshape(i, s)
-            if sh.fov[j]>0:
+            if sh.fov[j]>0 and not self.invalidate_fov:
                 fov = sh.fov[j] + (f+p-2) * sh.strides[j]
             else:
                 fov = -1
@@ -1071,8 +1078,15 @@ class UpConv(Conv):
         self.strides = np.divide(self.strides,self.pool_shape)
         sh = self.parent.shape
         for j,(i,f,p) in enumerate(zip(self.spatial_axes, self.filter_shape, self.pool_shape)):
-            s = 1 - f if self.conv_mode=='valid' else f -1
-            s = (sh[i] * p) + p - 1 + s # unpool with margin then apply conv
+            if self.conv_mode == 'valid':
+                k = 1 - f
+            elif self.conv_mode == 'full':
+                k = f - 1
+            elif self.conv_mode == 'same':
+                k = 0
+            else:
+                raise ValueError('{}: Invalid conv_mode {}'.format(self.name, self.conv_mode))
+            s = (sh[i] * p) + p - 1 + k # unpool with margin then apply conv
             sh = sh.updateshape(i, s)
             # Unpooling creates asymmetric FOV (left/right is different for
             # some neurons), therefore we flag the FOV as exceptional with '-1'
@@ -1265,28 +1279,35 @@ class Pad(Node):
         self.computational_cost = 0
 
 
-def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
-              disable_upconv=False, name='merge', print_repr=True,
-              # "u_" Parameters for a possible UpConv constructor:
-              u_activation_func='relu', u_identity_init=True,
-              u_batch_normalisation=False, u_dropout_rate=0, u_name='upconv',
-              u_w=None, u_b=None, u_gamma=None, u_mean=None, u_std=None,
-              u_gradnet_mode=None):
+def AutoMerge(parent1, parent2, upconv_n_f=None, merge_mode='concat',
+              disable_upconv=False, upconv_kwargs=None,
+              name='merge', print_repr=True):
     """
-    Merge two network branches by automatic cropping and upconvolutions.
+    Merges two network branches by automatic cropping and upconvolutions.
 
-    Try to automatically align and merge a high-res and a low-res
+    (Wrapper for
+    :py:class:`UpConv <elektronn2.neuromancer.neural.UpConv>`,
+    :py:class:`Crop <elektronn2.neuromancer.neural.Crop>`,
+    :py:class:`Concat <elektronn2.neuromancer.node_basic.Concat>` and
+    :py:class:`Add <elektronn2.neuromancer.node_basic.Add>`.)
+
+    Tries to automatically align and merge a high-res and a low-res
     (convolution) output of two branches of a CNN by applying UpConv and Crop to
     make their shapes and strides compatible.
-    UpConv is used if the low-res Node's strides are at least twice as large
-    as the strides of the high-res Node in any dimension.
+    UpConv is used if the low-res parent's strides are at least twice as large
+    as the strides of the high-res parent in any dimension.
+
+    The parents are automatically identified as high-res and low-res by their strides.
+    If both parents have the same strides, the concept of high-res and low-res is
+    ignored and this function just crops the larger parent's output until the
+    parents' spatial shapes match and then merges them.
 
     This function can be used to simplify creation of e.g. architectures similar to
     U-Net (see https://arxiv.org/abs/1505.04597) or skip-connections.
 
     If a ValueError that the shapes cannot be aligned is thrown,
     you can try changing the filter shapes and pooling factors of the
-    (grand-)parent Nodes or add/remove Convolutions and Crops in the preceding
+    (grand-)parent nodes or add/remove Convolutions and Crops in the preceding
     branches until the error disappears (of course you should try to keep
     those changes as minimal as possible).
 
@@ -1294,44 +1315,25 @@ def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
 
     Parameters
     ----------
-    hi_res: Node
-        Parent Node with high resolution output.
-    lo_res: Node
-        Parent Node with low resolution output.
+    parent1: Node
+        First parent to be merged.
+    parent2: Node
+        Second parent to be merged.
+    upconv_n_f: int
+        Number of filters for the aligning ``UpConv`` for the low-res parent.
     merge_mode: str
         How the merging should be performed. Available options:
-        'concat' (default): Merge with a ``Concat`` Node.
-        'add': Merge with an ``Add`` Node.
+        'concat' (default): Merge with a ``Concat`` node.
+        'add': Merge with an ``Add`` node.
+    disable_upconv: bool
+        If ``True``, no automatic upconvolutions are performed to match strides.
+    upconv_kwargs: dict
+        Additional keyword arguments that are passed to the
+        ``UpConv`` constructor if upconvolution is applied.
     name: str
         Name of the final merge node.
     print_repr: bool
         Whether to print the node representation upon initialisation.
-    disable_upconv: bool
-        If True, no automatic upconvolutions are performed to match strides.
-    u_hi_res_n_f: int
-        Number of filters for the aligning UpConv.
-    u_activation_func: str
-        (passed to new UpConv if required).
-    u_identity_init: bool
-        (passed to new UpConv if required).
-    u_batch_normalisation: str or False
-        (passed to new UpConv if required).
-    u_dropout_rate: float
-        (passed to new UpConv if required).
-    u_name: str
-        Name of the intermediate UpConv node if required.
-    u_w
-        (passed to new UpConv if required).
-    u_b
-        (passed to new UpConv if required).
-    u_gamma
-        (passed to new UpConv if required).
-    u_mean
-        (passed to new UpConv if required).
-    u_std
-        (passed to new UpConv if required).
-    u_gradnet_mode
-        (passed to new UpConv if required).
 
     Returns
     -------
@@ -1340,28 +1342,36 @@ def AutoMerge(hi_res, lo_res, u_hi_res_n_f=None, merge_mode='concat',
         that merges the aligned high-res and low-res outputs.
     """
     ###TODO exchange UpConv and Crop to save computation in some cases
-    # TODO: Automatically determine which one is hi or lo res.
-    # TODO: Make concept of resolutions optional (This op can also be just used for auto-cropping)
-    # TODO: Bundle "u_" parameters for UpConv to a single dict to clean up the signature?
 
+    assert len(parent1.shape)==len(parent2.shape)
+    assert parent1.shape.spatial_axes == parent2.shape.spatial_axes
+
+    if any(parent2.shape.strides // parent1.shape.strides < 1):
+        lo_res, hi_res = parent1, parent2
+    else:
+        hi_res, lo_res = parent1, parent2
     sh_hi = hi_res.shape
     sh_lo = lo_res.shape
-    assert len(sh_hi)==len(sh_lo)
-    assert sh_hi.spatial_axes == sh_lo.spatial_axes
-
     unpool = sh_lo.strides // sh_hi.strides
     if np.any(unpool > 1) and not disable_upconv:
-        if u_hi_res_n_f is None:
+        if upconv_n_f is None:
             raise ValueError('AutoMerge is trying to insert an UpConv node, but'
-                             'u_hi_res_n_f is not defined. Please set it to the'
+                             'upconv_n_f is not defined. Please set it to the'
                              'desired number of features to be used for UpConv.')
-        lo_res = UpConv(lo_res, u_hi_res_n_f, unpool,
-                        activation_func=u_activation_func, identity_init=u_identity_init,
-                        batch_normalisation=u_batch_normalisation, dropout_rate=u_dropout_rate,
-                        name=u_name, print_repr=print_repr, w=u_w, b=u_b, gamma=u_gamma,
-                        mean=u_mean, std=u_std, gradnet_mode=u_gradnet_mode)
+        logger.info(
+            'AutoMerge assignend parent roles:\n'
+            '- {}: is lo_res (strides {})\n- {}: is hi_res (strides {})'.format(
+                lo_res.name, lo_res.shape.strides, hi_res.name, hi_res.shape.strides
+        ))
+        if upconv_kwargs is None:
+            upconv_kwargs = {}
+        lo_res = UpConv(lo_res, upconv_n_f, unpool, **upconv_kwargs)
+        logger.info(
+            'AutoMerge of {} and {}: Inserted UpConv with pool_shape {}'.format(
+                hi_res.name, lo_res.name, unpool
+        ))
 
-    # No both have same stride
+    # Now both have same stride
     # Shapes may have changed
     sh_hi = hi_res.shape.spatial_shape
     sh_lo = lo_res.shape.spatial_shape
@@ -1630,7 +1640,7 @@ class FaithlessMerge(Node):
         """
         Calculate and set self.computational_cost.
 
-        For this Node type this is hard-coded to 0.
+        For this node type this is hard-coded to 0.
         """
         self.computational_cost = 0
 

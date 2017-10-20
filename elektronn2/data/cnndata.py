@@ -108,14 +108,14 @@ class BatchCreatorImage(object):
     def __init__(self, input_node, target_node=None, d_path=None, l_path=None,
                  d_files=None, l_files=None, cube_prios=None, valid_cubes=None,
                  border_mode='crop', aniso_factor=2, target_vec_ix=None,
-                 target_discrete_ix=None, h5stream=False):
+                 target_discrete_ix=None, h5stream=False, zxy=True):
 
         assert (d_path and l_path and d_files and l_files)
         if len(d_files)!=len(l_files):
             raise ValueError("d_files and l_files must be lists of same length!")
         d_path = os.path.expanduser(d_path)
         l_path = os.path.expanduser(l_path)
-
+        self.zxy = zxy
         self.h5stream = h5stream
         self.d_path = d_path
         self.l_path = l_path
@@ -123,7 +123,7 @@ class BatchCreatorImage(object):
         self.l_files = l_files
         self.cube_prios = cube_prios
         self.valid_cubes = valid_cubes if valid_cubes is not None else []
-        self.aniso_factor  = aniso_factor
+        self.aniso_factor = aniso_factor
         self.border_mode = border_mode
         self.target_vec_ix = target_vec_ix
         self.target_discrete_ix = target_discrete_ix
@@ -135,17 +135,17 @@ class BatchCreatorImage(object):
         self.offsets = np.array(target_node.shape.offsets, dtype=np.int)
         self.target_ps = self.patch_size - self.offsets * 2
         self.t_dtype = target_node.output.dtype
-        if input_node.shape.ndim==target_node.shape.ndim:
+        if input_node.shape.ndim == target_node.shape.ndim:
             self.mode = 'img-img'
         else:
             if target_node.shape.ndim > 1:
-                raise ValueError() ###TODO would it work to map 'img-vect'?
+                raise ValueError()  ###TODO would it work to map 'img-vect'?
             self.mode = 'img-scalar'
 
         # The following will be inferred when reading data
         self.n_labelled_pixel = 0
-        self.n_f     = None # number of channels/feature in input
-        self.t_n_f  = None # the shape of the returned label batch at index 1
+        self.n_f = None  # number of channels/feature in input
+        self.t_n_f = None  # the shape of the returned label batch at index 1
 
         # Actual data fields
         self.valid_d = []
@@ -173,11 +173,11 @@ class BatchCreatorImage(object):
         logger.info('{}\n'.format(self.__repr__()))
 
     def __repr__(self):
-        s = "{0:,d}-target Data Set with {1:,d} input channel(s):\n"+\
-        "#train cubes: {2:,d} and #valid cubes: {3:,d}, {4:,d} labelled "+\
-        "pixels."
+        s = "{0:,d}-target Data Set with {1:,d} input channel(s):\n" + \
+            "#train cubes: {2:,d} and #valid cubes: {3:,d}, {4:,d} labelled " + \
+            "pixels."
         s = s.format(self.t_n_f, self.n_f, self._training_count,
-                                  self._valid_count, self.n_labelled_pixel)
+                     self._valid_count, self.n_labelled_pixel)
         return s
 
     @property
@@ -259,26 +259,26 @@ class BatchCreatorImage(object):
         images, target = self._allocbatch(batch_size)
         ll_masks = []
         patch_count = 0
-        while patch_count < batch_size: # Loop to fill up batch with examples
-            d, t, ll_mask = self._getcube(source) # get cube randomly
+        while patch_count < batch_size:  # Loop to fill up batch with examples
+            d, t, ll_mask = self._getcube(source)  # get cube randomly
 
             try:
-                if self.mode=='img-img':
+                if self.mode == 'img-img':
                     d, t = self.warp_cut(d, t, warp, warp_args)
                 else:
                     d, _ = self.warp_cut(d, None, warp, warp_args)
                 self.n_successful_warp += 1
 
             except transformations.WarpingOOBError:
-                    self.n_failed_warp += 1
-                    continue
+                self.n_failed_warp += 1
+                continue
 
             # Check only if a ignore_thresh is set and the cube is labelled
             if (ignore_thresh is not False) and (not np.any(ll_mask[1])):
-                if (t<0).mean() > ignore_thresh:
-                    continue # do not use cubes which have no information
+                if (t < 0).mean() > ignore_thresh:
+                    continue  # do not use cubes which have no information
 
-            if source == "train": # no grey augmentation for testing
+            if source == "train":  # no grey augmentation for testing
                 d = greyAugment(d, grey_augment_channels, self.rng)
 
             target[patch_count] = t
@@ -299,15 +299,14 @@ class BatchCreatorImage(object):
                                   [0, 0, 1],
                                   [0, 0, -1]], dtype=np.int)
 
-            if target.shape[1]==1:
+            if target.shape[1] == 1:
                 target = make_nhood_targets(target, nhood)
             else:  # Nhood targets for first feature only, keep other targets
                 tmp = make_nhood_targets(target[:, 0:1], nhood)
                 target = np.concatenate([tmp, target[:, 1:]], axis=1)
 
-
         # Final modification of targets: striding and replacing nan
-        if not (force_dense or np.all(self.strides==1)):
+        if not (force_dense or np.all(self.strides == 1)):
             target = self._stridedtargets(target)
 
         ret = [images, target]  # The "normal" batch
@@ -341,14 +340,14 @@ class BatchCreatorImage(object):
     def warp_cut(self, img, target, warp, warp_params):
         """
         (Wraps :py:meth:`elektronn2.data.transformations.get_warped_slice()`)
-        
+
         Cuts a warped slice out of the input and target arrays.
         The same random warping transformation is each applied to both input
         and target.
-        
+
         Warping is randomly applied with the probability defined by the ``warp``
         parameter (see below).
-        
+
         Parameters
         ----------
         img: np.ndarray
@@ -365,7 +364,7 @@ class BatchCreatorImage(object):
             kwargs that are passed through to
             :py:meth:`elektronn2.data.transformations.get_warped_slice()`.
             Can be empty.
-        
+
         Returns
         -------
         d: np.ndarray
@@ -373,32 +372,33 @@ class BatchCreatorImage(object):
         t: np.ndarray
             (Warped) target slice
         """
-        if (warp is True) or (warp==1): # always warp
-            do_warp=True
-        elif (0 < warp < 1): # warp only a fraction of examples
-            do_warp=True if (self.rng.rand()<warp) else False
-        else: # never warp
-            do_warp=False
+        if (warp is True) or (warp == 1):  # always warp
+            do_warp = True
+        elif (0 < warp < 1):  # warp only a fraction of examples
+            do_warp = True if (self.rng.rand() < warp) else False
+        else:  # never warp
+            do_warp = False
 
         if not do_warp:
             warp_params = dict(warp_params)
             warp_params['warp_amount'] = 0
 
         d, t = transformations.get_warped_slice(img, self.patch_size,
-                            aniso_factor=self.aniso_factor, target=target,
-                            target_ps=self.target_ps, target_vec_ix=self.target_vec_ix,
-                            target_discrete_ix=self.target_discrete_ix,
+                                                aniso_factor=self.aniso_factor,
+                                                target=target,
+                                                target_ps=self.target_ps,
+                                                target_vec_ix=self.target_vec_ix,
+                                                target_discrete_ix=self.target_discrete_ix,
                                                 rng=self.rng, **warp_params)
 
         return d, t
-
 
     def _getcube(self, source):
         """
         Draw an example cube according to sampling weight on training data,
         or randomly on valid data
         """
-        if source=='train':
+        if source == 'train':
             p = self.rng.rand()
             i = np.flatnonzero(self._sampling_weight <= p)[-1]
             d, t, ll_mask = self.train_d[i], self.train_l[i], self.train_extra[i]
@@ -415,7 +415,6 @@ class BatchCreatorImage(object):
             raise ValueError("Unknown data source")
 
         return d, t, ll_mask
-
 
     def _stridedtargets(self, lab):
         if self.ndim == 3:
@@ -445,7 +444,7 @@ class BatchCreatorImage(object):
         # returns lists of cubes, ll_mask is a tuple per cube
         data, target, extras = self.read_files()
 
-        if self.mode=='img-scalar':
+        if self.mode == 'img-scalar':
             data = border_treatment(data, self.patch_size, self.border_mode,
                                     self.ndim)
 
@@ -468,7 +467,7 @@ class BatchCreatorImage(object):
 
         if self.cube_prios is None:
             prios = np.array(prios, dtype=np.float)
-        else: # If priorities are given: sample irrespective of cube size
+        else:  # If priorities are given: sample irrespective of cube size
             prios = np.array(self.cube_prios, dtype=np.float)
 
         # sample example i if: batch_prob[i] < p
@@ -476,14 +475,13 @@ class BatchCreatorImage(object):
         self._training_count = len(self.train_d)
         self._valid_count = len(self.valid_d)
 
-
     def check_files(self):
         """
         Check if file paths in the network config are available.
         """
         notfound = False
         give_neuro_data_hint = False
-        fullpaths = [os.path.join(self.d_path, f) for f, _ in self.d_files] +\
+        fullpaths = [os.path.join(self.d_path, f) for f, _ in self.d_files] + \
                     [os.path.join(self.l_path, f) for f, _ in self.l_files]
         for p in fullpaths:
             if not os.path.exists(p):
@@ -513,38 +511,41 @@ class BatchCreatorImage(object):
         data, target, extras = [], [], []
         pbar = tqdm.tqdm(total=len(self.d_files), ncols=120, leave=False)
 
-
         for (d_f, d_key), (l_f, l_key) in zip(self.d_files, self.l_files):
-            pbar.write('Loading %s and %s' % (d_f,l_f))
+            pbar.write('Loading %s and %s' % (d_f, l_f))
             if self.h5stream:
                 d = h5py.File(os.path.join(self.d_path, d_f), 'r')[d_key]
                 t = h5py.File(os.path.join(self.l_path, l_f), 'r')[l_key]
-                assert d.compression==t.compression==None
-                assert len(d.shape)==len(t.shape)==4
-                assert d.dtype==np.float32
-                assert t.dtype==self.t_dtype
+                assert d.compression == t.compression == None
+                assert len(d.shape) == len(t.shape) == 4
+                assert d.dtype == np.float32
+                assert t.dtype == self.t_dtype
 
             else:
                 d = utils.h5load(os.path.join(self.d_path, d_f), d_key)
                 t = utils.h5load(os.path.join(self.l_path, l_f), l_key)
 
             try:
-                ll_mask_1 = utils.h5load(os.path.join(self.l_path, l_f), 'll_mask')
+                ll_mask_1 = utils.h5load(os.path.join(self.l_path, l_f),
+                                         'll_mask')
+                if not self.zxy:
+                    ll_mask_1 = transformations.xyz2zxy(ll_mask_1)
                 extras.append(ll_mask_1)
             except KeyError:
                 extras.append(None)
-
+            if not self.zxy:
+                d = transformations.xyz2zxy(d)
+                t = transformations.xyz2zxy(t)
             if self.mode == 'img-scalar':
                 assert t.ndim == 1, "Scalar targets must be 1d"
 
-            if len(d.shape) == 4: # h5 dataset has no ndim
+            if len(d.shape) == 4:  # h5 dataset has no ndim
                 self.n_f = d.shape[0]
             elif len(d.shape) == 3:  # We have no channels in data
                 self.n_f = 1
                 d = d[None]  # add (empty) 0-axis
 
-
-            if len(t.shape) == 3: # If labels not empty add first axis
+            if len(t.shape) == 3:  # If labels not empty add first axis
                 t = t[None]
 
             if self.t_n_f is None:
@@ -552,13 +553,11 @@ class BatchCreatorImage(object):
             else:
                 assert self.t_n_f == t.shape[0]
 
-
             self.n_labelled_pixel += t[0].size
 
             # determine normalisation depending on int or float type
-            if d.dtype in [np.int, np.int8, np.int16, np.int32, np.uint32,
-                           np.uint, np.uint8, np.uint16, np.uint32, np.uint32]:
-                m = 255
+            if d.dtype.kind in ('u', 'i'):
+                m = 255.
                 d = np.ascontiguousarray(d, dtype=np.float32) / m
 
             if (np.dtype(self.t_dtype) is not np.dtype(t.dtype)) and \

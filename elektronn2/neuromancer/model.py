@@ -882,10 +882,15 @@ def kernel_lists_from_node_descr(model_descr):
                    "nodes (excluding 'UpConv'!)")
     for name, descr in model_descr.items():
         if isinstance(descr, (list, tuple)):
-          if descr[0].cls.__name__ == 'Conv':
-              filter_shapes.append(descr[0].args[2])
-              pool_shapes.append(descr[0].args[3])
-              mfp.append(descr[0].kwargs.get('mfp', False))
+            if descr[0].cls.__name__ == 'Conv':
+                filter_shapes.append(descr[0].args[2])
+                try:  # Old Conv constructor with explicit pool shape
+                    pool_shapes.append(descr[0].args[3])
+                except IndexError:  # Using the new Conv constructor with implicit 1-pooling
+                    # Default to no pooling (p=1 for every spatial axis found in filter_shape)
+                    default_pool_shape = tuple([1 for _ in descr[0].args[2]])
+                    pool_shapes.append(descr[0].kwargs.get('pool_shape', default_pool_shape))
+                mfp.append(descr[0].kwargs.get('mfp', False))
 
     return filter_shapes, pool_shapes, mfp
 

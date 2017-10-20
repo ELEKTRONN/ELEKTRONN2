@@ -157,7 +157,7 @@ model_manager = ModelContainer()
 
 def choose_name(proposal, names):
     """
-    Choose an appropriate unique name for a Node.
+    Choose an appropriate unique name for a node.
 
     If the proposed name is not already taken, it is directly returned.
     If it is taken and it does not end with a number, a "1" is appended to it.
@@ -167,14 +167,14 @@ def choose_name(proposal, names):
     Parameters
     ----------
     proposal: str
-        Proposed name for the Node.
+        Proposed name for the node.
     names: str
         Names that were already given to other nodes in this Model.
 
     Returns
     -------
     str
-        Appropriate and unique name for the Node.
+        Appropriate and unique name for the node.
 
     Examples
     --------
@@ -232,15 +232,15 @@ class MetaNode(type):
     @staticmethod
     def init_register(old_init):
         """
-        Wrap the Node class constructor with with model management routines.
+        Wrap the ``Node`` class constructor with with model management routines.
 
-        This makes sure that every Node object that is created is registered
+        This makes sure that every ``Node`` object that is created is registered
         within the current network model.
 
         Parameters
         ----------
         old_init: function
-            Original constructor of the Node
+            Original constructor of the ``Node``
 
         Returns
         -------
@@ -313,7 +313,7 @@ class Node(with_metaclass(MetaNode, object)):
     parent: Node or list[Node]
         The input node(s).
     name: str
-        Given name of the Node, may be an empty string.
+        Given name of the ``Node``, may be an empty string.
     print_repr: bool
         Whether to print the node representation upon initialisation.
 
@@ -951,14 +951,14 @@ class Node(with_metaclass(MetaNode, object)):
         z_tiles = int(np.ceil(float(pred_sh[0])/prob_sh[0]))
         x_tiles = int(np.ceil(float(pred_sh[1])/prob_sh[1]))
         y_tiles = int(np.ceil(float(pred_sh[2])/prob_sh[2]))
-        total_nb_tiles = np.product([x_tiles, y_tiles, z_tiles])
+        total_nb_tiles = int(np.product([x_tiles, y_tiles, z_tiles]))
         if self._output_func.func is None:
             self._output_func.compile()
 
         logger.info("Predicting img %s in %i Blocks: (%i, %i, %i)" \
                     %(raw_img.shape, total_nb_tiles, z_tiles, x_tiles, y_tiles))
         self() # This compiles the function
-        pbar = tqdm.tqdm(total=total_nb_tiles, ncols=80, leave=False)
+        pbar = tqdm.tqdm(total=np.prod(pred_sh), ncols=80, leave=False, unit='Vx', unit_scale=True, dynamic_ncols=False)
         for z_t in range(z_tiles):
             for x_t in range(x_tiles):
                 for y_t in range(y_tiles):
@@ -997,7 +997,10 @@ class Node(with_metaclass(MetaNode, object)):
                     x_t*prob_sh[1]:(x_t+1)*prob_sh[1],
                     y_t*prob_sh[2]:(y_t+1)*prob_sh[2]] = prob
 
-                    pbar.update()
+
+                    # print ("shape", prob.shape)
+                    current_buffer = np.prod(prob_sh)
+                    pbar.update(current_buffer)
 
         pbar.close()
         dtime = time.time() - time_start
@@ -1013,7 +1016,7 @@ class Node(with_metaclass(MetaNode, object)):
 
     def test_run(self, on_shape_mismatch='warn', debug_outputs=False):
         """
-        Test execution of this Node with random (but correctly shaped) data.
+        Test execution of this node with random (but correctly shaped) data.
 
         Parameters
         ----------
@@ -1181,7 +1184,7 @@ class Node(with_metaclass(MetaNode, object)):
 
 class Input(Node):
     """
-    Input Node
+    Input node
 
     Parameters
     ----------
@@ -1273,7 +1276,7 @@ def Input_like(ref, dtype=None, name='input',
 
 class GenericInput(Node):
     """
-    Input Node for arbitrary oject.
+    Input node for arbitrary oject.
 
     Parameters
     ----------
@@ -1302,7 +1305,7 @@ class GenericInput(Node):
 
 class FromTensor(Node):
     """
-    Dummy Node to be used in the split-function.
+    Dummy node to be used in the split-function.
 
     Parameters
     ----------
@@ -1433,7 +1436,12 @@ class Concat(Node):
     def _make_output(self):
         # It is assumed that all other dimensions are matching
         inputs = [inp.output for inp in self.parent]
-        self.output = T.concatenate(inputs, axis=self.axis)
+        try:
+            self.output = T.concatenate(inputs, axis=self.axis)
+        except TypeError as e :
+            print('WARNING: A possible pickle file error. Passing axis as 1' + '\n'+ str(e))
+            self.output = T.concatenate(inputs, axis=1)
+
 
     def _calc_shape(self):
         joint_axis_size = reduce(lambda x,y: x+y.shape[self.axis],
@@ -1449,7 +1457,7 @@ class Concat(Node):
 
 class Add(Node):
     """
-    Add two Nodes using ``theano.tensor.add``.
+    Add two nodes using ``theano.tensor.add``.
 
     Parameters
     ----------
@@ -1546,7 +1554,7 @@ class ApplyFunc(Node):
 
 class ValueNode(Node):
     """
-    (Optionally) trainable Value Node
+    (Optionally) trainable value node
 
     Parameters
     ----------
