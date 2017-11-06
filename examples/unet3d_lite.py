@@ -30,8 +30,8 @@ data_batch_args = {
         'perspective': True
     }
 }
-n_steps = 150000
-max_runtime = 24 * 3600 # in seconds
+n_steps = 1000000
+max_runtime = 14 * 24 * 3600 # in seconds
 history_freq = 200
 monitor_batch_size = 30
 optimiser = 'Adam'

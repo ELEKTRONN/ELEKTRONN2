@@ -489,6 +489,10 @@ class ExperimentConfig(object):
         self.sequence_training = None
 
         self.read_user_config()
+
+        if not os.path.exists(str(self.preview_data_path)):
+            raise ValueError(str(self.preview_data_path) + " does not exist!")
+
         if not use_existing_dir:
             self.make_dir()
 
