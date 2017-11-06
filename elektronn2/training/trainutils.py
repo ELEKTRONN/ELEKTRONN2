@@ -490,7 +490,7 @@ class ExperimentConfig(object):
 
         self.read_user_config()
 
-        if not os.path.exists(str(self.preview_data_path)):
+        if self.preview_data_path and not os.path.exists(str(self.preview_data_path)):
             raise ValueError(str(self.preview_data_path) + " does not exist!")
 
         if not use_existing_dir:
