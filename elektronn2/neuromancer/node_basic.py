@@ -9,7 +9,7 @@ from builtins import filter, hex, input, int, map, next, oct, pow, range, super,
 
 __all__ = ['Node', 'Input', 'Input_like', 'Concat', 'ApplyFunc',
            'FromTensor', 'split', 'model_manager', 'GenericInput', 'ValueNode',
-           'MultMerge', 'InitialState_like', 'Add', 'advmerge']
+           'MultMerge', 'InitialState_like', 'Add']
 
 
 import sys
@@ -1399,48 +1399,6 @@ def split(node, axis='f', index=None, n_out=None, strip_singleton_dims=False, na
         out_nodes.append(out_node)
 
     return tuple(out_nodes)
-
-
-##############################################################################
-
-def advmerge(n1, n2, p=0.5):
-    """
-    Adversarial merge. Merging inputs by randomly choosing elements 
-    exclusively from one parent node along axis 'b'. Thereby applying argmax
-    to n1, assuming this contains one channel for each output class.
-
-    Parameters
-    ----------
-    n1: Node
-        First input node; trainee output.
-    n2: Node
-        Second input node; ground truth.
-    name: str
-        Node name.
-    print_repr: bool
-        Whether to print the node representation upon initialisation.
-    """
-    assert n1.shape.spatial_shape==n2.shape.spatial_shape
-
-    rng = T.shared_randomstreams.RandomStreams(int(time.time()))
-    size = [1,] * n1.output.ndim
-    axes = list(range(n1.output.ndim))
-
-    gt_chosen = rng.binomial(size=size, n=1, p=p,
-                             dtype=theano.config.floatX)
-    gt_chosen_tmp = T.addbroadcast(gt_chosen, *axes)
-
-    par0 = T.argmax(n1.output, keepdims=True, axis=n1.shape.tag2index('f')).astype(dtype=theano.config.floatX) * gt_chosen_tmp
-    par1 = n2.output * (1. - gt_chosen_tmp)
-    sub_sh = n1.shape.updateshape(n1.shape.tag2index('f'), 1)
-    out_node1 = FromTensor(par0 + par1,sub_sh, n1, name="advmerge1")
-    sub_sh2 = n1.shape.delaxis(n1.shape.tag2index('z'))
-    sub_sh2 = sub_sh2.delaxis(sub_sh2.tag2index('y'))
-    sub_sh2 = sub_sh2.delaxis(sub_sh2.tag2index('x'))
-    sub_sh2 = sub_sh2.updateshape(sub_sh2.tag2index('f'), 1)
-    out_node2 = FromTensor(gt_chosen_tmp, sub_sh2, n1, name="advmerge2")
-    return tuple([out_node1, out_node2])
-
 
 
 ###############################################################################

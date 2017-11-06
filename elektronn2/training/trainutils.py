@@ -481,7 +481,6 @@ class ExperimentConfig(object):
         self.dropout_schedule = None
         self.gradnet_schedule = None
         self.schedules = dict()
-        self.network_arch = dict()
 
         self.class_weights = None
         self.lazy_labels = None
