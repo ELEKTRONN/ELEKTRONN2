@@ -4,6 +4,7 @@ from __future__ import absolute_import, division, print_function
 
 import os
 from setuptools import setup, find_packages, Extension
+import versioneer
 
 
 malis = False  # Set to True to enable malis build.
@@ -36,7 +37,8 @@ def read(fname):
 
 setup(
     name="elektronn2",
-    version="0.5.1",
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
     scripts=[
         'scripts/elektronn2-train',
