@@ -106,3 +106,7 @@ if not len(inspection_logger.handlers) > 0:
             lstream_handler)  # comment out to suppress printing
 
     inspection_logger.propagate = False
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions

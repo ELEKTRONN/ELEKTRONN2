@@ -5,3 +5,5 @@ include requirements.txt
 recursive-include elektronn2/utils/d3viz/css *
 recursive-include elektronn2/utils/d3viz/html *
 recursive-include elektronn2/utils/d3viz/js *
+include versioneer.py
+include elektronn2/_version.py
