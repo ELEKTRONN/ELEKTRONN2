@@ -30,8 +30,8 @@ def noiseAugment( data, level = 0.15, data_overwrite = False ):
     overwritten or can be modified. If the "data_overwrite" is equal to True
     the original data passed to the function will be overwritten
 
-    Returns 4D numpy array with the following format: [ num_channels, z, x, y ]
-    -------
+
+    Returns 4D numpy array of the following format: [ num_channels, z, x, y ]
 
     """
     MIN_NOISE = 0
@@ -74,8 +74,7 @@ def blurAugment( data, level = 1, data_overwrite = False ):
     overwritten or can be modified. If the "data_overwrite" is equal to True
     the original data passed to the function will be overwritten
 
-    Returns 4D numpy array with the following format: [ num_channels, z, x, y ]
-    -------
+    Returns 4D numpy array of the following format: [ num_channels, z, x, y ]
 
     """
     if data_overwrite == False:
@@ -116,7 +115,7 @@ def mixBlurNoiseAugment( data,
     overwritten or can be modified. If the "data_overwrite" is equal to True
     the original data passed to the function will be overwritten
 
-    Returns 4D numpy array with the following format: [ num_channels, z, x, y ]
+    Returns 4D numpy array of the following format: [ num_channels, z, x, y ]
     -------
 
     """
