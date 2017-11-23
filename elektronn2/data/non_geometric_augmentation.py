@@ -3,10 +3,11 @@ import numpy as np
 from scipy import ndimage
 
 
-class InvalidNonGeomAugmentParameters( Exception ):
+class InvalidNonGeomAugmentParameters(Exception):
     pass
 
-def noiseAugment( data, level = 0.15, data_overwrite = False ):
+
+def noise_augment(data, level=0.15, data_overwrite=False):
     """
     The  function adds random noise to the original raw data passed to the function.
 
@@ -37,24 +38,22 @@ def noiseAugment( data, level = 0.15, data_overwrite = False ):
     MIN_NOISE = 0
     MAX_NOISE = 1
 
-    if level < MIN_NOISE or level > MAX_NOISE :
-        raise InvalidNonGeomAugmentParameters( "Noise level exceeds either "
-                                               "Min or Max level" )
+    if level < MIN_NOISE or level > MAX_NOISE:
+        raise InvalidNonGeomAugmentParameters("Noise level exceeds either Min or Max level")
 
-    if data_overwrite == False:
-        data = data.copy( )
+    if not data_overwrite:
+        data = data.copy()
 
-    num_channels = data.shape[ 0 ]
+    num_channels = data.shape[0]
 
     # add noise to all channels of the data
     for channel in range(num_channels):
-        shape = data[ channel ].shape
-        data[ channel ] += level * ( np.random.random(shape) - 0.5 )
+        shape = data[channel].shape
+        data[channel] += level * (np.random.random(shape) - 0.5)
     return data
 
 
-
-def blurAugment( data, level = 1, data_overwrite = False ):
+def blur_augment(data, level=1, data_overwrite=False):
     """
     The function performs Gaussian smoothing on the original data.
 
@@ -78,22 +77,18 @@ def blurAugment( data, level = 1, data_overwrite = False ):
     -------
 
     """
-    if data_overwrite == False:
-        data = data.copy( )
+    if not data_overwrite:
+        data = data.copy()
 
-    num_channels = data.shape[ 0 ]
+    num_channels = data.shape[0]
 
     for channel in range(num_channels):
-        data[ channel ] = ndimage.gaussian_filter( data[ channel ], level )
+        data[channel] = ndimage.gaussian_filter(data[channel], level)
 
     return data
 
 
-def mixBlurNoiseAugment( data,
-                         noise_level = 0.15,
-                         smoothing_level = 1,
-                         data_overwrite = False ):
-
+def mix_blur_noise_augment(data, noise_level=0.15, smoothing_level=1, data_overwrite=False):
     """
     The function performs Gaussian smoothing and adding random noise respectively.
 
@@ -121,10 +116,10 @@ def mixBlurNoiseAugment( data,
 
     """
 
-    if data_overwrite == False:
-        data = data.copy( )
+    if not data_overwrite:
+        data = data.copy()
 
-    blurAugment( data, smoothing_level, data_overwrite = True )
-    noiseAugment( data, noise_level, data_overwrite = True )
+    blur_augment(data, smoothing_level, data_overwrite=True)
+    noise_augment(data, noise_level, data_overwrite=True)
 
     return data

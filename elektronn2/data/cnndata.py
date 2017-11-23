@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import getpass
-from .non_geometric_augmentation import mixBlurNoiseAugment
+from .non_geometric_augmentation import mix_blur_noise_augment
 
 try:
     from importlib import reload
@@ -290,9 +290,7 @@ class BatchCreatorImage(object):
 
 
             if source == "train":  # no non-geometric augmentation for testing
-                d = mixBlurNoiseAugment( data = d,
-                                         noise_level = 0.15,
-                                         smoothing_level = 1 )
+                d = mix_blur_noise_augment(data=d, noise_level=0.15, smoothing_level=1)
 
             target[patch_count] = t
             images[patch_count] = d
