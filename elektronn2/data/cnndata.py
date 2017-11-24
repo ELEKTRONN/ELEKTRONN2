@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import getpass
-from .non_geometric_augmentation import mixBlurNoiseAugment
+from .non_geometric_augmentation import mix_blur_noise_augment
 
 try:
     from importlib import reload
@@ -285,14 +285,10 @@ class BatchCreatorImage(object):
                 if (t < 0).mean() > ignore_thresh:
                     continue  # do not use cubes which have no information
 
-            if source == "train":  # no grey augmentation for testing
+            if source == "train":  # no grey/non-geometric augmentation for testing
                 d = greyAugment(d, grey_augment_channels, self.rng)
-
-
-            if source == "train":  # no non-geometric augmentation for testing
-                d = mixBlurNoiseAugment( data = d,
-                                         noise_level = 0.15,
-                                         smoothing_level = 1 )
+                # TODO: Blur and noise should be configurable and optional.
+                d = mix_blur_noise_augment(data=d, noise_level=0.15, smoothing_level=1)
 
             target[patch_count] = t
             images[patch_count] = d
