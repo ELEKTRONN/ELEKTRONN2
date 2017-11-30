@@ -59,7 +59,7 @@ def create_model():
 if __name__ == "__main__":
     print('Testing and visualising model...\n(If you want to train with this '
           'config file instead, run '
-          '"$ elektronn2-train {}".)\n'.format(__file__))
+          '"$ elektronn2-train.py {}".)\n'.format(__file__))
     import traceback
 
     model = create_model()

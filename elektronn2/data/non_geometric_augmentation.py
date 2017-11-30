@@ -10,7 +10,7 @@ class InvalidNonGeomAugmentParameters(Exception):
     pass
 
 
-def noiseAugment(data, level=0.15, data_overwrite=False):
+def noise_augment(data, level=0.15, data_overwrite=False):
     """
     The function adds random noise to the original raw data passed to the function.
 
@@ -60,7 +60,7 @@ def noiseAugment(data, level=0.15, data_overwrite=False):
     return data
 
 
-def blurAugment(data, level=1, data_overwrite=False):
+def blur_augment(data, level=1, data_overwrite=False):
     """
     The function performs Gaussian smoothing on the original data.
 
@@ -99,10 +99,10 @@ def blurAugment(data, level=1, data_overwrite=False):
     return data
 
 
-def mixBlurNoiseAugment(data,
-                        noise_level=0.15,
-                        smoothing_level=1,
-                        data_overwrite=False):
+def mix_blur_noise_augment(data,
+                           noise_level=0.15,
+                           smoothing_level=1,
+                           data_overwrite=False):
     """
     The function performs Gaussian smoothing and adding random noise respectively.
 
@@ -135,8 +135,8 @@ def mixBlurNoiseAugment(data,
     if not data_overwrite:
         data = data.copy()
 
-    blurAugment(data, smoothing_level, data_overwrite=True)
-    noiseAugment(data, noise_level, data_overwrite=True)
+    blur_augment(data, smoothing_level, data_overwrite=True)
+    noise_augment(data, noise_level, data_overwrite=True)
 
     return data
 
@@ -199,7 +199,7 @@ def add_blobs(data,
             # get the blob size
             blob_size = np.random.randint(low=min_blob_size,
                                           high=max_blob_size,
-                                          dtype=int)
+                                          dtype=np.int16)
             make_blob(data[channel],
                       depth,
                       width,
@@ -244,18 +244,12 @@ def make_blob(data, depth, width, height, blob_size, diffuseness=None):
 
     slice_z, slice_x, slice_y = make_slice(seed, blob_size)
 
-    """
-    blob = data[ slice_z[ "low" ] + delta : slice_z[ "high" ]  - delta,
-                 slice_x[ "low" ] + delta : slice_x[ "high" ]  - delta,
-                 slice_y[ "low" ] + delta : slice_y[ "high" ] - delta ]
-    """
-
     snippet = data[slice_z["low"]: slice_z["high"],
                    slice_x["low"]: slice_x["high"],
                    slice_y["low"]: slice_y["high"]]
 
     if not diffuseness:
-        diffuseness = np.random.randint(low=1, high=6, dtype=int)
+        diffuseness = np.random.randint(low=1, high=6, dtype=np.int16)
 
     snippet = ndimage.gaussian_filter(snippet, diffuseness)
 
@@ -310,9 +304,9 @@ def throw_seed(depth, width, height, delta):
     dictionary : 3 int values (coordinates of a seed)
     """
 
-    z = np.random.randint(low=delta, high=depth-delta, dtype=int)
-    x = np.random.randint(low=delta, high=width-delta, dtype=int)
-    y = np.random.randint(low=delta, high=height-delta, dtype=int)
+    z = np.random.randint(low=delta, high=depth-delta, dtype=np.int16)
+    x = np.random.randint(low=delta, high=width-delta, dtype=np.int16)
+    y = np.random.randint(low=delta, high=height-delta, dtype=np.int16)
 
     return {"z": z, "x": x, "y": y}
 

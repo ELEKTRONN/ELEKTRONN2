@@ -14,7 +14,8 @@ import os
 import sys
 import time
 import getpass
-from .non_geometric_augmentation import mix_blur_noise_augment
+from . non_geometric_augmentation import mix_blur_noise_augment, add_blobs
+
 
 try:
     from importlib import reload
@@ -213,7 +214,9 @@ class BatchCreatorImage(object):
     def getbatch(self, batch_size=1, source='train',
                  grey_augment_channels=None, warp=False, warp_args=None,
                  ignore_thresh=False, force_dense=False,
-                 affinities=False, nhood_targets=False, ret_ll_mask=False):
+                 affinities=False, nhood_targets=False, ret_ll_mask=False,
+                 nga_blur_noise_probability=0.15,
+                 nga_add_blobs_probability=0.15):
         """
         Prepares a batch by randomly sampling, shifting and augmenting
         patches from the data
@@ -247,6 +250,17 @@ class BatchCreatorImage(object):
             If True additional information for reach batch example is returned.
             Currently implemented are two ll_mask arrays to indicate the targeting mode.
             The first dimension of those arrays is the batch_size!
+        nga_blur_noise_probability : float
+            It is probability of applying consequently Gaussing filter and noise
+            to the batch raw data.
+            The value must be within the range [0.0, 1.0]
+        nga_add_blobs_probability : float
+            It is probability of augmenting the batch raw data with "blobs". "Blobs"
+            are considered as the random cubes across the batch raw data. The region
+            within a cube is blured with the Gaussian smoothing. The level of smoothing
+            and the position of each cube are random. The number of blobs is a random
+            variable between 5 and 20.
+            The value must be within the range [0.0, 1.0]
 
         Returns
         -------
@@ -287,8 +301,20 @@ class BatchCreatorImage(object):
 
             if source == "train":  # no grey/non-geometric augmentation for testing
                 d = greyAugment(d, grey_augment_channels, self.rng)
+
                 # TODO: Blur and noise should be configurable and optional.
-                d = mix_blur_noise_augment(data=d, noise_level=0.15, smoothing_level=1)
+                if nga_blur_noise_probability:
+                    random_value = np.random.rand()
+                    if random_value < nga_blur_noise_probability:
+                        d = mix_blur_noise_augment(data=d,
+                                                   noise_level=0.15,
+                                                   smoothing_level=1)
+
+                if nga_add_blobs_probability:
+                    random_value = np.random.rand()
+                    if random_value < nga_add_blobs_probability:
+                        num_blobs = np.random.randint(low=5, high=20, dtype=np.uint16)
+                        d = add_blobs(data=d, num_blobs=num_blobs)
 
             target[patch_count] = t
             images[patch_count] = d
