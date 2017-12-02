@@ -250,14 +250,13 @@ class BatchCreatorImage(object):
             If True additional information for reach batch example is returned.
             Currently implemented are two ll_mask arrays to indicate the targeting mode.
             The first dimension of those arrays is the batch_size!
-        nga_blur_noise_probability : float
-            It is probability of applying consequently Gaussing filter and noise
-            to the batch raw data.
+        nga_blur_noise_probability: float
+            Probability of applying a Gaussian filter and noise to the input data.
             The value must be within the range [0.0, 1.0]
-        nga_add_blobs_probability : float
-            It is probability of augmenting the batch raw data with "blobs". "Blobs"
-            are considered as the random cubes across the batch raw data. The region
-            within a cube is blured with the Gaussian smoothing. The level of smoothing
+        nga_add_blobs_probability: float
+            Probability of augmenting the input data with "blobs". "Blobs"
+            mean random cubes across the input data. The region
+            within a cube is blurred with Gaussian smoothing. The level of smoothing
             and the position of each cube are random. The number of blobs is a random
             variable between 5 and 20.
             The value must be within the range [0.0, 1.0]
