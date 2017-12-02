@@ -19,3 +19,4 @@ elektronn2.egg-info
 docs/_build/*
 docs/source/*
 .staging
+.vscode
