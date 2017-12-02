@@ -24,7 +24,7 @@ def parseargs():
             return int(s)
 
     parser = argparse.ArgumentParser(
-        usage="$ elektronn2-train.py </path/to_config_file> "
+        usage="$ elektronn2-train </path/to_config_file> "
               "[--gpu={auto|none|<int>}] "
               "[--mpl-backend={auto|<backend_name>|force-<backend_name>}]")
     parser.add_argument("config", type=str)
