@@ -12,11 +12,11 @@ class InvalidNonGeomAugmentParameters(Exception):
 
 def noise_augment(data, level=0.15, data_overwrite=False):
     """
-    The function adds random noise to the original raw data passed to the function.
+    Adds random noise to the original raw data passed to the function.
 
     By default the raw data will be copied in order to avoid of overwriting of the
     original data. However, the user can disable that and allow the function
-    makes changes on the passed data. The function doesn't require to change
+    to make changes on the passed data. The function doesn't require to change
     the corresponding labels of the raw data
 
     If the noise level is too high (more than 1.0) or too low (less than 0.0)
@@ -24,22 +24,21 @@ def noise_augment(data, level=0.15, data_overwrite=False):
 
     Parameters
     ----------
-    data : 4d np.ndarray float32
-        The array represents the current field of view.
-        The array has to have the following format: [ num_channels, z, x, y ]
-    level : float
-        The value determines determines the strength of the noise. The maximum value
-        must be 1.0.
-    data_overwrite : boolean
-        The value determines whether the raw data might be
-        overwritten or can be modified. If the "data_overwrite" is equal to True
-        the original data passed to the function will be overwritten
+    data: np.ndarray
+        Current field of view.
+        Has to have the following format: [num_channels, z, x, y]
+    level: float
+        Strength of the noise. The maximum value is 1.0.
+    data_overwrite: bool
+        Determines whether the input data may be
+        modified. If ``data_overwrite`` is true
+        the original data passed to the function will be overwritten.
 
 
      Returns
     -------
-    data : 4d np.ndarray float32
-        The array has   the following format: [ num_channels, z, x, y ]
+    data: np.ndarray
+        The array has the following format: [num_channels, z, x, y]
     """
     MIN_NOISE = 0
     MAX_NOISE = 1
@@ -64,28 +63,28 @@ def blur_augment(data, level=1, data_overwrite=False):
     """
     The function performs Gaussian smoothing on the original data.
 
-    By default the raw data will be copied in order to avoid of overwriting of the
+    By default the raw data will be copied in order to avoid overwriting the
     original data. However, the user can disable that and allow the function
-    makes changes on the passed data. The function doesn't require to change
-    the corresponding labels of the raw data
+    to make changes to the passed data. The function doesn't require to change
+    the corresponding labels of the raw data.
 
     Parameters
     ----------
-    data : 4d np.ndarray float32
-        The array represents the current field of view.
-        The array has to have the following format: [ num_channels, z, x, y ]
-    level : int
-        The value determines the strength of the gaussian smoothing.
-    data_overwrite : boolean
-        The value determines whether the raw data might be
-        overwritten or can be modified. If the "data_overwrite" is equal to True
-        the original data passed to the function will be overwritten
+    data: np.ndarray
+        Current field of view.
+        Has to have the following format: [num_channels, z, x, y]
+    level: int
+        Strength of the gaussian smoothing.
+    data_overwrite: bool
+        Determines whether the input data may be
+        modified. If ``data_overwrite`` is true
+        the original data passed to the function will be overwritten.
 
 
     Returns
     -------
-    data : 4d np.ndarray float32
-        The array has   the following format: [ num_channels, z, x, y ]
+    data: np.ndarray
+        The array has the following format: [num_channels, z, x, y]
     """
 
     if not data_overwrite:
@@ -104,33 +103,33 @@ def mix_blur_noise_augment(data,
                            smoothing_level=1,
                            data_overwrite=False):
     """
-    The function performs Gaussian smoothing and adding random noise respectively.
+    Performs Gaussian smoothing and adds random noise.
 
-    By default the raw data will be copied in order to avoid of overwriting of the
-    original data. However, the user can disable that and allow the function
-    makes changes on the passed data. The function doesn't require to change
+    By default, the (raw) input data will be copied in order to avoid
+    overwriting the original data.
+    However, the user can disable that and allow the function to
+    make changes to the passed data. The function doesn't require changing
     the corresponding labels of the raw data
 
     Parameters
     ----------
-    data : 4d np.ndarray float32
-        The array represents the current field of view.
-        The array has to have the following format: [ num_channels, z, x, y ]
-    noise_level : float
-        The value determines determines the strength of the noise. The maximum value
-        must be 1.0.
-    smoothing_level : int
-        The value determines the strength of the gaussian smoothing.
-    data_overwrite : boolean
-        The value determines whether the raw data might be
-        overwritten or can be modified. If the "data_overwrite" is equal to True
-        the original data passed to the function will be overwritten
+    data: np.ndarray
+        4d array that represents the current field of view.
+        Has to have the following format: [num_channels, z, x, y]
+    noise_level: float
+        Determines the strength of the noise. The maximum value is 1.0.
+    smoothing_level: int
+        Determines the strength of the gaussian smoothing.
+    data_overwrite: bool
+        Determines whether the input data may be
+        modified. If ``data_overwrite`` is true
+        the original data passed to the function will be overwritten.
 
 
     Returns
     -------
-    data : 4d np.ndarray float32
-        The array has   the following format: [ num_channels, z, x, y ]
+    data: np.ndarray
+        Augmented data of the following format: [num_channels, z, x, y]
     """
     if not data_overwrite:
         data = data.copy()
@@ -148,43 +147,43 @@ def add_blobs(data,
               diffuseness=None,
               data_overwrite=False):
     """
-     The function generates random blobs across the given data.
+    Generates random blobs across the given (raw) input data.
 
-     A blob is a cube of the size that will be randomly drawn from the range:
-    [ min_blob_size, max_blob_size ]. The area within the blob will be affected by
-    the Gausssian smoothing. Depending of the diffuseness level the blob can stay
+    A blob is a cube of the size that will be randomly drawn from the range
+    [min_blob_size, max_blob_size]. The area within the blob will be affected by
+    Gausssian smoothing. Depending on the diffuseness level the blob can stay
     almost transparent (in case of low diffuseness value) or be filled with the mean
     color value of the blob region (in case of high diffuseness value)
 
-    By default the raw data will be copied in order to avoid of overwriting of the
+    By default the raw data will be copied in order to avoid overwriting the
     original data. However, the user can disable that and allow the function
-    makes changes on the passed data. The function doesn't require to change
+    to make changes to the passed data. The function doesn't require to change
     the corresponding labels of the raw data
 
     Parameters
     ----------
-    data : 4d np.ndarray float32
-        The array represents the current field of view.
-        The array has to have the following format: [ num_channels, z, x, y ]
-    num_blobs : int
-        The value represents the number of blobs that have to be generated
-    max_blob_size : int
-        The value represents the maximum size of a blob
-    min_blob_size : int
-        The value represents the minimum size of a blob
-    diffuseness : int
-        Diffuseness determines the level of the gaussian smoothing which will be
+    data: np.ndarray
+        Represents the current field of view.
+        It has to have the following format: [num_channels, z, x, y]
+    num_blobs: int
+        Number of blobs that have to be generated
+    max_blob_size: int
+        Maximum size of a blob
+    min_blob_size: int
+        Minimum size of a blob
+    diffuseness: int
+        Determines the level of the gaussian smoothing which will be
         performed within a randomly generated blob
-    data_overwrite : boolean
-        The value determines whether the raw data might be
-        overwritten or can be modified. If the "data_overwrite" is equal to True
-        the original data passed to the function will be overwritten
+    data_overwrite: bool
+        Determines whether the input data may be
+        modified. If ``data_overwrite`` is true
+        the original data passed to the function will be overwritten.
 
 
     Returns
     -------
-    data : 4d np.ndarray float32
-        The array has   the following format: [ num_channels, z, x, y ]
+    data: np.ndarray
+        Augmented data of the following format: [num_channels, z, x, y]
     """
 
     if not data_overwrite:
@@ -212,25 +211,25 @@ def add_blobs(data,
 
 def make_blob(data, depth, width, height, blob_size, diffuseness=None):
     """
-    The function generates a random blob within the given filed of view.
+    Generates a random blob within the given field of view.
 
     The user can control the level of diffuseness or it can be generated
-    automatically drawing from a distribution
+    automatically drawing from a distribution.
 
     Parameters
     ----------
-    data : 4d np.ndarray float32
-        The array represents the current field of view.
-        The array has to have the following format: [ num_channels, z, x, y ]
-    depth : int
-        The depth of the filed of view
-    width : int
-        The width of the filed of view
-    height : int
-        The height of the filed of view
-    blob_size : int
+    data: np.ndarray
+        Represents the current field of view.
+        It has to have the following format: [num_channels, z, x, y]
+    depth: int
+        The depth of the field of view
+    width: int
+        The width of the field of view
+    height: int
+        The height of the field of view
+    blob_size: int
         A particular size of a blob
-    diffuseness : int
+    diffuseness: int
         Level of blob diffuseness ( transparency )
 
 
@@ -260,7 +259,7 @@ def make_blob(data, depth, width, height, blob_size, diffuseness=None):
 
 def throw_seed(depth, width, height, delta):
     """
-    The function generates a random seed within the given volume which is represented
+    Generates a random seed within the given volume which is represented
     by 3 integer values: depth, width, height. The function also takes care of
     the fact that a seed should not lay within the margin which is determined by the
     parameter "delta"
@@ -289,19 +288,20 @@ def throw_seed(depth, width, height, delta):
 
     Parameters
     ----------
-    depth : int
-        depth represents the z dimension of the given vield of view
-    width : int
-        width represents the x dimension of the given vield of view
-    height : int
-        height represents the y dimension of the given vield of view
-    delta : int
+    depth: int
+        z dimension of the given vield of view
+    width: int
+        x dimension of the given vield of view
+    height: int
+        y dimension of the given vield of view
+    delta: int
         delta represents the margin where a seed should not be taken
 
 
     Returns
     -------
-    dictionary : 3 int values (coordinates of a seed)
+    dict
+        3 int values (coordinates of a seed)
     """
 
     z = np.random.randint(low=delta, high=depth-delta, dtype=np.int16)
@@ -319,17 +319,17 @@ def make_slice(seed, delta):
 
     Parameters
     ----------
-    seed : dictionary with three int values
-        seed represents the coordinates of a seed
-    delta : int
-        delta represents a half of the slice length
+    seed: dictionary with three int values
+        Ccoordinates of a seed
+    delta: int
+        Half of the slice length
 
     Returns
     -------
     3 dictionaries
         The dictionaries represent the slices along z, x, y respectively
-        Each dictionary has the following keys: low and high; which determines the lower
-        and the higher indices of the slice along a particular axis
+        Each dictionary has the following keys: low and high; which determine the lowest
+        and highest indices of the slice along a particular axis
     """
 
     slice_z = {}
