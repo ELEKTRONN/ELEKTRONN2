@@ -163,7 +163,7 @@ def add_blobs(data,
     Parameters
     ----------
     data: np.ndarray
-        Represents the current field of view.
+        Current field of view.
         It has to have the following format: [num_channels, z, x, y]
     num_blobs: int
         Number of blobs that have to be generated
@@ -295,7 +295,7 @@ def throw_seed(depth, width, height, delta):
     height: int
         y dimension of the given vield of view
     delta: int
-        delta represents the margin where a seed should not be taken
+        The margin where a seed should not be taken
 
 
     Returns
@@ -320,7 +320,7 @@ def make_slice(seed, delta):
     Parameters
     ----------
     seed: dictionary with three int values
-        Ccoordinates of a seed
+        Coordinates of a seed
     delta: int
         Half of the slice length
 
