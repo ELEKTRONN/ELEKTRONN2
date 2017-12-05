@@ -244,13 +244,13 @@ def make_slice(center, delta):
     slice_x = {}
     slice_y = {}
 
-    slice_z["low"] = center[0] - delta - 1
-    slice_z["high"] = center[0] + delta - 1
+    slice_z["low"] = center[0] - delta
+    slice_z["high"] = center[0] + delta
 
-    slice_x["low"] = center[1] - delta - 1
-    slice_x["high"] = center[1] + delta - 1
+    slice_x["low"] = center[1] - delta
+    slice_x["high"] = center[1] + delta
 
-    slice_y["low"] = center[2] - delta - 1
-    slice_y["high"] = center[2] + delta - 1
+    slice_y["low"] = center[2] - delta
+    slice_y["high"] = center[2] + delta
 
     return slice_z, slice_x, slice_y
