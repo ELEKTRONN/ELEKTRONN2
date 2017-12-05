@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import getpass
-from . non_geometric_augmentation import mix_blur_noise_augment, add_blobs
+from . non_geometric_augmentation import blur_augment, noise_augment, add_blobs
 
 
 try:
@@ -215,8 +215,8 @@ class BatchCreatorImage(object):
                  grey_augment_channels=None, warp=False, warp_args=None,
                  ignore_thresh=False, force_dense=False,
                  affinities=False, nhood_targets=False, ret_ll_mask=False,
-                 nga_blur_noise_probability=0.15,
-                 nga_add_blobs_probability=0.15):
+                 nga_blur_noise_probability=1.15,
+                 nga_add_blobs_probability=1.15):
         """
         Prepares a batch by randomly sampling, shifting and augmenting
         patches from the data
@@ -305,9 +305,8 @@ class BatchCreatorImage(object):
                 if nga_blur_noise_probability:
                     random_value = np.random.rand()
                     if random_value < nga_blur_noise_probability:
-                        d = mix_blur_noise_augment(data=d,
-                                                   noise_level=0.15,
-                                                   smoothing_level=1)
+                        blur_augment(d, level=1, data_overwrite=False)
+                        noise_augment(d, level=0.15, data_overwrite=True)
 
                 if nga_add_blobs_probability:
                     random_value = np.random.rand()

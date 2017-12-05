@@ -98,48 +98,6 @@ def blur_augment(data, level=1, data_overwrite=False):
     return data
 
 
-def mix_blur_noise_augment(data,
-                           noise_level=0.15,
-                           smoothing_level=1,
-                           data_overwrite=False):
-    """
-    Performs Gaussian smoothing and adds random noise.
-
-    By default, the (raw) input data will be copied in order to avoid
-    overwriting the original data.
-    However, the user can disable that and allow the function to
-    make changes to the passed data. The function doesn't require changing
-    the corresponding labels of the raw data
-
-    Parameters
-    ----------
-    data: np.ndarray
-        4d array that represents the current field of view.
-        Has to have the following format: [num_channels, z, x, y]
-    noise_level: float
-        Determines the strength of the noise. The maximum value is 1.0.
-    smoothing_level: int
-        Determines the strength of the gaussian smoothing.
-    data_overwrite: bool
-        Determines whether the input data may be
-        modified. If ``data_overwrite`` is true
-        the original data passed to the function will be overwritten.
-
-
-    Returns
-    -------
-    data: np.ndarray
-        Augmented data of the following format: [num_channels, z, x, y]
-    """
-    if not data_overwrite:
-        data = data.copy()
-
-    blur_augment(data, smoothing_level, data_overwrite=True)
-    noise_augment(data, noise_level, data_overwrite=True)
-
-    return data
-
-
 def add_blobs(data,
               num_blobs=10,
               max_blob_size=15,
@@ -239,9 +197,13 @@ def make_blob(data, depth, width, height, blob_size, diffuseness=None):
 
     delta = blob_size // 2
 
-    seed = throw_seed(depth, width, height, delta)
+    # select a random center
+    z = np.random.randint(low=delta, high=depth - delta, dtype=np.int16)
+    x = np.random.randint(low=delta, high=width - delta, dtype=np.int16)
+    y = np.random.randint(low=delta, high=height - delta, dtype=np.int16)
+    center = (z, x, y)
 
-    slice_z, slice_x, slice_y = make_slice(seed, blob_size)
+    slice_z, slice_x, slice_y = make_slice(center, blob_size)
 
     snippet = data[slice_z["low"]: slice_z["high"],
                    slice_x["low"]: slice_x["high"],
@@ -257,61 +219,7 @@ def make_blob(data, depth, width, height, blob_size, diffuseness=None):
          slice_y["low"]: slice_y["high"]] = snippet
 
 
-def throw_seed(depth, width, height, delta):
-    """
-    Generates a random seed within the given volume which is represented
-    by 3 integer values: depth, width, height. The function also takes care of
-    the fact that a seed should not lay within the margin which is determined by the
-    parameter "delta"
-
-                _________________________________________________________
-                |                            d                           |
-                |                            e                           |
-                |                            l                           |
-                |                            t                           |
-                |           _________________a________________           |
-                |          |                                  |          |
-                |          |                                  |          |
-                |          |                                  |          |
-                |          |                                  |          |
-                |  delta   |  place where a seed can be taken |  delta   |
-                |          |                                  |          |
-                |          |                                  |          |
-                |          |                                  |          |
-                |          |__________________________________|          |
-                |                            d                           |
-                |                            e                           |
-                |                            l                           |
-                |                            t                           |
-                |____________________________a___________________________|
-
-
-    Parameters
-    ----------
-    depth: int
-        z dimension of the given vield of view
-    width: int
-        x dimension of the given vield of view
-    height: int
-        y dimension of the given vield of view
-    delta: int
-        The margin where a seed should not be taken
-
-
-    Returns
-    -------
-    dict
-        3 int values (coordinates of a seed)
-    """
-
-    z = np.random.randint(low=delta, high=depth-delta, dtype=np.int16)
-    x = np.random.randint(low=delta, high=width-delta, dtype=np.int16)
-    y = np.random.randint(low=delta, high=height-delta, dtype=np.int16)
-
-    return {"z": z, "x": x, "y": y}
-
-
-def make_slice(seed, delta):
+def make_slice(center, delta):
     """
     Given the coordinates of a seed the function generates three slices along three
     different axes: z, y, z. The slices can be used later to extract a particular place
@@ -319,8 +227,8 @@ def make_slice(seed, delta):
 
     Parameters
     ----------
-    seed: dictionary with three int values
-        Coordinates of a seed
+    center: tuple with three int values
+        Coordinates of a center in the following format: (z, x, y)
     delta: int
         Half of the slice length
 
@@ -336,13 +244,13 @@ def make_slice(seed, delta):
     slice_x = {}
     slice_y = {}
 
-    slice_z["low"] = seed["z"] - delta
-    slice_z["high"] = seed["z"] + delta
+    slice_z["low"] = center[0] - delta - 1
+    slice_z["high"] = center[0] + delta - 1
 
-    slice_x["low"] = seed["x"] - delta
-    slice_x["high"] = seed["x"] + delta
+    slice_x["low"] = center[1] - delta - 1
+    slice_x["high"] = center[1] + delta - 1
 
-    slice_y["low"] = seed["y"] - delta
-    slice_y["high"] = seed["y"] + delta
+    slice_y["low"] = center[2] - delta - 1
+    slice_y["high"] = center[2] + delta - 1
 
     return slice_z, slice_x, slice_y
