@@ -100,8 +100,8 @@ def blur_augment(data, level=1, data_overwrite=False):
 
 def add_blobs(data,
               num_blobs=10,
-              max_blob_size=15,
-              min_blob_size=8,
+              max_blob_size=32,
+              min_blob_size=10,
               diffuseness=None,
               data_overwrite=False):
     """
@@ -117,6 +117,9 @@ def add_blobs(data,
     original data. However, the user can disable that and allow the function
     to make changes to the passed data. The function doesn't require to change
     the corresponding labels of the raw data
+
+    If the size of a blob exceeds the length of any dimension of the give volume
+    the blob size will be assign to the length of the corresponding dimension
 
     Parameters
     ----------
@@ -149,14 +152,29 @@ def add_blobs(data,
 
     num_channels, depth, width, height = data.shape
 
+    # blob_size_restriction - the minimal dimension of the given volume
+    blob_size_restriction = np.min(data.shape[1:])
+
     # generate random blobs for each individual channel
     for channel in range(num_channels):
         for i in range(num_blobs):
 
-            # get the blob size
-            blob_size = np.random.randint(low=min_blob_size,
-                                          high=max_blob_size,
-                                          dtype=np.int16)
+            # get an appropriate blob size
+            while True:
+                # get a blob size drawn from the distribution
+                blob_size = np.random.randint(low=min_blob_size,
+                                              high=max_blob_size,
+                                              dtype=np.int16)
+
+                # check whether the chosen blob size fits
+                # to the given volume. If it doesn't assign
+                # the blob size to the blob_size_restriction
+                # and subtract 2 to as the offset to guarantee
+                # the fit
+                if blob_size >= blob_size_restriction:
+                    blob_size = blob_size_restriction - 2
+                    break
+
             make_blob(data[channel],
                       depth,
                       width,
@@ -201,56 +219,21 @@ def make_blob(data, depth, width, height, blob_size, diffuseness=None):
     z = np.random.randint(low=delta, high=depth - delta, dtype=np.int16)
     x = np.random.randint(low=delta, high=width - delta, dtype=np.int16)
     y = np.random.randint(low=delta, high=height - delta, dtype=np.int16)
-    center = (z, x, y)
+    center = np.array([z, x, y])
 
-    slice_z, slice_x, slice_y = make_slice(center, blob_size)
+    # make a slice and extract a cube
+    bottom = center - delta
+    top = center + delta
 
-    snippet = data[slice_z["low"]: slice_z["high"],
-                   slice_x["low"]: slice_x["high"],
-                   slice_y["low"]: slice_y["high"]]
+    snippet = data[bottom[0]: top[0],
+                   bottom[1]: top[1],
+                   bottom[2]: top[2]]
 
     if not diffuseness:
         diffuseness = np.random.randint(low=1, high=6, dtype=np.int16)
 
     snippet = ndimage.gaussian_filter(snippet, diffuseness)
 
-    data[slice_z["low"]: slice_z["high"],
-         slice_x["low"]: slice_x["high"],
-         slice_y["low"]: slice_y["high"]] = snippet
-
-
-def make_slice(center, delta):
-    """
-    Given the coordinates of a seed the function generates three slices along three
-    different axes: z, y, z. The slices can be used later to extract a particular place
-    from the given data
-
-    Parameters
-    ----------
-    center: tuple with three int values
-        Coordinates of a center in the following format: (z, x, y)
-    delta: int
-        Half of the slice length
-
-    Returns
-    -------
-    3 dictionaries
-        The dictionaries represent the slices along z, x, y respectively
-        Each dictionary has the following keys: low and high; which determine the lowest
-        and highest indices of the slice along a particular axis
-    """
-
-    slice_z = {}
-    slice_x = {}
-    slice_y = {}
-
-    slice_z["low"] = center[0] - delta
-    slice_z["high"] = center[0] + delta
-
-    slice_x["low"] = center[1] - delta
-    slice_x["high"] = center[1] + delta
-
-    slice_y["low"] = center[2] - delta
-    slice_y["high"] = center[2] + delta
-
-    return slice_z, slice_x, slice_y
+    data[bottom[0]: top[0],
+         bottom[1]: top[1],
+         bottom[2]: top[2]] = snippet

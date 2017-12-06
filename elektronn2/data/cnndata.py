@@ -215,8 +215,8 @@ class BatchCreatorImage(object):
                  grey_augment_channels=None, warp=False, warp_args=None,
                  ignore_thresh=False, force_dense=False,
                  affinities=False, nhood_targets=False, ret_ll_mask=False,
-                 nga_blur_noise_probability=1.15,
-                 nga_add_blobs_probability=1.15):
+                 nga_blur_noise_probability=0.15,
+                 nga_add_blobs_probability=0.15):
         """
         Prepares a batch by randomly sampling, shifting and augmenting
         patches from the data
@@ -311,7 +311,7 @@ class BatchCreatorImage(object):
                 if nga_add_blobs_probability:
                     random_value = np.random.rand()
                     if random_value < nga_add_blobs_probability:
-                        num_blobs = np.random.randint(low=5, high=20, dtype=np.uint16)
+                        num_blobs = np.random.randint(low=5, high=15, dtype=np.uint16)
                         d = add_blobs(data=d, num_blobs=num_blobs)
 
             target[patch_count] = t
