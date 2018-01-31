@@ -215,8 +215,8 @@ class BatchCreatorImage(object):
                  grey_augment_channels=None, warp=False, warp_args=None,
                  ignore_thresh=False, force_dense=False,
                  affinities=False, nhood_targets=False, ret_ll_mask=False,
-                 nga_blur_noise_probability=0.15,
-                 nga_add_blobs_probability=0.15):
+                 nga_blur_noise_probability=False,
+                 nga_add_blobs_probability=False):
         """
         Prepares a batch by randomly sampling, shifting and augmenting
         patches from the data
@@ -250,16 +250,18 @@ class BatchCreatorImage(object):
             If True additional information for reach batch example is returned.
             Currently implemented are two ll_mask arrays to indicate the targeting mode.
             The first dimension of those arrays is the batch_size!
-        nga_blur_noise_probability: float
+        nga_blur_noise_probability: bool or float
             Probability of applying a Gaussian filter and noise to the input data.
-            The value must be within the range [0.0, 1.0]
-        nga_add_blobs_probability: float
+            The value must be a bool or be within the range [0.0, 1.0]
+            Default: False (disabled)
+        nga_add_blobs_probability: bool or float
             Probability of augmenting the input data with "blobs". "Blobs"
             mean random cubes across the input data. The region
             within a cube is blurred with Gaussian smoothing. The level of smoothing
             and the position of each cube are random. The number of blobs is a random
             variable between 5 and 20.
-            The value must be within the range [0.0, 1.0]
+            The value must be a bool or be within the range [0.0, 1.0]
+            Default: False (disabled)
 
         Returns
         -------
