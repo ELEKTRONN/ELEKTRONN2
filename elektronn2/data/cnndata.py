@@ -303,7 +303,6 @@ class BatchCreatorImage(object):
             if source == "train":  # no grey/non-geometric augmentation for testing
                 d = greyAugment(d, grey_augment_channels, self.rng)
 
-                # TODO: Blur and noise should be configurable and optional.
                 if nga_blur_noise_probability:
                     random_value = np.random.rand()
                     if random_value < nga_blur_noise_probability:
