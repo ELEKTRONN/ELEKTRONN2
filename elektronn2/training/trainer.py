@@ -74,17 +74,16 @@ class Trainer(object):
 
         #self.debug_store = []
 
-
     def _create_model(self):
-        if self.exp_config.create_model:
+        if self.exp_config.model_load_path:
+            mdl = modelload(self.exp_config.model_load_path,
+                             **self.exp_config.model_load_args)
+        elif self.exp_config.create_model:
             if self.exp_config.model_load_args:
-                mdl =  self.exp_config.create_model(
+                mdl = self.exp_config.create_model(
                     self.exp_config.model_load_args)
             else:
-                mdl =  self.exp_config.create_model()
-        else:
-            mdl =  modelload(self.exp_config.model_load_path,
-                             **self.exp_config.model_load_args)
+                mdl = self.exp_config.create_model()
 
         mdl.set_opt_meta_params(self.exp_config.optimiser,
                                        self.exp_config.optimiser_params)
@@ -207,6 +206,7 @@ class Trainer(object):
 
                     #self.debug_store.append(batch[1])
                     #-----------------------------------------------------------------------------------------------------
+                    # raise()
                     loss, t_per_train, debug_outputs = self.model.trainingstep(*batch, optimiser=exp_config.optimiser) # Update step
                     i += 1
                     #-----------------------------------------------------------------------------------------------------
