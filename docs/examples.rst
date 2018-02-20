@@ -299,7 +299,7 @@ Data Set
 This data set is a subset of the zebra finch area X dataset j0126 by
 `Jörgen Kornfeld <http://www.neuro.mpg.de/mitarbeiter/43611/3242756>`_.
 There are 3 volumes which contain "barrier" labels (union of cell boundaries
-and extra cellular space) of shape ``(150,150,150)`` in ``(x,y,z)`` axis
+and extra cellular space) of shape ``(150,150,150)`` in ``(z,x,y)`` axis
 order. Correspondingly, there are 3 volumes which contain raw electron
 microscopy images. Because a CNN can only make predictions within some offset
 from the input image extent, the size of the image cubes is larger

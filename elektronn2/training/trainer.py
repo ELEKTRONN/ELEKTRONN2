@@ -74,17 +74,16 @@ class Trainer(object):
 
         #self.debug_store = []
 
-
     def _create_model(self):
-        if self.exp_config.create_model:
+        if self.exp_config.model_load_path:
+            mdl = modelload(self.exp_config.model_load_path,
+                             **self.exp_config.model_load_args)
+        elif self.exp_config.create_model:
             if self.exp_config.model_load_args:
-                mdl =  self.exp_config.create_model(
+                mdl = self.exp_config.create_model(
                     self.exp_config.model_load_args)
             else:
-                mdl =  self.exp_config.create_model()
-        else:
-            mdl =  modelload(self.exp_config.model_load_path,
-                             **self.exp_config.model_load_args)
+                mdl = self.exp_config.create_model()
 
         mdl.set_opt_meta_params(self.exp_config.optimiser,
                                        self.exp_config.optimiser_params)
@@ -185,6 +184,7 @@ class Trainer(object):
 
                     #self.debug_store.append(batch[1])
                     #-----------------------------------------------------------------------------------------------------
+                    # raise()
                     loss, t_per_train, debug_outputs = self.model.trainingstep(*batch, optimiser=exp_config.optimiser) # Update step
                     i += 1
                     #-----------------------------------------------------------------------------------------------------
@@ -274,7 +274,7 @@ class Trainer(object):
                                    loss_smooth, loss, train_error, pp_err)
                             out +="vl=%05.2f%s, prev=%04.1f, L_diff=%+.1e, "\
                                    %(valid_error, pp_err, batch_char*100, loss_gain)
-                            out +="LR=%.5f, %.2f it/s, %s" %(lr, 1.0/t_pi, t)
+                            out +="LR=%.2e, %.2f it/s, %s" %(lr, 1.0/t_pi, t)
                             logger.info(out)
 
                 # User Interface ##############################################
@@ -286,7 +286,7 @@ class Trainer(object):
 
                     out = "%05i L_m=%.5f, L=%.4f, train=%.5f, valid=%.5f, " %(i,
                            loss_smooth, loss, train_loss, valid_loss)
-                    out +="train=%.3f%s, valid=%.3f%s,\n LR=%.6f, MOM=%.6f, "\
+                    out +="train=%.3f%s, valid=%.3f%s,\n LR=%.2e, MOM=%.6f, "\
                            %(train_error, pp_err, valid_error, pp_err, self.model.lr, self.model.mom)
                     out +="%.1f GPU-it/s, %.1f CPU-it/s, " %(1.0/self.model.time_per_step,
                            1.0/t_pi)
@@ -918,7 +918,7 @@ class TracingTrainer(Trainer):
                             out += "vl=%05.2f%s, prev=%04.1f, L_diff=%+.1e, " \
                                    % (valid_error, pp_err, debug_outputs[0] * 100,
                                       loss_gain)
-                            out += "LR=%.5f, %.2f it/s, %s" % (
+                            out += "LR=%.2e, %.2f it/s, %s" % (
                             lr, 1.0 / t_pi, t)
                             logger.info(out)
 
@@ -933,7 +933,7 @@ class TracingTrainer(Trainer):
                     out = "%05i L_m=%.5f, L=%.4f, train=%.5f, valid=%.5f, " % (
                     i,
                     loss_smooth, loss, train_loss, valid_loss)
-                    out += "train=%.3f%s, valid=%.3f%s,\n LR=%.6f, MOM=%.6f, " \
+                    out += "train=%.3f%s, valid=%.3f%s,\n LR=%.2e, MOM=%.6f, " \
                            % (
                            train_error, pp_err, valid_error, pp_err, self.model.lr,
                            self.model.mom)
@@ -1213,7 +1213,7 @@ class TracingTrainerRNN(TracingTrainer):
                             out += "vl=%05.2f%s, prev=%04.1f, L_diff=%+.1e, " \
                                    % (valid_error, pp_err, 0 * 100,
                                       loss_gain)
-                            out += "LR=%.5f, %.2f it/s, %s" % (
+                            out += "LR=%.2e, %.2f it/s, %s" % (
                             lr, 1.0 / t_pi, t)
                             logger.info(out)
 
@@ -1228,7 +1228,7 @@ class TracingTrainerRNN(TracingTrainer):
                     out = "%05i L_m=%.5f, L=%.4f, train=%.5f, valid=%.5f, " % (
                     i,
                     loss_smooth, loss, train_loss, valid_loss)
-                    out += "train=%.3f%s, valid=%.3f%s,\n LR=%.6f, MOM=%.6f, " \
+                    out += "train=%.3f%s, valid=%.3f%s,\n LR=%.2e, MOM=%.6f, " \
                            % (
                            train_error, pp_err, valid_error, pp_err, self.model.lr,
                            self.model.mom)

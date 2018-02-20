@@ -47,6 +47,12 @@ schedules = {
 batch_size = 1
 
 
+# uncomment model_load_path and model_load_args to load an already existing model
+# model_load_path= '/elektronn2_training/unet_model_to_be_loaded.mdl'
+# model_load_args = {
+#     'override_mfp_to_active': False
+#      }
+
 def create_model():
     from elektronn2 import neuromancer as nm
 
