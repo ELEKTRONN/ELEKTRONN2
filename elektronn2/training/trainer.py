@@ -274,7 +274,8 @@ class Trainer(object):
                                    loss_smooth, loss, train_error, pp_err)
                             out +="vl=%05.2f%s, prev=%04.1f, L_diff=%+.1e, "\
                                    %(valid_error, pp_err, batch_char*100, loss_gain)
-                            out +="LR=%.2e, %.2f it/s, %s" %(lr, 1.0/t_pi, t)
+                            out +="LR=%.2e, %.2f it/s, %.2f MVx/s, %s" %(lr, 1.0/t_pi,
+                                                                         np.prod(batch[0].shape)/t_pi/1e6, t)
                             logger.info(out)
 
                 # User Interface ##############################################

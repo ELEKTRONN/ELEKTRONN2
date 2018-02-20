@@ -968,9 +968,7 @@ class Node(with_metaclass(MetaNode, object)):
                                z_t*prob_sh[0]:z_t*prob_sh[0]+tile_sh[0],
                                x_t*prob_sh[1]:x_t*prob_sh[1]+tile_sh[1],
                                y_t*prob_sh[2]:y_t*prob_sh[2]+tile_sh[2]]
-
                     this_is_end_tile = False if np.all(np.equal(raw_tile.shape[1:],  tile_sh)) else True
-
                     if this_is_end_tile: # requires 0-padding
                         right_pad = np.subtract(tile_sh, raw_tile.shape[1:]) # (ch,z,x,y)
                         right_pad = np.concatenate(([0,], right_pad)) # for channel dimension
@@ -997,9 +995,8 @@ class Node(with_metaclass(MetaNode, object)):
                     x_t*prob_sh[1]:(x_t+1)*prob_sh[1],
                     y_t*prob_sh[2]:(y_t+1)*prob_sh[2]] = prob
 
-
+                    current_buffer = np.prod(prob[1:].shape)
                     # print ("shape", prob.shape)
-                    current_buffer = np.prod(prob_sh)
                     pbar.update(current_buffer)
 
         pbar.close()
