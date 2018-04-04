@@ -216,7 +216,7 @@ class BatchCreatorImage(object):
                  ignore_thresh=False, force_dense=False,
                  affinities=False, nhood_targets=False, ret_ll_mask=False,
                  nga_blur_noise_probability=False,
-                 nga_add_blobs_probability=False):
+                 nga_add_blobs_probability=False, nga_add_blobs_args=None):
         """
         Prepares a batch by randomly sampling, shifting and augmenting
         patches from the data
@@ -262,6 +262,9 @@ class BatchCreatorImage(object):
             variable between 5 and 20.
             The value must be a bool or be within the range [0.0, 1.0]
             Default: False (disabled)
+        nga_add_blobs_args: dict
+            Additional keyword arguments that get passed through to
+            elektronn2.data.non_geometric_augmentation.add_blobs()
 
         Returns
         -------
@@ -313,7 +316,7 @@ class BatchCreatorImage(object):
                     random_value = np.random.rand()
                     if random_value < nga_add_blobs_probability:
                         num_blobs = np.random.randint(low=5, high=15, dtype=np.uint16)
-                        d = add_blobs(data=d, num_blobs=num_blobs)
+                        d = add_blobs(data=d, num_blobs=num_blobs, **nga_add_blobs_args)
 
             target[patch_count] = t
             images[patch_count] = d
