@@ -14,7 +14,7 @@ import os
 import sys
 import time
 import getpass
-from . non_geometric_augmentation import blur_augment, noise_augment, add_blobs
+from . import non_geometric_augmentation as nga
 
 
 try:
@@ -216,7 +216,12 @@ class BatchCreatorImage(object):
                  ignore_thresh=False, force_dense=False,
                  affinities=False, nhood_targets=False, ret_ll_mask=False,
                  nga_blur_noise_probability=False,
-                 nga_add_blobs_probability=False, nga_add_blobs_args=None):
+                 blurry_blobs_probability=False,
+                 blurry_blobs_args=None,
+                 noisy_random_erasing_probability=0,
+                 noisy_random_erasing_args=None,
+                 uniform_random_erasing_probability=0,
+                 uniform_random_erasing_args=None):
         """
         Prepares a batch by randomly sampling, shifting and augmenting
         patches from the data
@@ -254,18 +259,31 @@ class BatchCreatorImage(object):
             Probability of applying a Gaussian filter and noise to the input data.
             The value must be a bool or be within the range [0.0, 1.0]
             Default: False (disabled)
-        nga_add_blobs_probability: bool or float
-            Probability of augmenting the input data with "blobs". "Blobs"
-            mean random cubes across the input data. The region
+        blurry_blobs_probability: bool or float
+            Probability of augmenting the input data with blurry "blobs".
+            "Blobs" mean random cubes across the input data. The region
             within a cube is blurred with Gaussian smoothing. The level of smoothing
-            and the position of each cube are random. The number of blobs is a random
-            variable between 5 and 20.
+            and the position of each cube are random.
             The value must be a bool or be within the range [0.0, 1.0]
             Default: False (disabled)
-        nga_add_blobs_args: dict
+        blurry_blobs_args: dict
             Additional keyword arguments that get passed through to
-            elektronn2.data.non_geometric_augmentation.add_blobs()
-
+            elektronn2.data.non_geometric_augmentation.blurry_blobs().
+            Effective if setting blurry_blobs_probability > 0.
+        noisy_random_erasing_probability: float
+            Probability of augmenting the input data with noise blobs. The blob
+            region is filled with random noise values between 0 and 255.
+        noisy_random_erasing_args: dict
+            Additional keyword arguments that get passed through to
+            elektronn2.data.non_geometric_augmentation.noisy_random_erasing().
+            Effective if setting noisy_random_erasing_probability > 0.
+        uniform_random_erasing_probability: float
+            Probability of augmenting the input data with uniform blobs.
+            The blob region is filled with one value.
+        uniform_random_erasing_args: dict
+            Additional keyword arguments that get passed through to
+            elektronn2.data.non_geometric_augmentation.uniform_random_erasing().
+            Effective if uniform_random_erasing_probability > 0.
         Returns
         -------
         data: np.ndarray
@@ -309,14 +327,22 @@ class BatchCreatorImage(object):
                 if nga_blur_noise_probability:
                     random_value = np.random.rand()
                     if random_value < nga_blur_noise_probability:
-                        blur_augment(d, level=1, data_overwrite=False)
-                        noise_augment(d, level=0.15, data_overwrite=True)
+                        nga.blur_augment(d, level=1, data_overwrite=False)
+                        nga.noise_augment(d, level=0.15, data_overwrite=True)
 
-                if nga_add_blobs_probability:
-                    random_value = np.random.rand()
-                    if random_value < nga_add_blobs_probability:
-                        num_blobs = np.random.randint(low=5, high=15, dtype=np.uint16)
-                        d = add_blobs(data=d, num_blobs=num_blobs, **nga_add_blobs_args)
+                if blurry_blobs_probability > 0\
+                   and np.random.rand() < blurry_blobs_probability:
+                    d = nga.blurry_blobs(data=d, **blurry_blobs_args)
+
+                if uniform_random_erasing_probability > 0\
+                   and np.random.rand() < uniform_random_erasing_probability:
+                    d = nga.uniform_random_erasing(data=d,
+                                                   **uniform_random_erasing_args)
+
+                if noisy_random_erasing_probability > 0\
+                   and np.random.rand() < noisy_random_erasing_probability:
+                    d = nga.noisy_random_erasing(data=d,
+                                                 **noisy_random_erasing_args)
 
             target[patch_count] = t
             images[patch_count] = d
