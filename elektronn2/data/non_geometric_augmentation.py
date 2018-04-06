@@ -160,20 +160,18 @@ def add_blobs(data,
         for i in range(num_blobs):
 
             # get an appropriate blob size
-            while True:
-                # get a blob size drawn from the distribution
-                blob_size = np.random.randint(low=min_blob_size,
-                                              high=max_blob_size,
-                                              dtype=np.int16)
+            # get a blob size drawn from the distribution
+            blob_size = np.random.randint(low=min_blob_size,
+                                          high=max_blob_size,
+                                          dtype=np.int16)
 
-                # check whether the chosen blob size fits
-                # to the given volume. If it doesn't assign
-                # the blob size to the blob_size_restriction
-                # and subtract 2 to as the offset to guarantee
-                # the fit
-                if blob_size >= blob_size_restriction:
-                    blob_size = blob_size_restriction - 2
-                    break
+            # check whether the chosen blob size fits
+            # to the given volume. If it doesn't assign
+            # the blob size to the blob_size_restriction
+            # and subtract 2 to as the offset to guarantee
+            # the fit
+            if blob_size >= blob_size_restriction:
+                blob_size = blob_size_restriction - 2
 
             make_blob(data[channel],
                       depth,
