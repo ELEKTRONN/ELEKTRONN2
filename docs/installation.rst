@@ -9,17 +9,14 @@ Installation
 ELEKTRONN2
 ==========
 
-There are three supported ways to install ELEKTRONN2:
-With the package managers ``conda``, ``pip`` or via the
-`AUR <https://wiki.archlinux.org/index.php/Arch_User_Repository>`_. We highly
+There are two supported ways to install ELEKTRONN2:
+With the package managers ``conda`` or ``pip``. We highly
 recommend using the ``conda`` install method.
 
 
 .. note:: ELEKTRONN2 is supported on Linux (x86_64), with Python versions
   2.7, 3.4, 3.5 and 3.6.
   Everything else is untested, but some other platforms might work as well.
-  Please create an `issue <https://github.com/ELEKTRONN/ELEKTRONN2/issues>`_ if
-  you are interested in support for other platforms.
 
 
 Installing with ``conda``
@@ -46,8 +43,7 @@ just for ELEKTRONN2::
 
   conda create -n elektronn2_env elektronn2
 
-Optionally run ``source activate elektronn2_env``
-(or ``conda activate elektronn2_env`` if you use the fish shell) to activate
+Optionally run ``conda activate elektronn2_env`` to activate
 the new environment and ensure all ELEKTRONN2 executables are on your PATH.
 The effects of the activation only last for the current shell session, so
 remember to repeat this step after re-opening your shell.
@@ -62,12 +58,10 @@ Installing with ``pip``
 You can install the current version of ELEKTRONN2 and all of its
 dependencies with the ``pip`` package manager. For Python 3, run::
 
-  python3 -m pip install numpy
   python3 -m pip install elektronn2
 
 Or if you want to install ELEKTRONN2 for Python 2::
 
-  python2 -m pip install numpy
   python2 -m pip install elektronn2
 
 To prevent permission errors and conflicts with other packages,
@@ -82,28 +76,7 @@ and applies to all packages (see `this issue <https://github.com/pypa/pip/issues
 ``pip install --user`` can be used instead, but this method can also break other
 Python packages due to the version/precedence conflicts between system and user packages.
 
-.. TODO: Manual numpy install is only necessary because numba doesn't provide
-  wheels. Once wheels are public, delete the "pip install numpy" lines.
-
 .. TODO: Maybe describe an example setup of a virtualenv.
-
-
-AUR (``pacaur``)
-----------------
-
-If you have ``pacaur`` (in Arch or derivative distros), you can install the
-`ELEKTRONN2 AUR packages <https://aur.archlinux.org/packages/python-elektronn2/>`_
-by running::
-
-  pacaur -S python-elektronn2 # for Python 3
-  pacaur -S python2-elektronn2 # for Python 2
-
-(Other AUR helpers like ``yaourt`` will work too, of course.)
-
-.. note:: In the Python 2 AUR package, a ``2`` is appended to command names
-  to prevent file name conflicts (e.g. ``elektronn2-train`` becomes
-  ``elektronn2-train2``)
-
 
 
 CUDA and cuDNN

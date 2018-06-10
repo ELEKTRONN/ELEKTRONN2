@@ -6,8 +6,6 @@
   :target: https://github.com/conda-forge/elektronn2-feedstock
 .. image:: https://img.shields.io/conda/pn/conda-forge/elektronn2.svg
   :target: https://anaconda.org/conda-forge/elektronn2
-.. image:: https://img.shields.io/aur/version/python-elektronn2.svg
-  :target: https://aur.archlinux.org/packages/python-elektronn2/
 
 ****************
 About ELEKTRONN2
@@ -57,6 +55,13 @@ Currently, the only supported platform is Linux (x86_64).
   `here <https://developer.nvidia.com/cuda-gpus>`_.
   Usage on systems without CUDA is possible but generally not recommended
   because it is very slow.
+
+.. note::
+   ELEKTRONN2 is being superceded by the more flexible, PyTorch-based
+   `elektronn3 <https://github.com/ELEKTRONN/elektronn3>`_ library. elektronn3
+   is actively developed and supported, so we encourage you to use it instead
+   of ELEKTRONN2 (if elektronn3's more experimental status and currently less
+   extensive documentation are acceptable for you).
 
 
 Use cases
