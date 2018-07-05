@@ -54,7 +54,7 @@ setup(
         'future>=0.15',
         'tqdm>=4.5',
         'colorlog>=2.7',
-        'prompt_toolkit>=1.0.3',
+        'prompt_toolkit>=1.0.3,<2',
         'jedi>=0.9.0',
         'pydotplus',
         'seaborn',

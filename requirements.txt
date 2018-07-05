@@ -11,7 +11,7 @@ numba>=0.25
 colorlog>=2.7
 pydotplus
 seaborn
-prompt_toolkit>=1.0.3
+prompt_toolkit>=1.0.3,<2
 jedi>=0.9.0
 psutil>=5.0.1
 

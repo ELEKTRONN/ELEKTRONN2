@@ -47,10 +47,12 @@ from __future__ import unicode_literals, absolute_import, division, \
 
 import jedi
 from prompt_toolkit.completion import Completer, Completion
-try:  # prompt_toolkit 2.*
-    from prompt_toolkit.completion import PathCompleter
-except ImportError:  # prompt_toolkit 1.*
+try:
     from prompt_toolkit.contrib.completers import PathCompleter
+except ImportError as e:  # prompt_toolkit 2.*
+    print('\n\n\nprompt_toolkit 2 is not supported. Please downgrade to prompt_toolkit<2.\n\n\n')
+    raise e
+
 from prompt_toolkit.contrib.regular_languages.compiler import \
     compile as compile_grammar
 from prompt_toolkit.contrib.regular_languages.completion import \
