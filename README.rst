@@ -124,8 +124,6 @@ parameters might be trainable (e.g. convolution weights) or non-trainable but
 changeable during training (e.g. dropout rates).
 
 
-.. _features:
-
 Features
 ========
 
