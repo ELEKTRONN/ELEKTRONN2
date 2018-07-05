@@ -47,7 +47,10 @@ from __future__ import unicode_literals, absolute_import, division, \
 
 import jedi
 from prompt_toolkit.completion import Completer, Completion
-from prompt_toolkit.contrib.completers import PathCompleter
+try:  # prompt_toolkit 2.*
+    from prompt_toolkit.completion import PathCompleter
+except ImportError:  # prompt_toolkit 1.*
+    from prompt_toolkit.contrib.completers import PathCompleter
 from prompt_toolkit.contrib.regular_languages.compiler import \
     compile as compile_grammar
 from prompt_toolkit.contrib.regular_languages.completion import \
