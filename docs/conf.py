@@ -169,16 +169,34 @@ texinfo_documents = [
 ]
 
 
-# From https://github.com/rtfd/readthedocs.org/issues/1139
+# See https://github.com/rtfd/readthedocs.org/issues/1139
 def run_apidoc(_):
-    from sphinx.apidoc import main
     import os
     import sys
+
     sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     module = '../elektronn2'
     output_path = os.path.join(cur_dir, 'source')
-    main(['-e', '-o', output_path, module, '--force'])
+
+    argv = [
+        "-f",
+        "-T",
+        "-e",
+        "-M",
+        "-o", output_path,
+        module
+    ]
+
+    try:
+        # Sphinx 1.7+
+        from sphinx.ext import apidoc
+        apidoc.main(argv)
+    except ImportError:
+        # Sphinx 1.6 (and earlier)
+        from sphinx import apidoc
+        argv.insert(0, apidoc.__file__)
+        apidoc.main(argv)
 
 def setup(app):
     app.connect('builder-inited', run_apidoc)
