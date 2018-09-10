@@ -378,6 +378,7 @@ class Trainer(object):
         for j in range(int(np.ceil(np.float(n)/self.batch_size))):
             slice_obj = [slice(None) for i in range(batch_axis+1)]
             slice_obj[batch_axis] = slice(j*self.batch_size, (j+1)*self.batch_size)
+            slice_obj = tuple(slice_obj)  # Silence NumPy warning
             d = batch[0][slice_obj] # data
             l = batch[1][slice_obj] # target
             if len(batch) > 2:
