@@ -160,6 +160,10 @@ class MultinoulliNLL(Node):
         output pixels) different weights. Values: ``1.0`` (default), ``w < 1.0`` (less important),
         ``w > 1.0`` (more important example). Note: if this is not normalised/bounded it may result in a
         effectively modified learning rate!
+    weakness: float
+        Should be a number between 0 and 1. 0 (default) disables weak learning.
+        If > 0, mix real targets with network outputs to achieve less accurate
+        but softer training labels. Can improve convergence.
 
     The following refers to lazy labels, the masks are always on a per patch basis, depending on the
     origin cube of the patch. The masks are properties of the individual image cubes and must be loaded
@@ -208,7 +212,7 @@ class MultinoulliNLL(Node):
     # TODO: add comment on normalisation.
 
     def __init__(self, pred, target, target_is_sparse=False, class_weights=None,
-                 example_weights=None, mask_class_labeled=None,
+                 example_weights=None, weakness=0, mask_class_labeled=None,
                  mask_class_not_present=None, name="nll", print_repr=True):
         parents = [pred, target]
         if class_weights is not None:
@@ -248,8 +252,11 @@ class MultinoulliNLL(Node):
         self.target_is_sparse = target_is_sparse
         self.class_weights = class_weights
         self.example_weights = example_weights
+        self.weakness = weakness
         self.mask_class_labeled = mask_class_labeled
         self.mask_class_not_present = mask_class_not_present
+        if self.weakness > 0:
+            logger.info('  Using experimental weak training with weakness: {}'.format(self.weakness))
 
     def _make_output(self):
         """ Computation of Theano Output """
@@ -305,6 +312,8 @@ class MultinoulliNLL(Node):
 
             target = target * mask_class_labeled  # this excludes some classes
             # in target (set their row to 0)
+        if self.weakness > 0:
+            target = (1 - self.weakness) * target + self.weakness * pred
 
         nll_up = -xlogy0(target * class_weights * example_weights, pred + EPS)
         n_labelled_up = target.sum()
