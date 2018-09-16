@@ -123,7 +123,13 @@ class Trainer(object):
                 data = utils.h5load(self.exp_config.preview_data_path)
             if not (isinstance(data, list) or  isinstance(data, (tuple, list))):
                 data = [data,]
-            data = [d.astype(floatX)/d.max() for d in data]
+
+            # To stay consistent with BatchCreator.read_files()'s behavior:
+            # Determine normalisation depending on int or float type
+            m = 255. if data[0].dtype.kind in ('u', 'i') else 1.
+            data = [d.astype(floatX) / m for d in data]
+            # Note: In earlier versions, d was divided by d.max() instead of m
+
             return data
         else:
             return None
