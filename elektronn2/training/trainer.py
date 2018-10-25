@@ -504,7 +504,8 @@ class Trainer(object):
                     z_off = int(pred_node.shape.offsets[0])
 
                 for z in range(pred.shape[1]):
-                    plt.imsave('%s-raw-%s-z%i.png'%(save_name, block_name, z), raw_img[0,z+z_off,:,:], cmap='gray')
+                    plt.imsave('%s-raw-%s-z%i.png'%(save_name, block_name, z),
+                        raw_img[0,z+z_off,:,:], cmap='gray', vmin=0, vmax=1)
 
 
     def preview_slice_from_traindata(self, cube_i=0, off=(0,0,0), sh=(10,400,400), number=0, export_class='all'):
