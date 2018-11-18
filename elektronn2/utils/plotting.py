@@ -323,7 +323,7 @@ def plot_hist(timeline, history, save_name, loss_smoothing_length=200,
         loss_cap_t = lt_m + 2 * lt_s
         loss_cap = np.maximum(loss_cap, loss_cap_t)
 
-        if np.all(timeline['loss'] > 0):
+        if np.all(timeline['loss'] >= 0):
             loss_floor = 0.0
         else:
             loss_floor = lt_m - 2 * lt_s
@@ -367,7 +367,7 @@ def plot_hist(timeline, history, save_name, loss_smoothing_length=200,
             bc_m = bc.mean()
             bc_s = bc.std()
             bc_cap = bc_m + 2 * bc_s
-            if np.all(bc > 0):
+            if np.all(bc >= 0):
                 bc_floor = -0.01
             else:
                 bc_floor = bc_m - 2 * bc_s
