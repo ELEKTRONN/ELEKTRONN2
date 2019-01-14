@@ -123,7 +123,13 @@ class Trainer(object):
                 data = utils.h5load(self.exp_config.preview_data_path)
             if not (isinstance(data, list) or  isinstance(data, (tuple, list))):
                 data = [data,]
-            data = [d.astype(floatX)/d.max() for d in data]
+
+            # To stay consistent with BatchCreator.read_files()'s behavior:
+            # Determine normalisation depending on int or float type
+            m = 255. if data[0].dtype.kind in ('u', 'i') else 1.
+            data = [d.astype(floatX) / m for d in data]
+            # Note: In earlier versions, d was divided by d.max() instead of m
+
             return data
         else:
             return None
@@ -171,7 +177,7 @@ class Trainer(object):
             i = -1
             t0 = time.time()
             while i < exp_config.n_steps:
-                print('{:05d}'.format(i), end='\r')
+                print('{:05d}, loss: {:.4f}'.format(i, float(loss)), end='\r')
                 sys.stdout.flush()
                 try:
                     if config.background_processes:
@@ -378,6 +384,7 @@ class Trainer(object):
         for j in range(int(np.ceil(np.float(n)/self.batch_size))):
             slice_obj = [slice(None) for i in range(batch_axis+1)]
             slice_obj[batch_axis] = slice(j*self.batch_size, (j+1)*self.batch_size)
+            slice_obj = tuple(slice_obj)  # Silence NumPy warning
             d = batch[0][slice_obj] # data
             l = batch[1][slice_obj] # target
             if len(batch) > 2:
@@ -497,7 +504,8 @@ class Trainer(object):
                     z_off = int(pred_node.shape.offsets[0])
 
                 for z in range(pred.shape[1]):
-                    plt.imsave('%s-raw-%s-z%i.png'%(save_name, block_name, z), raw_img[0,z+z_off,:,:], cmap='gray')
+                    plt.imsave('%s-raw-%s-z%i.png'%(save_name, block_name, z),
+                        raw_img[0,z+z_off,:,:], cmap='gray', vmin=0, vmax=1)
 
 
     def preview_slice_from_traindata(self, cube_i=0, off=(0,0,0), sh=(10,400,400), number=0, export_class='all'):
