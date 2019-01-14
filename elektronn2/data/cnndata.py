@@ -53,10 +53,20 @@ def greyAugment(d, channels, rng):
         alpha = 1 + (rng.rand(k) - 0.5) * 0.3 # ~ contrast
         c     = (rng.rand(k) - 0.5) * 0.3 # mediates whether values are clipped for shadows or lights
         gamma = 2.0 ** (rng.rand(k) * 2 - 1) # sample from [0.5,2] with mean 0
-
-        d[channels] = d[channels] * alpha[:,None,None] + c[:,None,None]
+        if d.ndim == 3:  # 2D input data: ch, x, y
+            alpha = alpha[:, None, None]
+            gamma = gamma[:, None, None]
+            c = c[:, None, None]
+        elif d.ndim == 4:  # 3D input data: ch, z, x, y
+            alpha = alpha[:, None, None, None]
+            gamma = gamma[:, None, None, None]
+            c = c[:, None, None, None]
+        else:
+            raise ValueError('Unknown data shape occured during '
+                             '"greyAugment": {}'.format(d.shape))
+        d[channels] = d[channels] * alpha + c
         d[channels] = np.clip(d[channels], 0, 1)
-        d[channels] = d[channels] ** gamma[:,None,None]
+        d[channels] = d[channels] ** gamma
     return d
 
 
@@ -213,9 +223,9 @@ class BatchCreatorImage(object):
 
     def getbatch(self, batch_size=1, source='train',
                  grey_augment_channels=None, warp=False, warp_args=None,
-                 ignore_thresh=False, force_dense=False,
+                 ignore_thresh=False, force_dense=False, ignore_thresh_raw=None,
                  affinities=False, nhood_targets=False, ret_ll_mask=False,
-                 nga_blur_noise_probability=False,
+                 nga_blur_noise_probability=False, intensity_thresh=0,
                  blurry_blobs_probability=False,
                  blurry_blobs_args=None,
                  noisy_random_erasing_probability=0,
@@ -246,6 +256,12 @@ class BatchCreatorImage(object):
             If the fraction of negative targets in an example patch exceeds this
             threshold, this example is discarded (Negative targets are ignored
             for training [but could be used for unsupervised target propagation]).
+        ignore_thresh_raw : float
+            Cubes with a fraction of empty voxels above ignore_thresh_raw will be skipped
+        intensity_thresh :
+            pixel intensitiy threshold (0, ... 1.0). pixels above this threshold
+            will be considered empty (will be used to judge whether current cube
+            should be skipped, see ignore_thresh_raw).
         force_dense: bool
             If True the targets are *not* sub-sampled according to the CNN output\
             strides. Dense targets requires MFP in the CNN!
@@ -315,7 +331,9 @@ class BatchCreatorImage(object):
             except transformations.WarpingOOBError:
                 self.n_failed_warp += 1
                 continue
-
+            if ignore_thresh_raw is not None:
+                if (d <= intensity_thresh).mean() > ignore_thresh_raw:
+                    continue
             # Check only if a ignore_thresh is set and the cube is labelled
             if (ignore_thresh is not False) and (not np.any(ll_mask[1])):
                 if (t < 0).mean() > ignore_thresh:

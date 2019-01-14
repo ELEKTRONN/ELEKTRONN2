@@ -33,6 +33,7 @@ class ParamPointer(object):
     def __repr__(self):
         return "<ParamPointer> %s of node %s" %(self.param_name, self.target_id)
 
+
 class SplitDescriptor(object):
     def __init__(self, node_id, func, args, kwargs):
         self.node_id = node_id
@@ -43,7 +44,6 @@ class SplitDescriptor(object):
     def restore(self, gm):
         node = gm.nodes[self.node_id]
         return self.func(node, *self.args, **self.kwargs)
-
 
 
 class NodeDescriptor(object):
@@ -115,7 +115,6 @@ class NodeDescriptor(object):
         self.args = new_args
         self.kwargs = new_kwargs
         self.cls = cls
-
 
     def restore(self, param_values, gm, override_mfp_to_active=False,
                 make_weights_constant=False, unlock_weights=False,
